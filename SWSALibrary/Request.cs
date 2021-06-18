@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Xml;
 using Newtonsoft.Json;
+using SimpleWSA.Extensions;
 using SimpleWSA.Internal;
 using SimpleWSA.Services;
 
@@ -217,7 +218,7 @@ namespace SimpleWSA
       xmlWriter.WriteEndElement();  //_options
     }
 
-    public void WriteRoutine(XmlWriter xmlWriter,
+    private void WriteRoutine(XmlWriter xmlWriter,
                              Command command,
                              IConvertingService convertingService)
     {
@@ -269,6 +270,20 @@ namespace SimpleWSA
       return result;
     }
 
+    public string CreateXmlRoutine()
+    {
+      string result = string.Empty;
+      StringBuilder sb = new StringBuilder();
+      using (XmlWriter xmlWriter = XmlWriter.Create(sb, this.xmlWriterSettings))
+      {
+        this.WriteRoutine(xmlWriter, this.command, this.convertingService);
+        xmlWriter.Flush();
+        result = sb.ToString();
+      }
+
+      return result;
+    }
+
     protected virtual object Post(string xmlRequest)
     {
       return null;
@@ -301,6 +316,65 @@ namespace SimpleWSA
         }
         throw new RestServiceException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
       }
+    }
+
+    public static object Post(string serviceAddress,
+                              string requestString,
+                              string token,
+                              CompressionType outgoingCompressionType,
+                              CompressionType returnCompressionType,
+                              ICompressionService compressionService,
+                              Dictionary<string, string> errorCodes,
+                              WebProxy webProxy, 
+                              string postFormat)
+    {
+      string query = string.Format(postFormat, serviceAddress, token, (int)outgoingCompressionType);
+
+      try
+      {
+        var webRequest = WebRequest.Create(query);
+        if (webRequest != null)
+        {
+          webRequest.Timeout = 1 * 60 * 60 * 1000;
+
+          byte[] postData = compressionService.Compress(requestString, outgoingCompressionType);
+          webRequest.InitializeWebRequest(outgoingCompressionType, postData, webProxy);
+          using (var httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
+          {
+            if (httpWebResponse?.StatusCode == HttpStatusCode.OK)
+            {
+              using (var stream = httpWebResponse.GetResponseStream())
+              {
+                byte[] result = compressionService.Decompress(stream, returnCompressionType);
+                if (result != null)
+                {
+                  return System.Text.Encoding.UTF8.GetString(result);
+                }
+              }
+            }
+          }
+        }
+      }
+      catch (WebException ex)
+      {
+        if (ex.Response is HttpWebResponse)
+        {
+          HttpWebResponse httpWebResponse = (HttpWebResponse)ex.Response;
+          ErrorReply errorReply = JsonConvert.DeserializeObject<ErrorReply>(httpWebResponse.StatusDescription);
+          if (errorReply != null)
+          {
+            string wsaMessage = null;
+            if (errorCodes.TryGetValue(errorReply.Error.ErrorCode, out wsaMessage) == false)
+            {
+              wsaMessage = errorReply.Error.Message;
+            }
+            throw new RestServiceException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
+          }
+        }
+        throw;
+      }
+
+      return null;
     }
   }
 }

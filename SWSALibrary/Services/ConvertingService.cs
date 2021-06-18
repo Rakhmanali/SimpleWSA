@@ -2,9 +2,6 @@
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Xml.Linq;
-using System.Web;
-using Newtonsoft.Json.Linq;
 using SimpleWSA.Extensions;
 
 namespace SimpleWSA.Services
@@ -162,113 +159,6 @@ namespace SimpleWSA.Services
       return result;
     }
 
-    public object ConvertObjectFromDb(PgsqlDbType pgsqlDbType, object value, EncodingType returnEncodingType)
-    {
-      if (value.IsNullOrDBNull() == true)
-      {
-        return value;
-      }
-
-      switch (pgsqlDbType)
-      {
-        case PgsqlDbType.TimeTZ:
-        case PgsqlDbType.TimestampTZ:
-          {
-            value = value.NToNullDateTimeUTC();
-            break;
-          }
-        case PgsqlDbType.Time:
-        case PgsqlDbType.Timestamp:
-          {
-            value = value.NToNullDateTime();
-            break;
-          }
-        case PgsqlDbType.Date:
-          {
-            value = value.NToNullDate();
-            break;
-          }
-        case PgsqlDbType.Double:
-          {
-            value = value.NToNullDouble();
-            break;
-          }
-        case PgsqlDbType.Money:
-        case PgsqlDbType.Numeric:
-          {
-            value = value.NToNullDecimal();
-            break;
-          }
-        case PgsqlDbType.Real:
-          {
-            value = value.NToNullSingle();
-            break;
-          }
-        case PgsqlDbType.Smallint:
-          {
-            value = value.NToNullInt16();
-            break;
-          }
-        case PgsqlDbType.Integer:
-          {
-            value = value.NToNullInt32();
-            break;
-          }
-        case PgsqlDbType.Bigint:
-          {
-            value = value.NToNullInt64();
-            break;
-          }
-        case PgsqlDbType.Xml:
-        case PgsqlDbType.Text:
-        case PgsqlDbType.Varchar:
-        case PgsqlDbType.Json:
-          {
-            if (returnEncodingType != EncodingType.NONE)
-            {
-              if (string.Compare(Convert.ToString(value), "null", true) == 0)
-              {
-                value = null;
-                break;
-              }
-              else
-              {
-                value = this.DecodeFrom(value, returnEncodingType);
-              }
-            }
-
-            if (string.Compare(Convert.ToString(value), "null", true) == 0)
-            {
-              value = null;
-              break;
-            }
-
-            value = HttpUtility.HtmlDecode(value.NToString());
-
-            if (pgsqlDbType == PgsqlDbType.Json)
-            {
-              value = JObject.Parse(value.NToString());
-            }
-
-            if (pgsqlDbType == PgsqlDbType.Xml)
-            {
-              value = XElement.Parse(value.NToString());
-            }
-
-            break;
-          }
-        case PgsqlDbType.Boolean:
-          {
-            value = value.NToNullBoolean();
-            break;
-          }
-        default:
-          break;
-      }
-
-      return value;
-    }
-
     public string EncodeTo(object value, EncodingType outgoingEncodingType)
     {
       if (value == null)
@@ -293,37 +183,6 @@ namespace SimpleWSA.Services
       }
 
       return result;
-    }
-
-    public object DecodeFrom(object value, EncodingType returnEncodingType)
-    {
-      if (value.IsNullOrDBNull() == true)
-      {
-        return value;
-      }
-
-      switch (returnEncodingType)
-      {
-        case EncodingType.BASE64:
-          {
-            string str = Convert.ToString(value, CultureInfo.InvariantCulture);
-            byte[] bytes = null;
-            try
-            {
-              bytes = Convert.FromBase64String(str);
-              value = Encoding.UTF8.GetString(bytes);
-            }
-            catch { }
-            break;
-          }
-        case EncodingType.NONE:
-        default:
-          {
-            break;
-          }
-      }
-
-      return value;
     }
   }
 }

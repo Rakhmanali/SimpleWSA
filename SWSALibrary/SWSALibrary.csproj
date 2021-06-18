@@ -58,6 +58,7 @@
     <Compile Include="Internal\ErrorReply.cs" />
     <Compile Include="IRequest.cs" />
     <Compile Include="NonQueryRequest.cs" />
+    <Compile Include="ParallelExecution.cs" />
     <Compile Include="PgsqlDbType.cs" />
     <Compile Include="Parameter.cs" />
     <Compile Include="ParameterCollection.cs" />

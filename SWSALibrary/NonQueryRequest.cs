@@ -28,7 +28,7 @@ namespace SimpleWSA
       this.webProxy = webProxy;
     }
 
-    const string postFormat = "{0}executenonquerypost?token={1}&compression={2}";
+    public const string postFormat = "{0}executenonquerypost?token={1}&compression={2}";
 
     protected override object Post(string requestString)
     {
