@@ -31,9 +31,11 @@ Calling the PostgreSql function returning a scalar data
 
       ...
       Command command = new Command("help_ws_es_int64_array_test");
-      command.HttpMethod = HttpMethod.GET;
-      command.ResponseFormat = ResponseFormat.JSON;
-      Console.WriteLine(command.Execute(RoutineType.Scalar));
+      command.WriteSchema = WriteSchema.FALSE;
+      Console.WriteLine(Command.Execute(command,
+                                        RoutineType.Scalar,
+                                        HttpMethod.GET,
+                                        ResponseFormat.XML));
 	  ...
 
 Calling the PostgreSql function returning the data in the out parameters
@@ -54,17 +56,19 @@ Calling the PostgreSql function returning the data in the out parameters
       command.Parameters.Add("p_parameter8", PgsqlDbType.TimestampTZ | PgsqlDbType.Array);
       command.Parameters.Add("_returnvalue", PgsqlDbType.Integer);
 
-	  command.HttpMethod = HttpMethod.GET;
-      command.ResponseFormat = ResponseFormat.JSON;
-      Console.WriteLine(command.Execute(RoutineType.NonQuery));
+	  command.WriteSchema = WriteSchema.FALSE;
+      Console.WriteLine(Command.Execute(command,
+                                        RoutineType.NonQuery,
+                                        HttpMethod.GET,
+                                        ResponseFormat.XML));
 	  ...
 
 Calling the PostgreSql function returning the data set
 
       Command command = new Command("salesinformationmanager_getsalesinformationfiltersvalues");
       command.Parameters.Add("_employeeid", PgsqlDbType.Integer, 3);
-
-      command.HttpMethod = HttpMethod.GET;
-      command.ResponseFormat = ResponseFormat.XML;
-      command.WriteSchema = WriteSchema.TRUE;
-      Console.WriteLine(command.Execute(RoutineType.DataSet));
+	  command.WriteSchema = WriteSchema.TRUE;
+      string xmlResult = Command.Execute(command,
+                                         RoutineType.DataSet,
+                                         httpMethod: HttpMethod.GET,
+                                         responseFormat: ResponseFormat.XML);
