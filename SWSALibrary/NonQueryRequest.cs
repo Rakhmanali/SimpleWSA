@@ -10,7 +10,10 @@ namespace SimpleWSA
 {
   public sealed class NonQueryRequest : Request
   {
+    private readonly string serviceAddress;
+    private readonly string token;
     private readonly WebProxy webProxy;
+    private readonly ICompressionService compressionService;
 
     public NonQueryRequest(string serviceAddress,
                            string token,
@@ -18,14 +21,14 @@ namespace SimpleWSA
                            Dictionary<string, string> errorCodes,
                            IConvertingService convertingService,
                            ICompressionService compressionService,
-                           WebProxy webProxy) : base(serviceAddress,
-                                                     token,
-                                                     command,
+                           WebProxy webProxy) : base(command,
                                                      errorCodes,
-                                                     convertingService,
-                                                     compressionService)
+                                                     convertingService)
     {
+      this.serviceAddress = serviceAddress;
+      this.token = token;
       this.webProxy = webProxy;
+      this.compressionService = compressionService;
     }
 
     public const string postFormat = "{0}executenonquerypost?token={1}&compression={2}";
@@ -41,13 +44,6 @@ namespace SimpleWSA
           webRequest.Timeout = 1 * 60 * 60 * 1000;
 
           byte[] postData = this.compressionService.Compress(requestString, this.command.OutgoingCompressionType);
-
-          if (requestString.Length >= TEN_MEGABYTES)
-          {
-            requestString = null;
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-          }
 
           webRequest.InitializeWebRequest(this.command.OutgoingCompressionType, postData, this.webProxy);
           using (var httpWebResponse = webRequest.GetResponse() as HttpWebResponse)

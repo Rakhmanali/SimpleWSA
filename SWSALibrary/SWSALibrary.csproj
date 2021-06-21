@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClearPool.cs" />
+    <Compile Include="CommandEx.cs" />
     <Compile Include="CompressionType.cs" />
     <Compile Include="DataSetRequest.cs" />
     <Compile Include="EncodingType.cs" />

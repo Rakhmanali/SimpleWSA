@@ -11,10 +11,10 @@
       this.Name = name;
     }
 
-    public Parameter(string name, object value)
+    public Parameter(string name, PgsqlDbType pgsqlDbType)
     {
       this.Name = name;
-      this.Value = value;
+      this.PgsqlDbType = pgsqlDbType;
     }
 
     public Parameter(string name, PgsqlDbType pgsqlDbType, object value)

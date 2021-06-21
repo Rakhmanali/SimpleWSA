@@ -9,7 +9,10 @@ namespace SimpleWSA
 {
   public sealed class ScalarRequest : Request
   {
+    private readonly string serviceAddress;
+    private readonly string token;
     private readonly WebProxy webProxy;
+    private readonly ICompressionService compressionService;
 
     public ScalarRequest(string serviceAddress,
                          string token,
@@ -17,14 +20,14 @@ namespace SimpleWSA
                          Dictionary<string, string> errorCodes,
                          IConvertingService convertingService,
                          ICompressionService compressionService,
-                         WebProxy webProxy) : base(serviceAddress,
-                                                   token,
-                                                   command,
+                         WebProxy webProxy) : base(command,
                                                    errorCodes,
-                                                   convertingService,
-                                                   compressionService)
+                                                   convertingService)
     {
+      this.serviceAddress = serviceAddress;
+      this.token = token;
       this.webProxy = webProxy;
+      this.compressionService = compressionService;
     }
 
     public const string postFormat = "{0}executescalarpost?token={1}&compression={2}";
@@ -110,63 +113,5 @@ namespace SimpleWSA
       }
       return resultObject;
     }
-
-    //public static object Post(string serviceAddress, 
-    //                          string requestString,
-    //                          string token,
-    //                          CompressionType outgoingCompressionType,
-    //                          CompressionType returnCompressionType,
-    //                          ICompressionService compressionService,
-    //                          Dictionary<string, string> errorCodes,
-    //                          WebProxy webProxy)
-    //{
-    //  string query = string.Format(postFormat, serviceAddress, token, (int)outgoingCompressionType);
-
-    //  try
-    //  {
-    //    var webRequest = WebRequest.Create(query);
-    //    if (webRequest != null)
-    //    {
-    //      webRequest.Timeout = 1 * 60 * 60 * 1000;
-
-    //      byte[] postData = compressionService.Compress(requestString, outgoingCompressionType);
-    //      webRequest.InitializeWebRequest(outgoingCompressionType, postData, webProxy);
-    //      using (var httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
-    //      {
-    //        if (httpWebResponse?.StatusCode == HttpStatusCode.OK)
-    //        {
-    //          using (var stream = httpWebResponse.GetResponseStream())
-    //          {
-    //            byte[] result = compressionService.Decompress(stream, returnCompressionType);
-    //            if (result != null)
-    //            {
-    //              return System.Text.Encoding.UTF8.GetString(result);
-    //            }
-    //          }
-    //        }
-    //      }
-    //    }
-    //  }
-    //  catch (WebException ex)
-    //  {
-    //    if (ex.Response is HttpWebResponse)
-    //    {
-    //      HttpWebResponse httpWebResponse = (HttpWebResponse)ex.Response;
-    //      ErrorReply errorReply = JsonConvert.DeserializeObject<ErrorReply>(httpWebResponse.StatusDescription);
-    //      if (errorReply != null)
-    //      {
-    //        string wsaMessage = null;
-    //        if (errorCodes.TryGetValue(errorReply.Error.ErrorCode, out wsaMessage) == false)
-    //        {
-    //          wsaMessage = errorReply.Error.Message;
-    //        }
-    //        throw new RestServiceException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
-    //      }
-    //    }
-    //    throw;
-    //  }
-
-    //  return null;
-    //}
   }
 }

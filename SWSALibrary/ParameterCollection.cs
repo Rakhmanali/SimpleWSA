@@ -28,27 +28,24 @@ namespace SimpleWSA
       return parameter;
     }
 
-    public Parameter Add(string name, PgsqlDbType pgsqlDbType, object value)
-    {
-      Parameter parameter = new Parameter(name, pgsqlDbType, value);
-      this.internalList.Add(parameter);
-      return parameter;
-    }
-
-    public Parameter Add(string name, object value)
-    {
-      Parameter parameter = new Parameter(name, value);
-      this.internalList.Add(parameter);
-      return parameter;
-    }
-
     public Parameter Add(string name)
     {
       Parameter parameter = new Parameter(name);
-      this.internalList.Add(parameter);
-      return parameter;
+      return this.Add(parameter);
     }
 
+    public Parameter Add(string name, PgsqlDbType pgsqlDbType)
+    {
+      Parameter parameter = new Parameter(name, pgsqlDbType);
+      return this.Add(parameter);
+    }
+
+    public Parameter Add(string name, PgsqlDbType pgsqlDbType, object value)
+    {
+      Parameter parameter = new Parameter(name, pgsqlDbType, value);
+      return this.Add(parameter);
+    }
+    
     public int Count
     {
       get

@@ -1,10 +1,10 @@
-﻿using SimpleWSA.Internal;
-using SimpleWSA.Services;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Text;
+using SimpleWSA.Internal;
+using SimpleWSA.Services;
 
 namespace SimpleWSA
 {
@@ -134,117 +134,67 @@ namespace SimpleWSA
       ICompressionService compressionService = new CompressionService();
       IConvertingService convertingService = new ConvertingService();
 
+      string postFormat = DataSetRequest.postFormat;
       if (routineType == RoutineType.Scalar)
       {
-        StringBuilder sb = new StringBuilder();
-        sb.Append($"<{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
-        foreach (Command command in commands)
-        {
-          ScalarRequest scalarRequest = new ScalarRequest(SessionContext.RestServiceBufferedModeAddress,
-                                            SessionContext.Token,
-                                            command,
-                                            ErrorCodes.Collection,
-                                            convertingService,
-                                            compressionService,
-                                            SessionContext.WebProxy);
-          sb.Append(scalarRequest.CreateXmlRoutine());
-        }
-
-        if (returnCompressionType != CompressionType.NONE)
-        {
-          //sb.Append($"<{Constants.WS_XML_REQUEST_NODE_COMPRESSION}>{((int)returnCompressionType)}</{Constants.WS_XML_REQUEST_NODE_COMPRESSION}>");
-          sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_COMPRESSION, $"{(int)returnCompressionType}"));
-        }
-
-        //sb.Append($"<{Constants.WS_XML_REQUEST_NODE_RETURN_TYPE}>{responseFormat}</{Constants.WS_XML_REQUEST_NODE_RETURN_TYPE}>");
-        sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_RETURN_TYPE,$"{responseFormat}"));
-
-        if (parallelExecution == ParallelExecution.TRUE)
-        {
-          //sb.Append($"<{Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION}>1</{Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION}>");
-          sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION, "1"));
-        }
-        else
-        {
-          //sb.Append($"<{Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION}>0</{Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION}>");
-          sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION, "0"));
-        }
-
-        if (responseFormat == ResponseFormat.JSON)
-        {
-          //sb.Append($"<{Constants.WS_XML_REQUEST_NODE_JSON_DATE_FORMAT}>2</{Constants.WS_XML_REQUEST_NODE_JSON_DATE_FORMAT}>");
-          sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_JSON_DATE_FORMAT, "2"));
-        }
-
-        sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
-        string requestString = sb.ToString();
-
-        return (string)ScalarRequest.Post(SessionContext.RestServiceBufferedModeAddress,
-                                          requestString,
-                                          SessionContext.Token,
-                                          outgoingCompressionType,
-                                          returnCompressionType,
-                                          compressionService,
-                                          ErrorCodes.Collection,
-                                          SessionContext.WebProxy,
-                                          ScalarRequest.postFormat);
+        postFormat = ScalarRequest.postFormat;
       }
       else if (routineType == RoutineType.NonQuery)
       {
-        StringBuilder sb = new StringBuilder();
-        sb.Append($"<{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
-        foreach (Command command in commands)
-        {
-          NonQueryRequest nonQueryRequest = new NonQueryRequest(SessionContext.RestServiceBufferedModeAddress,
-                                                                SessionContext.Token,
-                                                                command,
-                                                                ErrorCodes.Collection,
-                                                                convertingService,
-                                                                compressionService,
-                                                                SessionContext.WebProxy);
-          sb.Append(nonQueryRequest.CreateXmlRoutine());
-        }
-
-        if (returnCompressionType != CompressionType.NONE)
-        {
-          //sb.Append($"<{Constants.WS_XML_REQUEST_NODE_COMPRESSION}>{((int)returnCompressionType)}</{Constants.WS_XML_REQUEST_NODE_COMPRESSION}>");
-          sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_COMPRESSION, $"{(int)returnCompressionType}"));
-        }
-
-        //sb.Append($"<{Constants.WS_XML_REQUEST_NODE_RETURN_TYPE}>{responseFormat}</{Constants.WS_XML_REQUEST_NODE_RETURN_TYPE}>");
-        sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_RETURN_TYPE, $"{responseFormat}"));
-
-        if (parallelExecution == ParallelExecution.TRUE)
-        {
-          //sb.Append($"<{Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION}>1</{Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION}>");
-          sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION, "1"));
-        }
-        else
-        {
-          //sb.Append($"<{Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION}>0</{Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION}>");
-          sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION, "0"));
-        }
-
-        if (responseFormat == ResponseFormat.JSON)
-        {
-          //sb.Append($"<{Constants.WS_XML_REQUEST_NODE_JSON_DATE_FORMAT}>2</{Constants.WS_XML_REQUEST_NODE_JSON_DATE_FORMAT}>");
-          sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_JSON_DATE_FORMAT, "2"));
-        }
-
-        sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
-        string requestString = sb.ToString();
-
-        return (string)NonQueryRequest.Post(SessionContext.RestServiceBufferedModeAddress,
-                                            requestString,
-                                            SessionContext.Token,
-                                            outgoingCompressionType,
-                                            returnCompressionType,
-                                            compressionService,
-                                            ErrorCodes.Collection,
-                                            SessionContext.WebProxy,
-                                            NonQueryRequest.postFormat);
+        postFormat = NonQueryRequest.postFormat;
       }
-      return null;
+
+      StringBuilder sb = new StringBuilder();
+      sb.Append($"<{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
+      foreach (Command command in commands)
+      {
+        Request request = new Request(command,
+                                      ErrorCodes.Collection,
+                                      convertingService);
+        sb.Append(request.CreateXmlRoutine());
+      }
+
+      CreateRoutinesLevelXmlNodes(sb, returnCompressionType, parallelExecution, responseFormat);
+
+      sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
+      string requestString = sb.ToString();
+
+      return (string)Request.Post(SessionContext.RestServiceBufferedModeAddress,
+                                        requestString,
+                                        SessionContext.Token,
+                                        outgoingCompressionType,
+                                        returnCompressionType,
+                                        compressionService,
+                                        ErrorCodes.Collection,
+                                        SessionContext.WebProxy,
+                                        postFormat);
+    }
+
+    protected static void CreateRoutinesLevelXmlNodes(StringBuilder sb,
+                                                    CompressionType returnCompressionType,
+                                                    ParallelExecution parallelExecution,
+                                                    ResponseFormat responseFormat)
+    {
+      if (returnCompressionType != CompressionType.NONE)
+      {
+        sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_COMPRESSION, $"{(int)returnCompressionType}"));
+      }
+
+      sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_RETURN_TYPE, $"{responseFormat}"));
+
+      if (parallelExecution == ParallelExecution.TRUE)
+      {
+        sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION, "1"));
+      }
+      else
+      {
+        sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION, "0"));
+      }
+
+      if (responseFormat == ResponseFormat.JSON)
+      {
+        sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_JSON_DATE_FORMAT, "2"));
+      }
     }
 
     private static string CreateXmlNode(string nodeName, string value)

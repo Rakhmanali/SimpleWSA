@@ -12,28 +12,19 @@ using SimpleWSA.Services;
 
 namespace SimpleWSA
 {
-  public abstract class Request : IRequest
+  public class Request : IRequest
   {
-    protected readonly string serviceAddress;
-    protected readonly string token;
-    protected Dictionary<string, string> errorCodes;
     protected readonly Command command;
+    protected Dictionary<string, string> errorCodes;
     protected readonly IConvertingService convertingService;
-    protected readonly ICompressionService compressionService;
 
-    public Request(string serviceAddress,
-                   string token,
-                   Command command,
+    public Request(Command command,
                    Dictionary<string, string> errorCodes,
-                   IConvertingService convertingService,
-                   ICompressionService compressionService)
+                   IConvertingService convertingService)
     {
-      this.serviceAddress = serviceAddress;
-      this.token = token;
       this.command = command;
       this.errorCodes = errorCodes;
       this.convertingService = convertingService;
-      this.compressionService = compressionService;
     }
 
     private XmlWriterSettings xmlWriterSettings => new XmlWriterSettings()
@@ -48,7 +39,7 @@ namespace SimpleWSA
                                 Command command,
                                 IConvertingService convertingService)
     {
-      if (this.command == null || this.command.Parameters.Count == 0)
+      if (command == null || command.Parameters.Count == 0)
       {
         return;
       }
@@ -197,9 +188,9 @@ namespace SimpleWSA
 #if DEBUG
       xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_COMMAND_TIMEOUT, "300"); //300 timeout seconds for debugging into pg-functions
 #else
-                    if (commandTimeout != 20) // Default value is 20 seconds
+                    if (command.CommandTimeout != 20) // Default value is 20 seconds
                     {
-                        xmlWriter.WriteElementString("_commandTimeout", (commandTimeout).ToString());
+                        xmlWriter.WriteElementString("_commandTimeout", $"{command.CommandTimeout}");
                     }
 #endif
       if (command.ReturnEncodingType != EncodingType.NONE)
@@ -218,6 +209,54 @@ namespace SimpleWSA
       xmlWriter.WriteEndElement();  //_options
     }
 
+    private void WriteOptions(XmlWriter xmlWriter, Command command, RoutineType routineType)
+    {
+      xmlWriter.WriteStartElement(Constants.WS_XML_REQUEST_NODE_OPTIONS);
+
+      if (command.ClearPool == ClearPool.TRUE)
+      {
+        xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_CLEAR_POOL, ((int)command.ClearPool).ToString());
+      }
+
+      if (command.GetFromCache == GetFromCache.TRUE) // Default value is FALSE
+      {
+        xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_FROM_CACHE, ((int)command.GetFromCache).ToString());
+      }
+
+      if (command.WriteSchema == WriteSchema.TRUE) // Default value is FALSE
+      {
+        xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_WRITE_SCHEMA, ((int)command.WriteSchema).ToString());
+      }
+
+#if DEBUG
+      xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_COMMAND_TIMEOUT, "300"); //300 timeout seconds for debugging into pg-functions
+#else
+                    if (command.CommandTimeout != 20) // Default value is 20 seconds
+                    {
+                        xmlWriter.WriteElementString("_commandTimeout", $"{command.CommandTimeout}");
+                    }
+#endif
+      if (command.ReturnEncodingType != EncodingType.NONE)
+      {
+        xmlWriter.WriteStartElement(Constants.WS_XML_REQUEST_NODE_ENCODING);
+        xmlWriter.WriteAttributeString(Constants.WS_XML_REQUEST_NODE_ENCODING_ATTRIBUTE_IS_ENTRY, "0");
+        xmlWriter.WriteValue(((int)command.ReturnEncodingType).ToString());
+        xmlWriter.WriteEndElement();
+      }
+
+      if (command.IsolationLevel != IsolationLevel.ReadCommitted) //Default value is ReadCommitted
+      {
+        xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_ISOLATION_LEVEL, ((int)command.IsolationLevel).ToString());
+      }
+
+
+      xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_ROUTINE_TYPE, $"{(int)routineType}");
+
+
+
+      xmlWriter.WriteEndElement();  //_options
+    }
+
     private void WriteRoutine(XmlWriter xmlWriter,
                              Command command,
                              IConvertingService convertingService)
@@ -229,7 +268,17 @@ namespace SimpleWSA
       xmlWriter.WriteEndElement();  //_routine
     }
 
-    protected const int TEN_MEGABYTES = 10 * 1024 * 1024;
+    private void WriteRoutine(XmlWriter xmlWriter,
+                             Command command,
+                             IConvertingService convertingService, 
+                             RoutineType routineType)
+    {
+      xmlWriter.WriteStartElement(Constants.WS_XML_REQUEST_NODE_ROUTINE);
+      xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_NAME, command.Name.ToLower());
+      this.WriteArguments(xmlWriter, command, convertingService);
+      this.WriteOptions(xmlWriter, command, routineType);
+      xmlWriter.WriteEndElement();  //_routine
+    }
 
     private string CreateXmlRequest()
     {
@@ -260,13 +309,6 @@ namespace SimpleWSA
         result = sb.ToString();
       }
 
-      if (sb.Length >= TEN_MEGABYTES)
-      {
-        sb = null;
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-      }
-
       return result;
     }
 
@@ -277,6 +319,20 @@ namespace SimpleWSA
       using (XmlWriter xmlWriter = XmlWriter.Create(sb, this.xmlWriterSettings))
       {
         this.WriteRoutine(xmlWriter, this.command, this.convertingService);
+        xmlWriter.Flush();
+        result = sb.ToString();
+      }
+
+      return result;
+    }
+
+    public string CreateXmlRoutine(RoutineType routineType)
+    {
+      string result = string.Empty;
+      StringBuilder sb = new StringBuilder();
+      using (XmlWriter xmlWriter = XmlWriter.Create(sb, this.xmlWriterSettings))
+      {
+        this.WriteRoutine(xmlWriter, this.command, this.convertingService, routineType);
         xmlWriter.Flush();
         result = sb.ToString();
       }

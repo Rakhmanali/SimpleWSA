@@ -9,25 +9,28 @@ namespace SimpleWSA
 {
   public sealed class DataSetRequest : Request
   {
+    private readonly string serviceAddress;
+    private readonly string token;
     private readonly WebProxy webProxy;
+    private readonly ICompressionService compressionService;
 
     public DataSetRequest(string serviceAddress,
-                           string token,
+                          string token,
                           Command command,
                           Dictionary<string, string> errorCodes,
                           IConvertingService convertingService,
                           ICompressionService compressionService,
-                          WebProxy webProxy) : base(serviceAddress,
-                                                    token,
-                                                    command,
+                          WebProxy webProxy) : base(command,
                                                     errorCodes,
-                                                    convertingService,
-                                                    compressionService)
+                                                    convertingService)
     {
+      this.serviceAddress = serviceAddress;
+      this.token = token;
       this.webProxy = webProxy;
+      this.compressionService = compressionService;
     }
 
-    const string postFormat = "{0}executereturnsetpost?token={1}&compression={2}";
+    public const string postFormat = "{0}executereturnsetpost?token={1}&compression={2}";
 
     protected override object Post(string requestString)
     {
