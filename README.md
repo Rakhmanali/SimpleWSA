@@ -9,7 +9,7 @@ okay, then the data access web service creates a session, and returns a token.
 with appropriate values, attach the token, and make the HTTP request.
   The SimpleWSA library has been created to simplify this work.
 
-##1. Session
+## 1. Session
 
   The following code is an example of how to create the session:
 
@@ -27,7 +27,7 @@ with appropriate values, attach the token, and make the HTTP request.
 	  ...
   ```
 
-##2. How to call a PostgreSql function returning the scalar data
+## 2. How to call a PostgreSql function returning the scalar data
 
    The following code is an example of how to get the scalar data:
 
@@ -45,7 +45,7 @@ with appropriate values, attach the token, and make the HTTP request.
 	  ...
    ```
 
-##3. How to call the PostgreSql function returning the data in the out parameters
+## 3. How to call the PostgreSql function returning the data in the out parameters
 
 ```csharp
       ...
@@ -62,7 +62,7 @@ with appropriate values, attach the token, and make the HTTP request.
 	  ...
 ```
 
-##4. How to call the PostgreSql function returning the data set
+## 4. How to call the PostgreSql function returning the data set
 
 ```csharp
       ...
@@ -77,7 +77,7 @@ with appropriate values, attach the token, and make the HTTP request.
       ...
 ```
 
-##5. How to call more than one the same type of PostgreSql functions
+## 5. How to call more than one the same type of PostgreSql functions
 
    For example, let's describe how to call two PostgreSql functions eveach of them 
    returns the set of data:
@@ -107,7 +107,7 @@ with appropriate values, attach the token, and make the HTTP request.
 	  to execute the PostgreSql functions "companymanager_getresellers" and 
 	  "currencymanager_getbusinessessuppliers" parallely.
 
-##6. There is possible to execute different type of PostgreSql functions 
+## 6. There is possible to execute different type of PostgreSql functions 
 
 ```csharp
       ...
@@ -137,7 +137,7 @@ with appropriate values, attach the token, and make the HTTP request.
       ...
 ```
 
-##7. Again about session
+## 7. Again about session
    
    In the above was described how to create the session. If during for 20 minutes no one request 
    was done the session will be expired, and the next request issues an exception.
