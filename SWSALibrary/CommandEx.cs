@@ -53,5 +53,10 @@ namespace SimpleWSA
                                   SessionContext.WebProxy,
                                   postFormat);
     }
+
+    //public CommandEx CreateFrom(Command command)
+    //{
+
+    //}
   }
 }
