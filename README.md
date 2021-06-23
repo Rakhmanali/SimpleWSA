@@ -9,10 +9,11 @@ okay, then the data access web service creates a session, and returns a token.
 with appropriate values, attach the token, and make the HTTP request.
   The SimpleWSA library has been created to simplify this work.
 
-1. Session
+##1. Session
 
   The following code is an example of how to create the session:
 
+  ```csharp
       ...
       Session session = new Session("<the connection provider address>",
                                     "<login>",
@@ -24,12 +25,13 @@ with appropriate values, attach the token, and make the HTTP request.
                                     <web proxy>);
       await session.CreateAsync();
 	  ...
+  ```
 
-
-2. How to call a PostgreSql function returning the scalar data
+##2. How to call a PostgreSql function returning the scalar data
 
    The following code is an example of how to get the scalar data:
 
+   ```csharp
       ...
       Command command = new Command("clientmanager_findclientbyemailbusiness");
       command.Parameters.Add("_businessid", PgsqlDbType.Integer).Value = 1;
@@ -41,9 +43,11 @@ with appropriate values, attach the token, and make the HTTP request.
                                         HttpMethod.GET,
                                         ResponseFormat.XML));
 	  ...
+   ```
 
-3. How to call the PostgreSql function returning the data in the out parameters
+##3. How to call the PostgreSql function returning the data in the out parameters
 
+```csharp
       ...
       Command command = new Command("brandmanager_hidebrand");
       command.Parameters.Add("_brandid", PgsqlDbType.Integer, 13);
@@ -56,9 +60,11 @@ with appropriate values, attach the token, and make the HTTP request.
                                         HttpMethod.GET,
                                         ResponseFormat.XML));
 	  ...
+```
 
-4. How to call the PostgreSql function returning the data set
+##4. How to call the PostgreSql function returning the data set
 
+```csharp
       ...
       Command command = new Command("companymanager_getresellers");
       command.Parameters.Add("_businessid", PgsqlDbType.Integer).Value = 1;
@@ -69,12 +75,14 @@ with appropriate values, attach the token, and make the HTTP request.
                                          httpMethod: HttpMethod.GET,
                                          responseFormat: ResponseFormat.XML);
       ...
+```
 
-5. How to call more than one the same type of PostgreSql functions
+##5. How to call more than one the same type of PostgreSql functions
 
    For example, let's describe how to call two PostgreSql functions eveach of them 
    returns the set of data:
 
+```csharp
       ...
 
 	  // the same type of routines in one HTTP request
@@ -93,13 +101,15 @@ with appropriate values, attach the token, and make the HTTP request.
                                             ResponseFormat.XML,
                                             parallelExecution: ParallelExecution.TRUE);
       ...
+```
 
 	  The value "ParallelExecution.TRUE" of the parameter "parallelExecution" instructs the server
 	  to execute the PostgreSql functions "companymanager_getresellers" and 
 	  "currencymanager_getbusinessessuppliers" parallely.
 
-6. There is possible to execute different type of PostgreSql functions 
+##6. There is possible to execute different type of PostgreSql functions 
 
+```csharp
       ...
       // the different type of routines in one HTTP request
 
@@ -125,13 +135,15 @@ with appropriate values, attach the token, and make the HTTP request.
                                               ResponseFormat.XML,
                                               parallelExecution: ParallelExecution.TRUE);
       ...
+```
 
-7. Again about session
+##7. Again about session
    
    In the above was described how to create the session. If during for 20 minutes no one request 
    was done the session will be expired, and the next request issues an exception.
    The following code solves this problem, i.e. creates a new session and continues the work:
 
+```csharp
       ...
       while (true)
       {
@@ -172,3 +184,4 @@ with appropriate values, attach the token, and make the HTTP request.
         }
       }
 	  ...
+```
