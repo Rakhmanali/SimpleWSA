@@ -1,24 +1,22 @@
-﻿using SimpleWSA.Internal;
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using SimpleWSA.Internal;
 
 namespace SimpleWSA
 {
   public class Session
   {
-    private readonly string connectionProviderAddress;
-    public readonly string login;
-    public readonly string password;
-    public readonly bool isEncrypted;
-    public readonly int appId;
-    public readonly string appVersion;
-    public readonly string domain;
-    public readonly WebProxy webProxy;
+    private readonly string login;
+    private readonly string password;
+    private readonly bool isEncrypted;
+    private readonly int appId;
+    private readonly string appVersion;
+    private readonly string domain;
+    private readonly WebProxy webProxy;
 
-    public Session(string connectionProviderAddress,
-                   string login,
+    public Session(string login,
                    string password,
                    bool isEncrypted,
                    int appId,
@@ -26,13 +24,6 @@ namespace SimpleWSA
                    string domain,
                    WebProxy webProxy)
     {
-      if (string.IsNullOrEmpty(connectionProviderAddress))
-      {
-        throw new ArgumentException("the connection privider address is required...");
-      }
-      this.connectionProviderAddress = connectionProviderAddress;
-
-
       this.login = login;
       this.password = password;
       this.isEncrypted = isEncrypted;
@@ -42,12 +33,9 @@ namespace SimpleWSA
       this.webProxy = webProxy;
     }
 
-    public async Task<string> CreateAsync()
+    public async Task<string> CreateByRestServiceAddressAsync(string restServiceAddress)
     {
-      string restServiceAddress = await GetRestServiceAddressAsync(this.domain, this.connectionProviderAddress, this.webProxy);
-      restServiceAddress = new Uri(restServiceAddress).GetLeftPart(UriPartial.Authority);
-
-      string requestUri = $"BufferedMode/Service/{Constants.WS_INITIALIZE_SESSION}";
+      string requestUri = $"{SessionContext.Route}{Constants.WS_INITIALIZE_SESSION}";
       SessionService sessionService = new SessionService(restServiceAddress,
                                                          requestUri,
                                                          this.login,
@@ -59,9 +47,28 @@ namespace SimpleWSA
                                                          ErrorCodes.Collection,
                                                          this.webProxy);
       string token = await sessionService.SendAsync(HttpMethod.GET);
-
       SessionContext.Create(restServiceAddress, this.login, this.password, this.isEncrypted, this.appId, this.appVersion, this.domain, this.webProxy, token);
+      return token;
+    }
 
+    public async Task<string> CreateByConnectionProviderAddressAsync(string connectionProviderAddress)
+    {
+      string restServiceAddress = await GetRestServiceAddressAsync(this.domain, connectionProviderAddress, this.webProxy);
+      restServiceAddress = new Uri(restServiceAddress).GetLeftPart(UriPartial.Authority);
+
+      string requestUri = $"{SessionContext.Route}{Constants.WS_INITIALIZE_SESSION}";
+      SessionService sessionService = new SessionService(restServiceAddress,
+                                                         requestUri,
+                                                         this.login,
+                                                         this.password,
+                                                         this.isEncrypted,
+                                                         this.appId,
+                                                         this.appVersion,
+                                                         this.domain,
+                                                         ErrorCodes.Collection,
+                                                         this.webProxy);
+      string token = await sessionService.SendAsync(HttpMethod.GET);
+      SessionContext.Create(restServiceAddress, this.login, this.password, this.isEncrypted, this.appId, this.appVersion, this.domain, this.webProxy, token);
       return token;
     }
 

@@ -70,7 +70,14 @@ namespace SimpleWSA.Services
       using (MemoryStream memoryStream = new MemoryStream())
       {
         stream.CopyTo(memoryStream);
-        result = Decompress(memoryStream.ToArray(), compressionType);
+        if (compressionType != CompressionType.NONE)
+        {
+          result = this.Decompress(memoryStream.ToArray(), compressionType);
+        }
+        else
+        {
+          result = memoryStream.ToArray();
+        }
       }
 
       return result;

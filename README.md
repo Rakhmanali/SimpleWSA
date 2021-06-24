@@ -6,24 +6,44 @@ The short description
 requests. To perform it a client should have the appropriate credentials. If credentials
 okay, then the data access web service creates a session, and returns a token.
   To perform the request the client should select the PostgreSql function, fill parameters
-with appropriate values, attach the token, and make the HTTP request.
+with appropriate values, attach the token (this library does it itself), and make the
+HTTP request.
   The SimpleWSA library has been created to simplify this work.
 
 ### 1. Session
 
-  The following code is an example of how to create the session:
+  The data access web service can provide data access to the group of databases. And there 
+  can be different instances of web service for different groups of databases.
+
+  If it is known the database and the web service address extracting data from it, then it is possible
+  to create a session by the web service address:
 
   ```csharp
       ...
-      Session session = new Session("<the connection provider address>",
-                                    "<login>",
+      Session session = new Session("<login>",
                                     "<password>",
                                     false,
                                     <app code>,
                                     "<app version>",
-                                    "<companyname>",
+                                    "<domain>",
                                     <web proxy>);
-      await session.CreateAsync();
+      await session.CreateByRestServiceAddressAsync("<replace it with the web service address>");
+	  ...
+  ```
+
+  The second case is the case when known the domain name (the company name) and the connection provider 
+  address. Then the following code creates the session:
+
+  ```csharp
+      ...
+      Session session = new Session("<login>",
+                                    "<password>",
+                                    false,
+                                    <app code>,
+                                    "<app version>",
+                                    "<domain>",
+                                    <web proxy>);
+      await session.CreateByConnectionProviderAddressAsync("<replace it with the connection provider address>");
 	  ...
   ```
 

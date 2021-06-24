@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Text;
+using System.Threading.Tasks;
 using SimpleWSA.Internal;
 using SimpleWSA.Services;
 
@@ -81,7 +82,8 @@ namespace SimpleWSA
 
       if (routineType == RoutineType.Scalar)
       {
-        ScalarRequest scalarRequest = new ScalarRequest(SessionContext.RestServiceBufferedModeAddress,
+        ScalarRequest scalarRequest = new ScalarRequest(SessionContext.RestServiceAddress,
+                                                        SessionContext.Route, 
                                                         SessionContext.Token,
                                                         command,
                                                         ErrorCodes.Collection,
@@ -93,7 +95,8 @@ namespace SimpleWSA
       }
       else if (routineType == RoutineType.NonQuery)
       {
-        NonQueryRequest nonqueryRequest = new NonQueryRequest(SessionContext.RestServiceBufferedModeAddress,
+        NonQueryRequest nonqueryRequest = new NonQueryRequest(SessionContext.RestServiceAddress,
+                                                              SessionContext.Route,
                                                               SessionContext.Token,
                                                               command,
                                                               ErrorCodes.Collection,
@@ -105,7 +108,8 @@ namespace SimpleWSA
       }
       else if (routineType == RoutineType.DataSet)
       {
-        DataSetRequest dataSetRequest = new DataSetRequest(SessionContext.RestServiceBufferedModeAddress,
+        DataSetRequest dataSetRequest = new DataSetRequest(SessionContext.RestServiceAddress,
+                                                           SessionContext.Route,
                                                            SessionContext.Token,
                                                            command,
                                                            ErrorCodes.Collection,
@@ -113,6 +117,64 @@ namespace SimpleWSA
                                                            compressionService,
                                                            SessionContext.WebProxy);
         object result = dataSetRequest.Send();
+        return Convert.ToString(result);
+      }
+
+      return null;
+    }
+
+    public static async Task<string> ExecuteAsync(Command command,
+                                 RoutineType routineType,
+                                 HttpMethod httpMethod = HttpMethod.GET,
+                                 ResponseFormat responseFormat = ResponseFormat.JSON,
+                                 CompressionType outgoingCompressType = CompressionType.NONE,
+                                 CompressionType returnCompressionType = CompressionType.NONE)
+    {
+      command.HttpMethod = httpMethod;
+      command.ResponseFormat = responseFormat;
+      command.OutgoingCompressionType = outgoingCompressType;
+      command.ReturnCompressionType = returnCompressionType;
+
+      ICompressionService compressionService = new CompressionService();
+      IConvertingService convertingService = new ConvertingService();
+
+      if (routineType == RoutineType.Scalar)
+      {
+        ScalarRequest scalarRequest = new ScalarRequest(SessionContext.RestServiceAddress,
+                                                        SessionContext.Route,
+                                                        SessionContext.Token,
+                                                        command,
+                                                        ErrorCodes.Collection,
+                                                        convertingService,
+                                                        compressionService,
+                                                        SessionContext.WebProxy);
+        object result = await scalarRequest.SendAsync();
+        return Convert.ToString(result);
+      }
+      else if (routineType == RoutineType.NonQuery)
+      {
+        NonQueryRequest nonqueryRequest = new NonQueryRequest(SessionContext.RestServiceAddress,
+                                                              SessionContext.Route,
+                                                              SessionContext.Token,
+                                                              command,
+                                                              ErrorCodes.Collection,
+                                                              convertingService,
+                                                              compressionService,
+                                                              SessionContext.WebProxy);
+        object result = await nonqueryRequest.SendAsync();
+        return Convert.ToString(result);
+      }
+      else if (routineType == RoutineType.DataSet)
+      {
+        DataSetRequest dataSetRequest = new DataSetRequest(SessionContext.RestServiceAddress,
+                                                           SessionContext.Route,
+                                                           SessionContext.Token,
+                                                           command,
+                                                           ErrorCodes.Collection,
+                                                           convertingService,
+                                                           compressionService,
+                                                           SessionContext.WebProxy);
+        object result = await dataSetRequest.SendAsync();
         return Convert.ToString(result);
       }
 
@@ -134,14 +196,14 @@ namespace SimpleWSA
       ICompressionService compressionService = new CompressionService();
       IConvertingService convertingService = new ConvertingService();
 
-      string postFormat = DataSetRequest.postFormat;
+      string postFormat = DataSetRequest.PostFormat;
       if (routineType == RoutineType.Scalar)
       {
-        postFormat = ScalarRequest.postFormat;
+        postFormat = ScalarRequest.PostFormat;
       }
       else if (routineType == RoutineType.NonQuery)
       {
-        postFormat = NonQueryRequest.postFormat;
+        postFormat = NonQueryRequest.PostFormat;
       }
 
       StringBuilder sb = new StringBuilder();
@@ -159,15 +221,16 @@ namespace SimpleWSA
       sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
       string requestString = sb.ToString();
 
-      return (string)Request.Post(SessionContext.RestServiceBufferedModeAddress,
-                                        requestString,
-                                        SessionContext.Token,
-                                        outgoingCompressionType,
-                                        returnCompressionType,
-                                        compressionService,
-                                        ErrorCodes.Collection,
-                                        SessionContext.WebProxy,
-                                        postFormat);
+      return (string)Request.Post(SessionContext.RestServiceAddress,
+                                  SessionContext.Route,  
+                                  requestString,
+                                  SessionContext.Token,
+                                  outgoingCompressionType,
+                                  returnCompressionType,
+                                  compressionService,
+                                  ErrorCodes.Collection,
+                                  SessionContext.WebProxy,
+                                  postFormat);
     }
 
     protected static void CreateRoutinesLevelXmlNodes(StringBuilder sb,

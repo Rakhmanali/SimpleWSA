@@ -12,7 +12,7 @@ namespace SimpleWSA
 
     public RoutineType RoutineType { get; set; } = RoutineType.DataSet;
 
-    private const string postFormat = "{0}executemixpost?token={1}&compression={2}";
+    private const string postFormat = "{0}{1}executemixpost?token={2}&compression={3}";
 
     public static string ExecuteAll(List<CommandEx> commandExs,
                                     ResponseFormat responseFormat = ResponseFormat.JSON,
@@ -43,7 +43,8 @@ namespace SimpleWSA
       sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
       string requestString = sb.ToString();
 
-      return (string)Request.Post(SessionContext.RestServiceBufferedModeAddress,
+      return (string)Request.Post(SessionContext.RestServiceAddress,
+                                  SessionContext.Route,
                                   requestString,
                                   SessionContext.Token,
                                   outgoingCompressionType,
@@ -53,10 +54,5 @@ namespace SimpleWSA
                                   SessionContext.WebProxy,
                                   postFormat);
     }
-
-    //public CommandEx CreateFrom(Command command)
-    //{
-
-    //}
   }
 }

@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using Newtonsoft.Json;
 using SimpleWSA.Extensions;
@@ -14,9 +18,14 @@ namespace SimpleWSA
 {
   public class Request : IRequest
   {
+    protected readonly string serviceAddress;
+    protected readonly string route;
+    protected readonly string token;
     protected readonly Command command;
     protected Dictionary<string, string> errorCodes;
     protected readonly IConvertingService convertingService;
+    protected readonly ICompressionService compressionService;
+    protected readonly WebProxy webProxy;
 
     public Request(Command command,
                    Dictionary<string, string> errorCodes,
@@ -25,6 +34,25 @@ namespace SimpleWSA
       this.command = command;
       this.errorCodes = errorCodes;
       this.convertingService = convertingService;
+    }
+
+    public Request(string serviceAddress,
+                   string route,
+                   string token,
+                   Command command,
+                   Dictionary<string, string> errorCodes,
+                   IConvertingService convertingService,
+                   ICompressionService compressionService,
+                   WebProxy webProxy)
+    {
+      this.serviceAddress = serviceAddress;
+      this.route = route;
+      this.token = token;
+      this.command = command;
+      this.errorCodes = errorCodes;
+      this.convertingService = convertingService;
+      this.compressionService = compressionService;
+      this.webProxy = webProxy;
     }
 
     private XmlWriterSettings xmlWriterSettings => new XmlWriterSettings()
@@ -340,17 +368,179 @@ namespace SimpleWSA
       return result;
     }
 
-    protected virtual object Post(string xmlRequest)
+    public static string postFormat = null;
+    //protected virtual object Post(string xmlRequest)
+    //{
+    //  return null;
+    //}
+    protected virtual object Post(string requestString)
     {
+      string query = string.Format(postFormat, this.serviceAddress, this.route, this.token, (int)this.command.OutgoingCompressionType);
+      try
+      {
+        WebRequest webRequest = WebRequest.Create(query);
+        if (webRequest != null)
+        {
+          webRequest.Timeout = 1 * 60 * 60 * 1000;
+          webRequest.Proxy = this.webProxy;
+
+          byte[] postData = this.compressionService.Compress(requestString, this.command.OutgoingCompressionType);
+          webRequest.InitializeWebRequest(this.command.OutgoingCompressionType, postData, this.webProxy);
+          using (HttpWebResponse httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
+          {
+            if (httpWebResponse?.StatusCode == HttpStatusCode.OK)
+            {
+              using (Stream stream = httpWebResponse.GetResponseStream())
+              {
+                byte[] result = this.compressionService.Decompress(stream, this.command.ReturnCompressionType);
+                if (result != null)
+                {
+                  return Encoding.UTF8.GetString(result);
+                }
+              }
+            }
+          }
+        }
+      }
+      catch (WebException ex)
+      {
+        if (ex.Response is HttpWebResponse)
+        {
+          this.CreateAndThrowIfRestServiceException((HttpWebResponse)ex.Response);
+        }
+        throw;
+      }
       return null;
     }
 
-    protected virtual object Get(string xmlRequest)
+
+    public static string getFormat = null;
+    protected virtual object Get(string requestString)
     {
+      string query = string.Format(getFormat, this.serviceAddress, this.route, this.token, requestString);
+      try
+      {
+        var webRequest = WebRequest.Create(query);
+        if (webRequest != null)
+        {
+          webRequest.Method = HttpMethod.GET.ToString(); ;
+          webRequest.ContentLength = 0;
+          webRequest.Timeout = 1 * 60 * 60 * 1000;
+          webRequest.Proxy = this.webProxy;
+
+          using (var httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
+          {
+            if (httpWebResponse.StatusCode == HttpStatusCode.OK)
+            {
+              using (Stream stream = httpWebResponse.GetResponseStream())
+              {
+                byte[] result = this.compressionService.Decompress(stream, this.command.ReturnCompressionType);
+                if (result != null)
+                {
+                  return Encoding.UTF8.GetString(result);
+                }
+              }
+            }
+          }
+        }
+      }
+      catch (WebException ex)
+      {
+        if (ex.Response is HttpWebResponse)
+        {
+          this.CreateAndThrowIfRestServiceException((HttpWebResponse)ex.Response);
+        }
+        throw;
+      }
       return null;
     }
 
-    public object Send()
+    //protected virtual Task<object> PostAsync(string xmlRequest)
+    //{
+    //  return null;
+    //}
+    protected virtual async Task<object> PostAsync(string requestString)
+    {
+      HttpClientHandler httpClientHandler = new HttpClientHandler
+      {
+        Proxy = this.webProxy,
+        UseProxy = this.webProxy != null
+      };
+
+      using (HttpClient httpClient = new HttpClient(httpClientHandler))
+      {
+        httpClient.BaseAddress = new Uri(this.serviceAddress);
+        httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
+
+        using (StringContent stringContent = new StringContent(requestString, Encoding.UTF8, "text/xml"))
+        {
+          string requestUri = string.Format(postFormat, string.Empty, this.route, this.token, (int)this.command.OutgoingCompressionType);
+          using (HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(requestUri, stringContent))
+          {
+            if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
+            {
+              using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync())
+              {
+                byte[] result = this.compressionService.Decompress(stream, this.command.ReturnCompressionType);
+                if (result != null)
+                {
+                  return Encoding.UTF8.GetString(result);
+                }
+              }
+            }
+            else
+            {
+              this.CreateAndThrowIfRestServiceException(httpResponseMessage.ReasonPhrase);
+              httpResponseMessage.EnsureSuccessStatusCode();
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    //protected virtual Task<object> GetAsync(string xmlRequest)
+    //{
+    //  return null;
+    //}
+    protected virtual async Task<object> GetAsync(string requestString)
+    {
+      HttpClientHandler httpClientHandler = new HttpClientHandler
+      {
+        Proxy = this.webProxy,
+        UseProxy = this.webProxy != null
+      };
+
+      using (HttpClient httpClient = new HttpClient(httpClientHandler))
+      {
+        httpClient.BaseAddress = new Uri(this.serviceAddress);
+        httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
+
+        string requestUri = string.Format(getFormat, string.Empty, this.route, this.token, requestString);
+        using (HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(requestUri))
+        {
+          if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
+          {
+            using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync())
+            {
+              byte[] result = this.compressionService.Decompress(stream, this.command.ReturnCompressionType);
+              if (result != null)
+              {
+                return Encoding.UTF8.GetString(result);
+              }
+            }
+          }
+          else
+          {
+            this.CreateAndThrowIfRestServiceException(httpResponseMessage.ReasonPhrase);
+            httpResponseMessage.EnsureSuccessStatusCode();
+          }
+        }
+      }
+      return null;
+    }
+
+    public virtual object Send()
     {
       string xmlRequest = this.CreateXmlRequest();
       if (this.command.HttpMethod == HttpMethod.POST)
@@ -360,21 +550,40 @@ namespace SimpleWSA
       return this.Get(xmlRequest);
     }
 
+    public async Task<object> SendAsync()
+    {
+      string xmlRequest = this.CreateXmlRequest();
+      if (this.command.HttpMethod == HttpMethod.POST)
+      {
+        return await this.PostAsync(xmlRequest);
+      }
+      return await this.GetAsync(xmlRequest);
+    }
+
     protected void CreateAndThrowIfRestServiceException(HttpWebResponse httpWebResponse)
     {
-      ErrorReply errorReply = JsonConvert.DeserializeObject<ErrorReply>(httpWebResponse.StatusDescription);
-      if (errorReply != null)
+      this.CreateAndThrowIfRestServiceException(httpWebResponse.StatusDescription);
+    }
+
+    protected void CreateAndThrowIfRestServiceException(string source)
+    {
+      if (!string.IsNullOrEmpty(source))
       {
-        string wsaMessage = null;
-        if (this.errorCodes.TryGetValue(errorReply.Error.ErrorCode, out wsaMessage) == false)
+        ErrorReply errorReply = JsonConvert.DeserializeObject<ErrorReply>(source);
+        if (errorReply != null)
         {
-          wsaMessage = errorReply.Error.Message;
+          string wsaMessage = null;
+          if (this.errorCodes.TryGetValue(errorReply.Error.ErrorCode, out wsaMessage) == false)
+          {
+            wsaMessage = errorReply.Error.Message;
+          }
+          throw new RestServiceException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
         }
-        throw new RestServiceException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
       }
     }
 
     public static object Post(string serviceAddress,
+                              string route, 
                               string requestString,
                               string token,
                               CompressionType outgoingCompressionType,
@@ -384,7 +593,7 @@ namespace SimpleWSA
                               WebProxy webProxy, 
                               string postFormat)
     {
-      string query = string.Format(postFormat, serviceAddress, token, (int)outgoingCompressionType);
+      string query = string.Format(postFormat, serviceAddress, route, token, (int)outgoingCompressionType);
 
       try
       {
