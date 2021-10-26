@@ -83,52 +83,106 @@ namespace SimpleWSA
       if (routineType == RoutineType.Scalar)
       {
         ScalarRequest scalarRequest = new ScalarRequest(SessionContext.RestServiceAddress,
-                                                        SessionContext.Route, 
+                                                        SessionContext.route,
                                                         SessionContext.Token,
                                                         command,
                                                         ErrorCodes.Collection,
                                                         convertingService,
                                                         compressionService,
                                                         SessionContext.WebProxy);
-        object result = scalarRequest.Send();
-        return Convert.ToString(result);
+        scalar_request_label:
+        try
+        {
+          object result = scalarRequest.Send();
+          return Convert.ToString(result);
+        }
+        catch (Exception ex)
+        {
+          if (ex is RestServiceException rex)
+          {
+            // keep session alive
+            if (rex.Code == "MI008")
+            {
+              SessionContext.Refresh();
+              scalarRequest.SetToken(SessionContext.Token);
+              goto scalar_request_label;
+            }
+          }
+          throw;
+        }
       }
       else if (routineType == RoutineType.NonQuery)
       {
         NonQueryRequest nonqueryRequest = new NonQueryRequest(SessionContext.RestServiceAddress,
-                                                              SessionContext.Route,
+                                                              SessionContext.route,
                                                               SessionContext.Token,
                                                               command,
                                                               ErrorCodes.Collection,
                                                               convertingService,
                                                               compressionService,
                                                               SessionContext.WebProxy);
-        object result = nonqueryRequest.Send();
-        return Convert.ToString(result);
+        nonquery_request_label:
+        try
+        {
+          object result = nonqueryRequest.Send();
+          return Convert.ToString(result);
+        }
+        catch (Exception ex)
+        {
+          if (ex is RestServiceException rex)
+          {
+            // keep session alive
+            if (rex.Code == "MI008")
+            {
+              SessionContext.Refresh();
+              nonqueryRequest.SetToken(SessionContext.Token);
+              goto nonquery_request_label;
+            }
+          }
+          throw;
+        }
       }
       else if (routineType == RoutineType.DataSet)
       {
         DataSetRequest dataSetRequest = new DataSetRequest(SessionContext.RestServiceAddress,
-                                                           SessionContext.Route,
+                                                           SessionContext.route,
                                                            SessionContext.Token,
                                                            command,
                                                            ErrorCodes.Collection,
                                                            convertingService,
                                                            compressionService,
                                                            SessionContext.WebProxy);
-        object result = dataSetRequest.Send();
-        return Convert.ToString(result);
+        dataset_request_label:
+        try
+        {
+          object result = dataSetRequest.Send();
+          return Convert.ToString(result);
+        }
+        catch (Exception ex)
+        {
+          if (ex is RestServiceException rex)
+          {
+            // keep session alive
+            if (rex.Code == "MI008")
+            {
+              SessionContext.Refresh();
+              dataSetRequest.SetToken(SessionContext.Token);
+              goto dataset_request_label;
+            }
+          }
+          throw;
+        }
       }
 
       return null;
     }
 
     public static async Task<string> ExecuteAsync(Command command,
-                                 RoutineType routineType,
-                                 HttpMethod httpMethod = HttpMethod.GET,
-                                 ResponseFormat responseFormat = ResponseFormat.JSON,
-                                 CompressionType outgoingCompressType = CompressionType.NONE,
-                                 CompressionType returnCompressionType = CompressionType.NONE)
+                                                  RoutineType routineType,
+                                                  HttpMethod httpMethod = HttpMethod.GET,
+                                                  ResponseFormat responseFormat = ResponseFormat.JSON,
+                                                  CompressionType outgoingCompressType = CompressionType.NONE,
+                                                  CompressionType returnCompressionType = CompressionType.NONE)
     {
       command.HttpMethod = httpMethod;
       command.ResponseFormat = responseFormat;
@@ -141,41 +195,95 @@ namespace SimpleWSA
       if (routineType == RoutineType.Scalar)
       {
         ScalarRequest scalarRequest = new ScalarRequest(SessionContext.RestServiceAddress,
-                                                        SessionContext.Route,
+                                                        SessionContext.route,
                                                         SessionContext.Token,
                                                         command,
                                                         ErrorCodes.Collection,
                                                         convertingService,
                                                         compressionService,
                                                         SessionContext.WebProxy);
-        object result = await scalarRequest.SendAsync();
-        return Convert.ToString(result);
+        scalar_request_label:
+        try
+        {
+          object result = await scalarRequest.SendAsync();
+          return Convert.ToString(result);
+        }
+        catch(Exception ex)
+        {
+          if (ex is RestServiceException rex)
+          {
+            // keep session alive
+            if (rex.Code == "MI008")
+            {
+              await SessionContext.RefreshAsync();
+              scalarRequest.SetToken(SessionContext.Token);
+              goto scalar_request_label;
+            }
+          }
+          throw;
+        }
       }
       else if (routineType == RoutineType.NonQuery)
       {
         NonQueryRequest nonqueryRequest = new NonQueryRequest(SessionContext.RestServiceAddress,
-                                                              SessionContext.Route,
+                                                              SessionContext.route,
                                                               SessionContext.Token,
                                                               command,
                                                               ErrorCodes.Collection,
                                                               convertingService,
                                                               compressionService,
                                                               SessionContext.WebProxy);
-        object result = await nonqueryRequest.SendAsync();
-        return Convert.ToString(result);
+        nonquery_request_label:
+        try
+        {
+          object result = await nonqueryRequest.SendAsync();
+          return Convert.ToString(result);
+        }
+        catch(Exception ex)
+        {
+          if (ex is RestServiceException rex)
+          {
+            // keep session alive
+            if (rex.Code == "MI008")
+            {
+              await SessionContext.RefreshAsync();
+              nonqueryRequest.SetToken(SessionContext.Token);
+              goto nonquery_request_label;
+            }
+          }
+          throw;
+        }
       }
       else if (routineType == RoutineType.DataSet)
       {
         DataSetRequest dataSetRequest = new DataSetRequest(SessionContext.RestServiceAddress,
-                                                           SessionContext.Route,
+                                                           SessionContext.route,
                                                            SessionContext.Token,
                                                            command,
                                                            ErrorCodes.Collection,
                                                            convertingService,
                                                            compressionService,
                                                            SessionContext.WebProxy);
-        object result = await dataSetRequest.SendAsync();
-        return Convert.ToString(result);
+        dataset_request_label:
+        try
+        {
+          object result = await dataSetRequest.SendAsync();
+          return Convert.ToString(result);
+        }
+        catch(Exception ex)
+        {
+          if (ex is RestServiceException rex)
+          {
+            // keep session alive
+            if (rex.Code == "MI008")
+            {
+              await SessionContext.RefreshAsync();
+              dataSetRequest.SetToken(SessionContext.Token);
+              goto dataset_request_label;
+            }
+          }
+          throw;
+        }
       }
 
       return null;
@@ -221,16 +329,33 @@ namespace SimpleWSA
       sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
       string requestString = sb.ToString();
 
-      return (string)Request.Post(SessionContext.RestServiceAddress,
-                                  SessionContext.Route,  
-                                  requestString,
-                                  SessionContext.Token,
-                                  outgoingCompressionType,
-                                  returnCompressionType,
-                                  compressionService,
-                                  ErrorCodes.Collection,
-                                  SessionContext.WebProxy,
-                                  postFormat);
+      executeall_post_label:
+      try
+      {
+        return (string)Request.Post(SessionContext.RestServiceAddress,
+                                    SessionContext.route,
+                                    requestString,
+                                    SessionContext.Token,
+                                    outgoingCompressionType,
+                                    returnCompressionType,
+                                    compressionService,
+                                    ErrorCodes.Collection,
+                                    SessionContext.WebProxy,
+                                    postFormat);
+      }
+      catch(Exception ex)
+      {
+        if(ex is RestServiceException rex)
+        {
+          // keep session alive
+          if (rex.Code == "MI008")
+          {
+            SessionContext.Refresh();
+            goto executeall_post_label;
+          }
+        }
+        throw;
+      }
     }
 
     protected static void CreateRoutinesLevelXmlNodes(StringBuilder sb,

@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using SimpleWSA.Internal;
 
 namespace SimpleWSA
@@ -35,7 +36,7 @@ namespace SimpleWSA
 
     public async Task<string> CreateByRestServiceAddressAsync(string restServiceAddress)
     {
-      string requestUri = $"{SessionContext.Route}{Constants.WS_INITIALIZE_SESSION}";
+      string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
       SessionService sessionService = new SessionService(restServiceAddress,
                                                          requestUri,
                                                          this.login,
@@ -53,10 +54,15 @@ namespace SimpleWSA
 
     public async Task<string> CreateByConnectionProviderAddressAsync(string connectionProviderAddress)
     {
+      if (connectionProviderAddress == null || connectionProviderAddress.Trim().Length == 0)
+      {
+        throw new ArgumentException($"{nameof(connectionProviderAddress)} is invalid");
+      }
+
       string restServiceAddress = await GetRestServiceAddressAsync(this.domain, connectionProviderAddress, this.webProxy);
       restServiceAddress = new Uri(restServiceAddress).GetLeftPart(UriPartial.Authority);
 
-      string requestUri = $"{SessionContext.Route}{Constants.WS_INITIALIZE_SESSION}";
+      string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
       SessionService sessionService = new SessionService(restServiceAddress,
                                                          requestUri,
                                                          this.login,
@@ -72,8 +78,18 @@ namespace SimpleWSA
       return token;
     }
 
-    public static async Task<string> GetRestServiceAddressAsync(string domain, string url, WebProxy webProxy)
+    public static async Task<string> GetRestServiceAddressAsync(string domain, string connectionProviderAddress, WebProxy webProxy)
     {
+      if (domain == null || domain.Trim().Length == 0)
+      {
+        throw new ArgumentException($"{nameof(domain)} is invalid");
+      }
+
+      if (connectionProviderAddress == null || connectionProviderAddress.Trim().Length == 0)
+      {
+        throw new ArgumentException($"{nameof(connectionProviderAddress)} is invalid");
+      }
+
       HttpClientHandler httpClientHandler = new HttpClientHandler
       {
         Proxy = webProxy,
@@ -81,7 +97,7 @@ namespace SimpleWSA
       };
 
       string apiUrl = $"/dataaccess/{domain}/restservice/address";
-      using (HttpClient httpClient = new HttpClient(httpClientHandler) { BaseAddress = new Uri(url) })
+      using (HttpClient httpClient = new HttpClient(httpClientHandler) { BaseAddress = new Uri(connectionProviderAddress) })
       {
         using (HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(apiUrl))
         {
@@ -89,10 +105,9 @@ namespace SimpleWSA
           {
             return await httpResponseMessage.Content.ReadAsStringAsync();
           }
+          throw new HttpException((int)HttpStatusCode.NotFound, $"BaseAddress: {connectionProviderAddress}, apiUrl: {apiUrl}");
         }
       }
-
-      return null;
     }
   }
 }

@@ -44,7 +44,7 @@ namespace SimpleWSA
       string requestString = sb.ToString();
 
       return (string)Request.Post(SessionContext.RestServiceAddress,
-                                  SessionContext.Route,
+                                  SessionContext.route,
                                   requestString,
                                   SessionContext.Token,
                                   outgoingCompressionType,

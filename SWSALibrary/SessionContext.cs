@@ -6,8 +6,9 @@ namespace SimpleWSA
 {
   public class SessionContext
   {
+    public const string route = "/BufferedMode/Service/";
+
     public static string RestServiceAddress { get; private set; }
-    public const string Route = "/BufferedMode/Service/";
     public static string Login { get; private set; }
     public static string Password { get; private set; }
     public static bool IsEncrypted { get; private set; }
@@ -38,9 +39,25 @@ namespace SimpleWSA
       Token = token;
     }
 
-    public static async Task Refresh()
+    public static void Refresh()
     {
-      string requestUri = $"{SessionContext.Route}{Constants.WS_INITIALIZE_SESSION}";
+      string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
+      SessionService sessionService = new SessionService(RestServiceAddress,
+                                                         requestUri,
+                                                         Login,
+                                                         Password,
+                                                         IsEncrypted,
+                                                         AppId,
+                                                         AppVersion,
+                                                         Domain,
+                                                         ErrorCodes.Collection,
+                                                         WebProxy);
+      Token = sessionService.Send(HttpMethod.GET);
+    }
+
+    public static async Task RefreshAsync()
+    {
+      string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
       SessionService sessionService = new SessionService(RestServiceAddress,
                                                          requestUri,
                                                          Login,

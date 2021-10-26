@@ -21,13 +21,13 @@ namespace SimpleWSA
                            IConvertingService convertingService,
                            ICompressionService compressionService,
                            WebProxy webProxy) : base(serviceAddress,
-                                                   route,
-                                                   token,
-                                                   command,
-                                                   errorCodes,
-                                                   convertingService,
-                                                   compressionService,
-                                                   webProxy)
+                                                     route,
+                                                     token,
+                                                     command,
+                                                     errorCodes,
+                                                     convertingService,
+                                                     compressionService,
+                                                     webProxy)
     { }
 
     static NonQueryRequest()

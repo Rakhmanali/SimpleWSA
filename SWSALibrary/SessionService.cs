@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -167,6 +168,68 @@ namespace SimpleWSA
       return result;
     }
 
+    private string Get(string baseaddress, string requestUri, string queryString, WebProxy webProxy)
+    {
+      string result = String.Empty;
+
+      string query = $"{baseaddress}/{requestUri}?{queryString}";
+      try
+      {
+        var webRequest = WebRequest.Create(query);
+        if (webRequest != null)
+        {
+          webRequest.Method = HttpMethod.GET.ToString(); ;
+          webRequest.ContentLength = 0;
+          webRequest.Timeout = 1 * 60 * 60 * 1000;
+          webRequest.Proxy = this.webProxy;
+
+          using (var httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
+          {
+            if (httpWebResponse.StatusCode == HttpStatusCode.OK)
+            {
+              using (Stream stream = httpWebResponse.GetResponseStream())
+              {
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                  stream.CopyTo(memoryStream);
+                  byte[] bytes = memoryStream.ToArray();
+                  if (bytes != null)
+                  {
+                    result = Encoding.UTF8.GetString(bytes);
+                    int startIndex = result.IndexOf(TOKEN_START) + TOKEN_START.Length;
+                    int length = result.IndexOf(TOKEN_END) - startIndex;
+                    result = result.Substring(startIndex, length);
+                  }
+                }
+
+              }
+            }
+          }
+        }
+      }
+      catch (WebException ex)
+      {
+        if (ex.Response is HttpWebResponse)
+        {
+          string statusDescription = ((HttpWebResponse)ex.Response).StatusDescription;
+          ErrorReply errorReply = JsonConvert.DeserializeObject<ErrorReply>(statusDescription);
+          if (errorReply != null)
+          {
+            string wsaMessage = null;
+            if (this.errorCodes.TryGetValue(errorReply.Error.ErrorCode, out wsaMessage) == false)
+            {
+              wsaMessage = errorReply.Error.Message;
+            }
+            throw new RestServiceException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
+          }
+        }
+        throw;
+      }
+
+      return result;
+    }
+
+
     private readonly string TOKEN_START = $"<{Constants.WS_TOKEN}>";
     private readonly string TOKEN_END = $"</{Constants.WS_TOKEN}>";
 
@@ -208,6 +271,23 @@ namespace SimpleWSA
           }
         }
       }
+
+      return result;
+    }
+
+    public string Send(HttpMethod httpMethod)
+    {
+      string result = null;
+      //if (httpMethod == HttpMethod.GET)
+      //{
+        string queryString = this.CreateQueryString();
+        result = this.Get(this.baseAddress, this.requestUri, queryString, this.webProxy);
+      //}
+      //else
+      //{
+      //  string xmlRequest = this.CreateXmlRequest();
+      //  result = this.Post(this.baseAddress, this.requestUri, xmlRequest, this.webProxy);
+      //}
 
       return result;
     }

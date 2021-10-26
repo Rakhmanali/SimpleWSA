@@ -20,7 +20,7 @@ namespace SimpleWSA
   {
     protected readonly string serviceAddress;
     protected readonly string route;
-    protected readonly string token;
+    protected string token;
     protected readonly Command command;
     protected Dictionary<string, string> errorCodes;
     protected readonly IConvertingService convertingService;
@@ -53,6 +53,11 @@ namespace SimpleWSA
       this.convertingService = convertingService;
       this.compressionService = compressionService;
       this.webProxy = webProxy;
+    }
+
+    public void SetToken(string token)
+    {
+      this.token = token;
     }
 
     private XmlWriterSettings xmlWriterSettings => new XmlWriterSettings()
@@ -369,10 +374,7 @@ namespace SimpleWSA
     }
 
     public static string postFormat = null;
-    //protected virtual object Post(string xmlRequest)
-    //{
-    //  return null;
-    //}
+    
     protected virtual object Post(string requestString)
     {
       string query = string.Format(postFormat, this.serviceAddress, this.route, this.token, (int)this.command.OutgoingCompressionType);
@@ -455,10 +457,6 @@ namespace SimpleWSA
       return null;
     }
 
-    //protected virtual Task<object> PostAsync(string xmlRequest)
-    //{
-    //  return null;
-    //}
     protected virtual async Task<object> PostAsync(string requestString)
     {
       HttpClientHandler httpClientHandler = new HttpClientHandler
@@ -499,10 +497,6 @@ namespace SimpleWSA
       return null;
     }
 
-    //protected virtual Task<object> GetAsync(string xmlRequest)
-    //{
-    //  return null;
-    //}
     protected virtual async Task<object> GetAsync(string requestString)
     {
       HttpClientHandler httpClientHandler = new HttpClientHandler

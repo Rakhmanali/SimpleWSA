@@ -23,7 +23,7 @@ HTTP request.
       Session session = new Session("<login>",
                                     "<password>",
                                     false,
-                                    <app code>,
+                                    <app id>,
                                     "<app version>",
                                     "<domain>",
                                     <web proxy>);
