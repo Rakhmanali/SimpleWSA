@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using Newtonsoft.Json;
 using SimpleWSA.Internal;
+using SimpleWSA.Services;
 
 namespace SimpleWSA
 {
@@ -26,8 +23,6 @@ namespace SimpleWSA
     private readonly string domain;
     private readonly Dictionary<string, string> errorCodes;
     private readonly WebProxy webProxy;
-
-    private const string MEDIA_TYPE = "text/xml";
 
     public SessionService(string baseAddress,
                           string requestUri,
@@ -126,153 +121,37 @@ namespace SimpleWSA
       return sb.ToString();
     }
 
-    private async Task<string> PostAsync(string baseAddress, string requestUri, string postData, WebProxy webProxy)
-    {
-      HttpClientHandler httpClientHandler = new HttpClientHandler
-      {
-        Proxy = webProxy,
-        UseProxy = webProxy != null
-      };
-
-      string result = String.Empty;
-      using (HttpClient httpClient = new HttpClient(httpClientHandler))
-      {
-        httpClient.BaseAddress = new Uri(baseAddress);
-        httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
-
-        using (StringContent stringContent = new StringContent(postData, Encoding.UTF8, MEDIA_TYPE))
-        {
-          using (HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(requestUri, stringContent))
-          {
-            if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
-            {
-              result = await httpResponseMessage.Content.ReadAsStringAsync();
-              result = XElement.Parse(result).Element(Constants.WS_TOKEN).Value;
-            }
-            else
-            {
-              ErrorReply errorReply = JsonConvert.DeserializeObject<ErrorReply>(httpResponseMessage.ReasonPhrase);
-              //this.logger.Error($"Post() - The rest service error, code: {errorReply.Error.ErrorCode}, message: {errorReply.Error.Message}");
-
-              string wsaMessage = null;
-              if (this.errorCodes.TryGetValue(errorReply.Error.ErrorCode, out wsaMessage) == false)
-              {
-                wsaMessage = errorReply.Error.Message;
-              }
-              throw new RestServiceException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
-            }
-          }
-        }
-      }
-
-      return result;
-    }
+    private readonly IHttpService httpService = new HttpService();
 
     private string Get(string baseaddress, string requestUri, string queryString, WebProxy webProxy)
     {
-      string result = String.Empty;
-
       string query = $"{baseaddress}/{requestUri}?{queryString}";
-      try
-      {
-        var webRequest = WebRequest.Create(query);
-        if (webRequest != null)
-        {
-          webRequest.Method = HttpMethod.GET.ToString(); ;
-          webRequest.ContentLength = 0;
-          webRequest.Timeout = 1 * 60 * 60 * 1000;
-          webRequest.Proxy = this.webProxy;
-
-          using (var httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
-          {
-            if (httpWebResponse.StatusCode == HttpStatusCode.OK)
-            {
-              using (Stream stream = httpWebResponse.GetResponseStream())
-              {
-                using (MemoryStream memoryStream = new MemoryStream())
-                {
-                  stream.CopyTo(memoryStream);
-                  byte[] bytes = memoryStream.ToArray();
-                  if (bytes != null)
-                  {
-                    result = Encoding.UTF8.GetString(bytes);
-                    int startIndex = result.IndexOf(TOKEN_START) + TOKEN_START.Length;
-                    int length = result.IndexOf(TOKEN_END) - startIndex;
-                    result = result.Substring(startIndex, length);
-                  }
-                }
-
-              }
-            }
-          }
-        }
-      }
-      catch (WebException ex)
-      {
-        if (ex.Response is HttpWebResponse)
-        {
-          string statusDescription = ((HttpWebResponse)ex.Response).StatusDescription;
-          ErrorReply errorReply = JsonConvert.DeserializeObject<ErrorReply>(statusDescription);
-          if (errorReply != null)
-          {
-            string wsaMessage = null;
-            if (this.errorCodes.TryGetValue(errorReply.Error.ErrorCode, out wsaMessage) == false)
-            {
-              wsaMessage = errorReply.Error.Message;
-            }
-            throw new RestServiceException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
-          }
-        }
-        throw;
-      }
-
-      return result;
+      string result = Convert.ToString(this.httpService.Get(query, webProxy, CompressionType.NONE));
+      return this.ExtractToken(result);
     }
 
+    private async Task<string> GetAsync(string baseaddress, string requestUri, string queryString, WebProxy webProxy)
+    {
+      string apiUrl = $"{requestUri}?{queryString}";
+      string result = Convert.ToString(await this.httpService.GetAsync(baseaddress, apiUrl, webProxy, CompressionType.NONE));
+      return this.ExtractToken(result);
+    }
+
+
+    private async Task<string> PostAsync(string baseAddress, string requestUri, string postData, WebProxy webProxy)
+    {
+      string result = Convert.ToString(await this.httpService.PostAsync(baseAddress, requestUri, postData, webProxy, CompressionType.NONE));
+      return XElement.Parse(result).Element(Constants.WS_TOKEN).Value;
+    }
 
     private readonly string TOKEN_START = $"<{Constants.WS_TOKEN}>";
     private readonly string TOKEN_END = $"</{Constants.WS_TOKEN}>";
 
-    private async Task<string> GetAsync(string baseaddress, string requestUri, string queryString, WebProxy webProxy)
+    private string ExtractToken(string source)
     {
-      HttpClientHandler httpClientHandler = new HttpClientHandler
-      {
-        Proxy = webProxy,
-        UseProxy = webProxy != null
-      };
-
-      string result = String.Empty;
-      using (HttpClient httpClient = new HttpClient(httpClientHandler))
-      {
-        httpClient.BaseAddress = new Uri(baseAddress);
-        httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
-
-        string apiUrl = $"{requestUri}?{queryString}";
-        using (HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(apiUrl))
-        {
-          if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
-          {
-            result = await httpResponseMessage.Content.ReadAsStringAsync();
-            int startIndex = result.IndexOf(TOKEN_START) + TOKEN_START.Length;
-            int length = result.IndexOf(TOKEN_END) - startIndex;
-            result = result.Substring(startIndex, length);
-          }
-          else
-          {
-            ErrorReply errorReply = JsonConvert.DeserializeObject<ErrorReply>(httpResponseMessage.ReasonPhrase);
-            //this.logger.Error($"Post() - The rest service error, code: {errorReply.Error.ErrorCode}, message: {errorReply.Error.Message}");
-
-            string wsaMessage = null;
-            if (this.errorCodes.TryGetValue(errorReply.Error.ErrorCode, out wsaMessage) == false)
-            {
-              wsaMessage = errorReply.Error.Message;
-            }
-            throw new RestServiceException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
-          }
-        }
-      }
-
-      return result;
+      int startIndex = source.IndexOf(TOKEN_START) + TOKEN_START.Length;
+      int length = source.IndexOf(TOKEN_END) - startIndex;
+      return source.Substring(startIndex, length);
     }
 
     public string Send(HttpMethod httpMethod)
@@ -280,8 +159,9 @@ namespace SimpleWSA
       string result = null;
       //if (httpMethod == HttpMethod.GET)
       //{
-        string queryString = this.CreateQueryString();
-        result = this.Get(this.baseAddress, this.requestUri, queryString, this.webProxy);
+      string queryString = this.CreateQueryString();
+      result = this.Get(this.baseAddress, this.requestUri, queryString, this.webProxy);
+
       //}
       //else
       //{

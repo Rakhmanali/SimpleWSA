@@ -73,8 +73,7 @@ HTTP request.
       command.Parameters.Add("_brandid", PgsqlDbType.Integer, 13);
       command.Parameters.Add("_ishidden", PgsqlDbType.Boolean).Value = false;
       command.Parameters.Add("_returnvalue", PgsqlDbType.Integer);
-
-	  command.WriteSchema = WriteSchema.FALSE;
+      command.WriteSchema = WriteSchema.FALSE;
       Console.WriteLine(Command.Execute(command,
                                         RoutineType.NonQuery,
                                         HttpMethod.GET,
@@ -89,7 +88,7 @@ HTTP request.
       Command command = new Command("companymanager_getresellers");
       command.Parameters.Add("_businessid", PgsqlDbType.Integer).Value = 1;
       command.Parameters.Add("_companyid", PgsqlDbType.Integer).Value = 13;
-	  command.WriteSchema = WriteSchema.TRUE;
+      command.WriteSchema = WriteSchema.TRUE;
       string xmlResult = Command.Execute(command,
                                          RoutineType.DataSet,
                                          httpMethod: HttpMethod.GET,
@@ -155,53 +154,4 @@ HTTP request.
                                               ResponseFormat.XML,
                                               parallelExecution: ParallelExecution.TRUE);
       ...
-```
-
-### 7. Again about session
-   
-   In the above was described how to create the session. If during for 20 minutes no one request 
-   was done the session will be expired, and the next request issues an exception.
-   The following code solves this problem, i.e. creates a new session and continues the work:
-
-```csharp
-      ...
-      while (true)
-      {
-
-        try
-        {
-          Command command = new Command("brandmanager_hidebrand");
-          command.Parameters.Add("_brandid", PgsqlDbType.Integer, 13);
-          command.Parameters.Add("_ishidden", PgsqlDbType.Boolean).Value = false;
-          command.Parameters.Add("_returnvalue", PgsqlDbType.Integer);
-
-          string xmlResult = Command.Execute(command,
-                                             RoutineType.NonQuery,
-                                             httpMethod: HttpMethod.POST,
-                                             responseFormat: ResponseFormat.XML);
-          Console.WriteLine(xmlResult);
-        }
-        catch (RestServiceException ex)
-        {
-          Console.WriteLine($"the rest service exception, code: {ex.Code}, message: {ex.Message}");
-          if (ex.Code == "MI008")
-          {
-            await SessionContext.Refresh();
-            continue;
-          }
-        }
-        catch (Exception ex)
-        {
-          Console.WriteLine(ex.ToString());
-        }
-
-        Console.WriteLine("press q to exit, or any other key to continue the work...");
-        ConsoleKeyInfo consoleKeyInfo = Console.ReadKey();
-        if (consoleKeyInfo.KeyChar == 'q' || consoleKeyInfo.KeyChar == 'Q')
-        {
-          Console.WriteLine("bye, bye...");
-          break;
-        }
-      }
-	  ...
 ```

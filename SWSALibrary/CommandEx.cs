@@ -25,16 +25,13 @@ namespace SimpleWSA
         throw new ArgumentException("commands are required...");
       }
 
-      ICompressionService compressionService = new CompressionService();
       IConvertingService convertingService = new ConvertingService();
 
       StringBuilder sb = new StringBuilder();
       sb.Append($"<{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
       foreach (CommandEx commandEx in commandExs)
       {
-        Request request = new Request(commandEx,
-                                      ErrorCodes.Collection,
-                                      convertingService);
+        Request request = new Request(commandEx, convertingService);
         sb.Append(request.CreateXmlRoutine(commandEx.RoutineType));
       }
 
@@ -43,16 +40,31 @@ namespace SimpleWSA
       sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
       string requestString = sb.ToString();
 
-      return (string)Request.Post(SessionContext.RestServiceAddress,
-                                  SessionContext.route,
-                                  requestString,
-                                  SessionContext.Token,
-                                  outgoingCompressionType,
-                                  returnCompressionType,
-                                  compressionService,
-                                  ErrorCodes.Collection,
-                                  SessionContext.WebProxy,
-                                  postFormat);
+      IHttpService httpService = new HttpService();
+
+      executeall_post_label:
+      try
+      {
+        string requestUri = string.Format(postFormat, SessionContext.RestServiceAddress, SessionContext.route, SessionContext.Token, (int)outgoingCompressionType);
+        return (string)httpService.Post(requestUri,
+                                        requestString,
+                                        SessionContext.WebProxy,
+                                        outgoingCompressionType,
+                                        returnCompressionType);
+      }
+      catch (Exception ex)
+      {
+        if (ex is RestServiceException rex)
+        {
+          // keep session alive
+          if (rex.Code == "MI008")
+          {
+            SessionContext.Refresh();
+            goto executeall_post_label;
+          }
+        }
+        throw;
+      }
     }
   }
 }

@@ -77,7 +77,6 @@ namespace SimpleWSA
       command.OutgoingCompressionType = outgoingCompressType;
       command.ReturnCompressionType = returnCompressionType;
 
-      ICompressionService compressionService = new CompressionService();
       IConvertingService convertingService = new ConvertingService();
 
       if (routineType == RoutineType.Scalar)
@@ -86,9 +85,7 @@ namespace SimpleWSA
                                                         SessionContext.route,
                                                         SessionContext.Token,
                                                         command,
-                                                        ErrorCodes.Collection,
                                                         convertingService,
-                                                        compressionService,
                                                         SessionContext.WebProxy);
         scalar_request_label:
         try
@@ -117,9 +114,7 @@ namespace SimpleWSA
                                                               SessionContext.route,
                                                               SessionContext.Token,
                                                               command,
-                                                              ErrorCodes.Collection,
                                                               convertingService,
-                                                              compressionService,
                                                               SessionContext.WebProxy);
         nonquery_request_label:
         try
@@ -148,9 +143,7 @@ namespace SimpleWSA
                                                            SessionContext.route,
                                                            SessionContext.Token,
                                                            command,
-                                                           ErrorCodes.Collection,
                                                            convertingService,
-                                                           compressionService,
                                                            SessionContext.WebProxy);
         dataset_request_label:
         try
@@ -198,9 +191,7 @@ namespace SimpleWSA
                                                         SessionContext.route,
                                                         SessionContext.Token,
                                                         command,
-                                                        ErrorCodes.Collection,
                                                         convertingService,
-                                                        compressionService,
                                                         SessionContext.WebProxy);
         scalar_request_label:
         try
@@ -229,9 +220,7 @@ namespace SimpleWSA
                                                               SessionContext.route,
                                                               SessionContext.Token,
                                                               command,
-                                                              ErrorCodes.Collection,
                                                               convertingService,
-                                                              compressionService,
                                                               SessionContext.WebProxy);
         nonquery_request_label:
         try
@@ -260,9 +249,7 @@ namespace SimpleWSA
                                                            SessionContext.route,
                                                            SessionContext.Token,
                                                            command,
-                                                           ErrorCodes.Collection,
                                                            convertingService,
-                                                           compressionService,
                                                            SessionContext.WebProxy);
         dataset_request_label:
         try
@@ -301,9 +288,6 @@ namespace SimpleWSA
         throw new ArgumentException("commands are required...");
       }
 
-      ICompressionService compressionService = new CompressionService();
-      IConvertingService convertingService = new ConvertingService();
-
       string postFormat = DataSetRequest.PostFormat;
       if (routineType == RoutineType.Scalar)
       {
@@ -314,13 +298,13 @@ namespace SimpleWSA
         postFormat = NonQueryRequest.PostFormat;
       }
 
+      IConvertingService convertingService = new ConvertingService();
+
       StringBuilder sb = new StringBuilder();
       sb.Append($"<{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
       foreach (Command command in commands)
       {
-        Request request = new Request(command,
-                                      ErrorCodes.Collection,
-                                      convertingService);
+        Request request = new Request(command, convertingService);
         sb.Append(request.CreateXmlRoutine());
       }
 
@@ -329,23 +313,21 @@ namespace SimpleWSA
       sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
       string requestString = sb.ToString();
 
+      IHttpService httpService = new HttpService();
+
       executeall_post_label:
       try
       {
-        return (string)Request.Post(SessionContext.RestServiceAddress,
-                                    SessionContext.route,
-                                    requestString,
-                                    SessionContext.Token,
-                                    outgoingCompressionType,
-                                    returnCompressionType,
-                                    compressionService,
-                                    ErrorCodes.Collection,
-                                    SessionContext.WebProxy,
-                                    postFormat);
+        string requestUri = string.Format(postFormat, SessionContext.RestServiceAddress, SessionContext.route, SessionContext.Token, (int)outgoingCompressionType);
+        return (string)httpService.Post(requestUri,
+                                        requestString,
+                                        SessionContext.WebProxy,
+                                        outgoingCompressionType,
+                                        returnCompressionType);
       }
-      catch(Exception ex)
+      catch (Exception ex)
       {
-        if(ex is RestServiceException rex)
+        if (ex is RestServiceException rex)
         {
           // keep session alive
           if (rex.Code == "MI008")

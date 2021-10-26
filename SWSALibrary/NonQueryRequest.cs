@@ -17,16 +17,16 @@ namespace SimpleWSA
                            string route,
                            string token,
                            Command command,
-                           Dictionary<string, string> errorCodes,
+                           //Dictionary<string, string> errorCodes,
                            IConvertingService convertingService,
-                           ICompressionService compressionService,
+                           //ICompressionService compressionService,
                            WebProxy webProxy) : base(serviceAddress,
                                                      route,
                                                      token,
                                                      command,
-                                                     errorCodes,
+                                                     //errorCodes,
                                                      convertingService,
-                                                     compressionService,
+                                                     //compressionService,
                                                      webProxy)
     { }
 

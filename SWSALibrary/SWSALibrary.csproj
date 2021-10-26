@@ -66,6 +66,8 @@
     <Compile Include="ScalarRequest.cs" />
     <Compile Include="Services\ConvertingService.cs" />
     <Compile Include="Services\IConvertingService.cs" />
+    <Compile Include="Services\HttpService.cs" />
+    <Compile Include="Services\IHttpService.cs" />
     <Compile Include="WriteSchema.cs" />
     <Compile Include="Request.cs" />
     <Compile Include="ResponseFormat.cs" />
