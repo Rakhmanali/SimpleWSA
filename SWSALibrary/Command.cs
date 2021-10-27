@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Text;
 using System.Threading.Tasks;
+using SimpleWSA.Exceptions;
 using SimpleWSA.Internal;
 using SimpleWSA.Services;
 

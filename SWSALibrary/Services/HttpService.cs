@@ -1,10 +1,9 @@
 ﻿using Newtonsoft.Json;
+using SimpleWSA.Exceptions;
 using SimpleWSA.Extensions;
 using SimpleWSA.Internal;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;

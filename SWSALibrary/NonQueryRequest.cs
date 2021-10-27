@@ -13,28 +13,22 @@ namespace SimpleWSA
 {
   public sealed class NonQueryRequest : Request
   {
+    private const string getFormat = "{0}{1}executenonquery?token={2}&value={3}";
+    private const string postFormat = "{0}{1}executenonquerypost?token={2}&compression={3}";
+
     public NonQueryRequest(string serviceAddress,
                            string route,
                            string token,
                            Command command,
-                           //Dictionary<string, string> errorCodes,
                            IConvertingService convertingService,
-                           //ICompressionService compressionService,
                            WebProxy webProxy) : base(serviceAddress,
                                                      route,
                                                      token,
                                                      command,
-                                                     //errorCodes,
                                                      convertingService,
-                                                     //compressionService,
-                                                     webProxy)
+                                                     webProxy,
+                                                     command.HttpMethod == HttpMethod.GET ? getFormat : postFormat)
     { }
-
-    static NonQueryRequest()
-    {
-      getFormat = "{0}{1}executenonquery?token={2}&value={3}";
-      postFormat = "{0}{1}executenonquerypost?token={2}&compression={3}";
-    }
 
     public static string PostFormat
     {

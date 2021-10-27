@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
+using SimpleWSA.Exceptions;
 using SimpleWSA.Internal;
 
 namespace SimpleWSA
@@ -105,7 +105,7 @@ namespace SimpleWSA
           {
             return await httpResponseMessage.Content.ReadAsStringAsync();
           }
-          throw new HttpException((int)HttpStatusCode.NotFound, $"BaseAddress: {connectionProviderAddress}, apiUrl: {apiUrl}");
+          throw new HttpExceptionEx((int)HttpStatusCode.NotFound, $"BaseAddress: {connectionProviderAddress}, apiUrl: {apiUrl}");
         }
       }
     }

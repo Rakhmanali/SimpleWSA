@@ -19,6 +19,7 @@ namespace SimpleWSA
     protected readonly IConvertingService convertingService;
     protected readonly WebProxy webProxy;
     private readonly IHttpService httpService = new HttpService();
+    private readonly string format;
 
     public Request(Command command, IConvertingService convertingService)
     {
@@ -30,8 +31,9 @@ namespace SimpleWSA
                    string route,
                    string token,
                    Command command,
-                        IConvertingService convertingService,
-                        WebProxy webProxy)
+                   IConvertingService convertingService,
+                   WebProxy webProxy,
+                   string format)
     {
       this.serviceAddress = serviceAddress;
       this.route = route;
@@ -39,6 +41,7 @@ namespace SimpleWSA
       this.command = command;
       this.convertingService = convertingService;
       this.webProxy = webProxy;
+      this.format = format;
     }
 
     public void SetToken(string token)
@@ -359,29 +362,27 @@ namespace SimpleWSA
       return result;
     }
 
-    public static string getFormat = null;
     protected virtual object Get(string requestString)
     {
-      string requestUri = string.Format(getFormat, this.serviceAddress, this.route, this.token, requestString);
+      string requestUri = string.Format(this.format, this.serviceAddress, this.route, this.token, requestString);
       return this.httpService.Get(requestUri, this.webProxy, this.command.ReturnCompressionType);
     }
 
-    public static string postFormat = null;
     protected virtual object Post(string requestString)
     {
-      string requestUri = string.Format(postFormat, this.serviceAddress, this.route, this.token, (int)this.command.OutgoingCompressionType);
+      string requestUri = string.Format(this.format, this.serviceAddress, this.route, this.token, (int)this.command.OutgoingCompressionType);
       return this.httpService.Post(requestUri, requestString, this.webProxy, this.command.OutgoingCompressionType, this.command.ReturnCompressionType);
     }
 
     protected virtual async Task<object> GetAsync(string requestString)
     {
-      string requestUri = string.Format(getFormat, string.Empty, this.route, this.token, requestString);
+      string requestUri = string.Format(this.format, string.Empty, this.route, this.token, requestString);
       return await this.httpService.GetAsync(this.serviceAddress, requestUri, this.webProxy, this.command.ReturnCompressionType);
     }
 
     protected virtual async Task<object> PostAsync(string requestString)
     {
-      string requestUri = string.Format(postFormat, string.Empty, this.route, this.token, (int)this.command.OutgoingCompressionType);
+      string requestUri = string.Format(this.format, string.Empty, this.route, this.token, (int)this.command.OutgoingCompressionType);
       return await this.httpService.PostAsync(this.serviceAddress, requestUri, requestString, this.webProxy, this.command.ReturnCompressionType);
     }
 

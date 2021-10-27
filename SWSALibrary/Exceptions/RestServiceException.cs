@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SimpleWSA
+namespace SimpleWSA.Exceptions
 {
   public class RestServiceException : Exception
   {
