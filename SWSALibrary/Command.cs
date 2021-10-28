@@ -70,12 +70,12 @@ namespace SimpleWSA
                                  RoutineType routineType,
                                  HttpMethod httpMethod = HttpMethod.GET,
                                  ResponseFormat responseFormat = ResponseFormat.JSON,
-                                 CompressionType outgoingCompressType = CompressionType.NONE,
+                                 CompressionType outgoingCompressionType = CompressionType.NONE,
                                  CompressionType returnCompressionType = CompressionType.NONE)
     {
       command.HttpMethod = httpMethod;
       command.ResponseFormat = responseFormat;
-      command.OutgoingCompressionType = outgoingCompressType;
+      command.OutgoingCompressionType = outgoingCompressionType;
       command.ReturnCompressionType = returnCompressionType;
 
       IConvertingService convertingService = new ConvertingService();

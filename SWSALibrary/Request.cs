@@ -396,7 +396,7 @@ namespace SimpleWSA
       return this.Get(xmlRequest);
     }
 
-    public async Task<object> SendAsync()
+    public virtual async Task<object> SendAsync()
     {
       string xmlRequest = this.CreateXmlRequest();
       if (this.command.HttpMethod == HttpMethod.POST)

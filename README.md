@@ -65,6 +65,18 @@ HTTP request.
 	  ...
    ```
 
+   the response in XML format:
+
+   ```csharp
+      <clientmanager_findclientbyemailbusiness drn='00:00:00.0033761'><returnValue>576887</returnValue></clientmanager_findclientbyemailbusiness>
+   ```
+
+   the same only in JSON format:
+
+   ```csharp
+      {\"clientmanager_findclientbyemailbusiness\":{\"returnValue\":576887}}
+   ```
+
 ### 3. How to call the PostgreSql function returning the data in the out parameters
 
 ```csharp
@@ -80,6 +92,22 @@ HTTP request.
                                         ResponseFormat.XML));
 	  ...
 ```
+
+   the response in XML format:
+
+   ```csharp
+      <brandmanager_hidebrand drn='00:00:00.0042139'><returnValue>-1</returnValue><arguments><_returnvalue>0</_returnvalue></arguments></brandmanager_hidebrand>
+   ```
+
+   the same only in JSON format:
+
+   ```csharp
+      {\"brandmanager_hidebrand\":{\"returnValue\":-1,\"arguments\":{\"_returnvalue\":0}}}
+   ```
+   
+   RoutineType.NonQuery uses to call PostgreSql functions with OUT or INOUT parameters. In the example above "_returnvalue" is OUT parameter and the response contains
+   the appropriate value - 0. 
+
 
 ### 4. How to call the PostgreSql function returning the data set
 
@@ -122,9 +150,9 @@ HTTP request.
       ...
 ```
 
-	  The value "ParallelExecution.TRUE" of the parameter "parallelExecution" instructs the server
-	  to execute the PostgreSql functions "companymanager_getresellers" and 
-	  "currencymanager_getbusinessessuppliers" parallely.
+   The value "ParallelExecution.TRUE" of the parameter "parallelExecution" instructs the server
+   to execute the PostgreSql functions "companymanager_getresellers" and 
+   "currencymanager_getbusinessessuppliers" parallely.
 
 ### 6. There is possible to execute different type of PostgreSql functions 
 

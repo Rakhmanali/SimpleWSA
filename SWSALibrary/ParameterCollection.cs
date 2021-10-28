@@ -45,7 +45,7 @@ namespace SimpleWSA
       Parameter parameter = new Parameter(name, pgsqlDbType, value);
       return this.Add(parameter);
     }
-    
+
     public int Count
     {
       get
