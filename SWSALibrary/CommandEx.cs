@@ -16,10 +16,10 @@ namespace SimpleWSA
     private const string postFormat = "{0}{1}executemixpost?token={2}&compression={3}";
 
     public static string ExecuteAll(List<CommandEx> commandExs,
-                                    ResponseFormat responseFormat = ResponseFormat.JSON,
-                                    CompressionType outgoingCompressionType = CompressionType.NONE,
-                                    CompressionType returnCompressionType = CompressionType.NONE,
-                                    ParallelExecution parallelExecution = ParallelExecution.TRUE)
+                                    ResponseFormat responseFormat,
+                                    CompressionType outgoingCompressionType,
+                                    CompressionType returnCompressionType,
+                                    ParallelExecution parallelExecution)
     {
       if (commandExs == null || commandExs.Count == 0)
       {

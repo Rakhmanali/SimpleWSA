@@ -1,6 +1,6 @@
 ﻿namespace SimpleWSA
 {
-    public enum GetFromCache
+    public enum FromCache
     {
         FALSE = 0,
         TRUE = 1

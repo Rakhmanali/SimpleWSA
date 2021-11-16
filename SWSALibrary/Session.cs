@@ -52,33 +52,7 @@ namespace SimpleWSA
       return token;
     }
 
-    public async Task<string> CreateByConnectionProviderAddressAsync(string connectionProviderAddress)
-    {
-      if (connectionProviderAddress == null || connectionProviderAddress.Trim().Length == 0)
-      {
-        throw new ArgumentException($"{nameof(connectionProviderAddress)} is invalid");
-      }
-
-      string restServiceAddress = await GetRestServiceAddressAsync(this.domain, connectionProviderAddress, this.webProxy);
-      restServiceAddress = new Uri(restServiceAddress).GetLeftPart(UriPartial.Authority);
-
-      string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
-      SessionService sessionService = new SessionService(restServiceAddress,
-                                                         requestUri,
-                                                         this.login,
-                                                         this.password,
-                                                         this.isEncrypted,
-                                                         this.appId,
-                                                         this.appVersion,
-                                                         this.domain,
-                                                         ErrorCodes.Collection,
-                                                         this.webProxy);
-      string token = await sessionService.SendAsync(HttpMethod.GET);
-      SessionContext.Create(restServiceAddress, this.login, this.password, this.isEncrypted, this.appId, this.appVersion, this.domain, this.webProxy, token);
-      return token;
-    }
-
-    public static async Task<string> GetRestServiceAddressAsync(string domain, string connectionProviderAddress, WebProxy webProxy)
+    private async Task<string> GetRestServiceAddressAsync(string domain, string connectionProviderAddress, WebProxy webProxy)
     {
       if (domain == null || domain.Trim().Length == 0)
       {
@@ -108,6 +82,18 @@ namespace SimpleWSA
           throw new HttpExceptionEx((int)HttpStatusCode.NotFound, $"BaseAddress: {connectionProviderAddress}, apiUrl: {apiUrl}");
         }
       }
+    }
+
+    public async Task<string> CreateByConnectionProviderAddressAsync(string connectionProviderAddress)
+    {
+      if (connectionProviderAddress == null || connectionProviderAddress.Trim().Length == 0)
+      {
+        throw new ArgumentException($"{nameof(connectionProviderAddress)} is invalid");
+      }
+
+      string restServiceAddress = await this.GetRestServiceAddressAsync(this.domain, connectionProviderAddress, this.webProxy);
+      restServiceAddress = new Uri(restServiceAddress).GetLeftPart(UriPartial.Authority);
+      return await this.CreateByRestServiceAddressAsync(restServiceAddress);
     }
   }
 }

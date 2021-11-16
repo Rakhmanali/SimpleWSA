@@ -23,10 +23,10 @@ namespace SimpleWSA
       }
     }
 
-    public HttpMethod HttpMethod { get; private set; } = HttpMethod.GET;
-    public ResponseFormat ResponseFormat { get; private set; } = ResponseFormat.JSON;
-    public CompressionType OutgoingCompressionType { get; private set; } = CompressionType.NONE;
-    public CompressionType ReturnCompressionType { get; private set; } = CompressionType.NONE;
+    public HttpMethod HttpMethod { get; set; } = HttpMethod.GET;
+    public ResponseFormat ResponseFormat { get; set; } = ResponseFormat.JSON;
+    public CompressionType OutgoingCompressionType { get; set; } = CompressionType.NONE;
+    public CompressionType ReturnCompressionType { get; set; } = CompressionType.NONE;
 
     // specifies whether being encoded every the text-based data during creating XML request,
     // works in the routine level boundary
@@ -37,7 +37,7 @@ namespace SimpleWSA
     public EncodingType ReturnEncodingType { get; set; } = EncodingType.NONE;
 
     public WriteSchema WriteSchema { get; set; } = WriteSchema.FALSE;
-    public GetFromCache GetFromCache { get; set; } = GetFromCache.FALSE;
+    public FromCache GetFromCache { get; set; } = FromCache.FALSE;
     public ClearPool ClearPool { get; set; } = ClearPool.FALSE;
     public IsolationLevel IsolationLevel { get; set; } = IsolationLevel.ReadCommitted;
 
@@ -66,12 +66,32 @@ namespace SimpleWSA
       this.Name = name;
     }
 
+    public static string Execute(Command command, RoutineType routineType)
+    {
+      return Execute(command, routineType, command.HttpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+    }
+
+    public static string Execute(Command command, RoutineType routineType, HttpMethod httpMethod)
+    {
+      return Execute(command, routineType, httpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+    }
+
+    public static string Execute(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat)
+    {
+      return Execute(command, routineType, httpMethod, responseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+    }
+
+    public static string Execute(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat, CompressionType outgoingCompressionType)
+    {
+      return Execute(command, routineType, httpMethod, responseFormat, outgoingCompressionType, command.ReturnCompressionType);
+    }
+
     public static string Execute(Command command,
                                  RoutineType routineType,
-                                 HttpMethod httpMethod = HttpMethod.GET,
-                                 ResponseFormat responseFormat = ResponseFormat.JSON,
-                                 CompressionType outgoingCompressionType = CompressionType.NONE,
-                                 CompressionType returnCompressionType = CompressionType.NONE)
+                                 HttpMethod httpMethod,
+                                 ResponseFormat responseFormat,
+                                 CompressionType outgoingCompressionType,
+                                 CompressionType returnCompressionType)
     {
       command.HttpMethod = httpMethod;
       command.ResponseFormat = responseFormat;
@@ -200,7 +220,7 @@ namespace SimpleWSA
           object result = await scalarRequest.SendAsync();
           return Convert.ToString(result);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
           if (ex is RestServiceException rex)
           {
@@ -229,7 +249,7 @@ namespace SimpleWSA
           object result = await nonqueryRequest.SendAsync();
           return Convert.ToString(result);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
           if (ex is RestServiceException rex)
           {
@@ -258,7 +278,7 @@ namespace SimpleWSA
           object result = await dataSetRequest.SendAsync();
           return Convert.ToString(result);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
           if (ex is RestServiceException rex)
           {
@@ -279,10 +299,10 @@ namespace SimpleWSA
 
     public static string ExecuteAll(List<Command> commands,
                                     RoutineType routineType,
-                                    ResponseFormat responseFormat = ResponseFormat.JSON,
-                                    CompressionType outgoingCompressionType = CompressionType.NONE,
-                                    CompressionType returnCompressionType = CompressionType.NONE,
-                                    ParallelExecution parallelExecution = ParallelExecution.TRUE)
+                                    ResponseFormat responseFormat,
+                                    CompressionType outgoingCompressionType,
+                                    CompressionType returnCompressionType,
+                                    ParallelExecution parallelExecution)
     {
       if (commands == null || commands.Count == 0)
       {
@@ -313,6 +333,8 @@ namespace SimpleWSA
 
       sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
       string requestString = sb.ToString();
+
+      Console.WriteLine(requestString);
 
       IHttpService httpService = new HttpService();
 

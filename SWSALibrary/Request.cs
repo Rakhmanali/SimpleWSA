@@ -197,7 +197,7 @@ namespace SimpleWSA
         xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_CLEAR_POOL, ((int)command.ClearPool).ToString());
       }
 
-      if (command.GetFromCache == GetFromCache.TRUE) // Default value is FALSE
+      if (command.GetFromCache == FromCache.TRUE) // Default value is FALSE
       {
         xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_FROM_CACHE, ((int)command.GetFromCache).ToString());
       }
@@ -240,7 +240,7 @@ namespace SimpleWSA
         xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_CLEAR_POOL, ((int)command.ClearPool).ToString());
       }
 
-      if (command.GetFromCache == GetFromCache.TRUE) // Default value is FALSE
+      if (command.GetFromCache == FromCache.TRUE) // Default value is FALSE
       {
         xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_FROM_CACHE, ((int)command.GetFromCache).ToString());
       }

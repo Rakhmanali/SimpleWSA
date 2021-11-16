@@ -53,15 +53,34 @@ HTTP request.
 
    ```csharp
       ...
-      Command command = new Command("clientmanager_findclientbyemailbusiness");
+
+      CommandEx command = new CommandEx("clientmanager_findclientbyemailbusiness");
       command.Parameters.Add("_businessid", PgsqlDbType.Integer).Value = 1;
       command.Parameters.Add("_email", PgsqlDbType.Text).Value = "femkedijkema@hotmail.com";
       command.Parameters.Add("_personid", PgsqlDbType.Integer).Value = 3;
-      command.WriteSchema = WriteSchema.FALSE;
-      Console.WriteLine(Command.Execute(command,
-                                        RoutineType.Scalar,
-                                        HttpMethod.GET,
-                                        ResponseFormat.XML));
+
+      // the HTTP GET is default
+      command.HttpMethod = HttpMethod.GET;
+
+      // a result in the JSON format is default
+      command.ResponseFormat = ResponseFormat.JSON;
+
+      // specifies the text-based data be encoded before sending,
+      // the default is EncodingType.NONE, i.e. sends as is
+      command.OutgoingEncodingType = EncodingType.NONE;
+
+      // allows compressing data in the HTTP POST before sending,
+      // the default is CompressionType.NONE, i.e. as is
+      command.OutgoingCompressionType = CompressionType.NONE;
+
+      // requires responding data be compressed,
+      // the default is CompressionType.NONE, i.e. as is
+      command.ReturnCompressionType = CompressionType.NONE;
+
+      string result = Command.Execute(command, RoutineType.Scalar);
+
+      Console.WriteLine(result);
+
 	  ...
    ```
 
@@ -74,22 +93,30 @@ HTTP request.
    the same only in JSON format:
 
    ```csharp
-      {\"clientmanager_findclientbyemailbusiness\":{\"returnValue\":576887}}
+      {"clientmanager_findclientbyemailbusiness":{"returnValue":576887}}
    ```
 
 ### 3. How to call the PostgreSql function returning the data in the out parameters
 
 ```csharp
       ...
+
       Command command = new Command("brandmanager_hidebrand");
       command.Parameters.Add("_brandid", PgsqlDbType.Integer, 13);
       command.Parameters.Add("_ishidden", PgsqlDbType.Boolean).Value = false;
+
+      // out parameter
       command.Parameters.Add("_returnvalue", PgsqlDbType.Integer);
-      command.WriteSchema = WriteSchema.FALSE;
+
+      command.OutgoingEncodingType = EncodingType.BASE64;
+
       Console.WriteLine(Command.Execute(command,
                                         RoutineType.NonQuery,
                                         HttpMethod.GET,
-                                        ResponseFormat.XML));
+                                        ResponseFormat.XML,
+                                        CompressionType.NONE,
+                                        CompressionType.NONE));
+
 	  ...
 ```
 
@@ -102,7 +129,7 @@ HTTP request.
    the same only in JSON format:
 
    ```csharp
-      {\"brandmanager_hidebrand\":{\"returnValue\":-1,\"arguments\":{\"_returnvalue\":0}}}
+      {"brandmanager_hidebrand":{"returnValue\":-1,"arguments":{"_returnvalue":0}}}
    ```
    
    RoutineType.NonQuery uses to call PostgreSql functions with OUT or INOUT parameters. In the example above "_returnvalue" is OUT parameter and the response contains
@@ -113,14 +140,21 @@ HTTP request.
 
 ```csharp
       ...
+
       Command command = new Command("companymanager_getresellers");
       command.Parameters.Add("_businessid", PgsqlDbType.Integer).Value = 1;
       command.Parameters.Add("_companyid", PgsqlDbType.Integer).Value = 13;
+
+      // applies when ResponseFormat.XML
       command.WriteSchema = WriteSchema.TRUE;
-      string xmlResult = Command.Execute(command,
-                                         RoutineType.DataSet,
-                                         httpMethod: HttpMethod.GET,
-                                         responseFormat: ResponseFormat.XML);
+      command.ResponseFormat = ResponseFormat.XML;
+
+      command.HttpMethod = HttpMethod.GET;
+
+      string result = Command.Execute(command, RoutineType.DataSet);
+
+      Console.WriteLine(result);
+
       ...
 ```
 
@@ -137,16 +171,25 @@ HTTP request.
       Command command1 = new Command("companymanager_getresellers");
       command1.Parameters.Add("_businessid", PgsqlDbType.Integer).Value = 1;
       command1.Parameters.Add("_companyid", PgsqlDbType.Integer).Value = 13;
+
+      // applies when ResponseFormat.XML
       command1.WriteSchema = WriteSchema.TRUE;
 
       Command command2 = new Command("currencymanager_getbusinessessuppliers");
       command2.Parameters.Add("_currencyid", PgsqlDbType.Integer).Value = 1;
+
+      // applies when ResponseFormat.XML
       command2.WriteSchema = WriteSchema.TRUE;
 
-      string xmlResult = Command.ExecuteAll(new List<Command> { command1, command2 },
-                                            RoutineType.DataSet,
-                                            ResponseFormat.XML,
-                                            parallelExecution: ParallelExecution.TRUE);
+      string result = Command.ExecuteAll(new List<Command> { command1, command2 },
+                                         RoutineType.DataSet,
+                                         ResponseFormat.XML,
+                                         CompressionType.NONE,
+                                         CompressionType.NONE,
+                                         ParallelExecution.TRUE);
+
+      Console.WriteLine(result);
+
       ...
 ```
 
@@ -158,12 +201,12 @@ HTTP request.
 
 ```csharp
       ...
+
       // the different type of routines in one HTTP request
 
       CommandEx command1 = new CommandEx("companymanager_getresellers");
       command1.Parameters.Add("_businessid", PgsqlDbType.Integer).Value = 1;
       command1.Parameters.Add("_companyid", PgsqlDbType.Integer).Value = 13;
-      command1.WriteSchema = WriteSchema.TRUE;
       command1.RoutineType = RoutineType.DataSet;
 
       CommandEx command2 = new CommandEx("brandmanager_hidebrand");
@@ -178,8 +221,13 @@ HTTP request.
       command3.Parameters.Add("_personid", PgsqlDbType.Integer).Value = 3;
       command3.RoutineType = RoutineType.Scalar;
 
-      string xmlResult = CommandEx.ExecuteAll(new List<CommandEx> { command1, command2, command3 },
-                                              ResponseFormat.XML,
-                                              parallelExecution: ParallelExecution.TRUE);
+      string result = CommandEx.ExecuteAll(new List<CommandEx> { command1, command2, command3 },
+                                           ResponseFormat.JSON,
+                                           CompressionType.NONE,
+                                           CompressionType.NONE,
+                                           ParallelExecution.FALSE);
+
+      Console.WriteLine(result);
+
       ...
 ```
