@@ -2,10 +2,10 @@
 
 The short description
 
-  The data access web service allows executing the PostgreSql functions by the HTTP 
+  The data access web service allows executing the PostgreSQL functions by the HTTP 
 requests. To perform it a client should have the appropriate credentials. If credentials
 okay, then the data access web service creates a session, and returns a token.
-  To perform the request the client should select the PostgreSql function, fill parameters
+  To perform the request the client should select the PostgreSQL function, fill parameters
 with appropriate values, attach the token (this library does it itself), and make the
 HTTP request.
   The SimpleWSA library has been created to simplify this work.
@@ -47,7 +47,7 @@ HTTP request.
 	  ...
   ```
 
-### 2. How to call a PostgreSql function returning the scalar data
+### 2. How to call a PostgreSQL function returning the scalar data
 
    The following code is an example of how to get the scalar data:
 
@@ -96,7 +96,7 @@ HTTP request.
       {"clientmanager_findclientbyemailbusiness":{"returnValue":576887}}
    ```
 
-### 3. How to call the PostgreSql function returning the data in the out parameters
+### 3. How to call the PostgreSQL function returning the data in the out parameters
 
 ```csharp
       ...
@@ -132,11 +132,11 @@ HTTP request.
       {"brandmanager_hidebrand":{"returnValue\":-1,"arguments":{"_returnvalue":0}}}
    ```
    
-   RoutineType.NonQuery uses to call PostgreSql functions with OUT or INOUT parameters. In the example above "_returnvalue" is OUT parameter and the response contains
+   RoutineType.NonQuery uses to call PostgreSQL functions with OUT or INOUT parameters. In the example above "_returnvalue" is OUT parameter and the response contains
    the appropriate value - 0. 
 
 
-### 4. How to call the PostgreSql function returning the data set
+### 4. How to call the PostgreSQL function returning the data set
 
 ```csharp
       ...
@@ -158,9 +158,9 @@ HTTP request.
       ...
 ```
 
-### 5. How to call more than one the same type of PostgreSql functions
+### 5. How to call more than one the same type of PostgreSQL functions
 
-   For example, let's describe how to call two PostgreSql functions eveach of them 
+   For example, let's describe how to call two PostgreSQL functions eveach of them 
    returns the set of data:
 
 ```csharp
@@ -194,10 +194,10 @@ HTTP request.
 ```
 
    The value "ParallelExecution.TRUE" of the parameter "parallelExecution" instructs the server
-   to execute the PostgreSql functions "companymanager_getresellers" and 
+   to execute the PostgreSQL functions "companymanager_getresellers" and 
    "currencymanager_getbusinessessuppliers" parallely.
 
-### 6. There is possible to execute different type of PostgreSql functions 
+### 6. There is possible to execute different type of PostgreSQL functions 
 
 ```csharp
       ...
