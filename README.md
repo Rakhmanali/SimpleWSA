@@ -166,7 +166,7 @@ HTTP request.
 ```csharp
       ...
 
-	  // the same type of routines in one HTTP request
+      // the same type of routines in one HTTP request
 
       Command command1 = new Command("companymanager_getresellers");
       command1.Parameters.Add("_businessid", PgsqlDbType.Integer).Value = 1;
