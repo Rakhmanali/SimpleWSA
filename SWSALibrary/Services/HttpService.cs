@@ -142,7 +142,6 @@ namespace SimpleWSA.Services
       {
         httpClient.BaseAddress = new Uri(baseAddress);
         httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
-
         using (StringContent stringContent = new StringContent(requestString, Encoding.UTF8, "text/xml"))
         {
           using (HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(requestUri, stringContent))

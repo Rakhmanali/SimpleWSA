@@ -23,7 +23,27 @@ namespace SimpleWSA.Services
           {
             if (value is TimeSpan timeSpan)
             {
-              result = timeSpan.ToString(@"hh\:mm\:ss");
+              //result = timeSpan.ToString(@"hh\:mm\:ss");
+
+              /*
+               * PostgreSql time:
+               * description: time of day (no date)
+               * low value: 00:00:00
+               * high value: 24:00:00
+               * example 16:50:12.768915
+               * https://www.postgresql.org/docs/9.1/datatype-datetime.html
+               *
+               * .NET TimeSpan supports DAY too, but we can ignore it, because PostgreSql time
+               * is not support it
+               */
+              if (timeSpan.Milliseconds > 0)
+              {
+                result = timeSpan.ToString(@"hh\:mm\:ss\.ffff");
+              }
+              else
+              {
+                result = timeSpan.ToString(@"hh\:mm\:ss");
+              }
             }
             else
             {
@@ -35,7 +55,15 @@ namespace SimpleWSA.Services
           {
             if (value is DateTimeOffset dateTimeOffset)
             {
-              result = dateTimeOffset.ToString(@"HH:mm:sszzz");
+              //result = dateTimeOffset.ToString(@"HH:mm:sszzz");
+              if (dateTimeOffset.Millisecond > 0)
+              {
+                result = dateTimeOffset.ToString(@"yyyy-MM-dd HH:mm:ss.ffffzzzz");
+              }
+              else
+              {
+                result = dateTimeOffset.ToString(@"yyyy-MM-dd HH:mm:sszzzz");
+              }
             }
             else
             {
@@ -53,12 +81,41 @@ namespace SimpleWSA.Services
           }
         case PgsqlDbType.Timestamp:
           {
-            result = Convert.ToDateTime(value).ToString("yyyy-MM-dd HH:mm:ss");
+            //result = Convert.ToDateTime(value).ToString("yyyy-MM-dd HH:mm:ss");
+            DateTime dateTime = Convert.ToDateTime(value);
+            if (dateTime.Millisecond > 0)
+            {
+              result = dateTime.ToString("yyyy-MM-dd HH:mm:ss.ffff");
+            }
+            else
+            {
+              result = dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+            }
             break;
           }
         case PgsqlDbType.TimestampTZ:
           {
-            result = Convert.ToDateTime(value).ToString("yyyy-MM-dd HH:mm:sszzz");
+            //result = Convert.ToDateTime(value).ToString("yyyy-MM-dd HH:mm:sszzz");
+            DateTime dateTime = Convert.ToDateTime(value);
+            if (dateTime.Kind == DateTimeKind.Unspecified)
+            {
+              throw new Exception("NpgsqlDbType.TimestampTz type waits .NET DateTime object where DateTimeKind is Local");
+            }
+
+            if (dateTime.Kind == DateTimeKind.Utc)
+            {
+              dateTime = dateTime.ToLocalTime();
+            }
+
+            if (dateTime.Millisecond > 0)
+            {
+              result = dateTime.ToString("yyyy-MM-dd HH:mm:ss.ffffzzz");
+            }
+            else
+            {
+              result = dateTime.ToString("yyyy-MM-dd HH:mm:sszzz");
+            }
+
             break;
           }
         case PgsqlDbType.Date:

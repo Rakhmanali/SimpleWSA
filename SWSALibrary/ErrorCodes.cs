@@ -40,6 +40,7 @@ namespace SimpleWSA
       ["MI032"] = "The local storage has not have the connection string for the given domain",
       ["MI033"] = "Cannot get the domain from the InitializeSession request",
       ["MI034"] = "Unable to start the work. Please, check the company name",
+      ["MI035"] = "token missed in the query",
 
       ["EX001"] = "System exception",
       ["EX002"] = "PostgreSql function is not return set function",

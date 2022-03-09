@@ -207,14 +207,11 @@ namespace SimpleWSA
         xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_WRITE_SCHEMA, ((int)command.WriteSchema).ToString());
       }
 
-#if DEBUG
-      xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_COMMAND_TIMEOUT, "300"); //300 timeout seconds for debugging into pg-functions
-#else
-                    if (command.CommandTimeout != 20) // Default value is 20 seconds
-                    {
-                        xmlWriter.WriteElementString("_commandTimeout", $"{command.CommandTimeout}");
-                    }
-#endif
+      if (command.CommandTimeout != 20) // Default value is 20 seconds
+      {
+        xmlWriter.WriteElementString("_commandTimeout", $"{command.CommandTimeout}");
+      }
+
       if (command.ReturnEncodingType != EncodingType.NONE)
       {
         xmlWriter.WriteStartElement(Constants.WS_XML_REQUEST_NODE_ENCODING);
@@ -250,14 +247,11 @@ namespace SimpleWSA
         xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_WRITE_SCHEMA, ((int)command.WriteSchema).ToString());
       }
 
-#if DEBUG
-      xmlWriter.WriteElementString(Constants.WS_XML_REQUEST_NODE_COMMAND_TIMEOUT, "300"); //300 timeout seconds for debugging into pg-functions
-#else
-                    if (command.CommandTimeout != 20) // Default value is 20 seconds
-                    {
-                        xmlWriter.WriteElementString("_commandTimeout", $"{command.CommandTimeout}");
-                    }
-#endif
+      if (command.CommandTimeout != 20) // Default value is 20 seconds
+      {
+        xmlWriter.WriteElementString("_commandTimeout", $"{command.CommandTimeout}");
+      }
+
       if (command.ReturnEncodingType != EncodingType.NONE)
       {
         xmlWriter.WriteStartElement(Constants.WS_XML_REQUEST_NODE_ENCODING);
