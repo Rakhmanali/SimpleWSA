@@ -43,13 +43,15 @@ namespace SimpleWSA
 
       IHttpService httpService = new HttpService();
 
+      SessionContext sessionContext = SessionContext.GetContext();
+
       executeall_post_label:
       try
       {
-        string requestUri = string.Format(postFormat, SessionContext.RestServiceAddress, SessionContext.route, SessionContext.Token, (int)outgoingCompressionType);
+        string requestUri = string.Format(postFormat, sessionContext.BaseAddress, SessionContext.route, sessionContext.Token, (int)outgoingCompressionType);
         return (string)httpService.Post(requestUri,
                                         requestString,
-                                        SessionContext.WebProxy,
+                                        sessionContext.WebProxy,
                                         outgoingCompressionType,
                                         returnCompressionType);
       }

@@ -11,7 +11,6 @@ namespace SimpleWSA
   {
     private readonly string login;
     private readonly string password;
-    private readonly bool isEncrypted;
     private readonly int appId;
     private readonly string appVersion;
     private readonly string domain;
@@ -19,7 +18,6 @@ namespace SimpleWSA
 
     public Session(string login,
                    string password,
-                   bool isEncrypted,
                    int appId,
                    string appVersion,
                    string domain,
@@ -27,29 +25,25 @@ namespace SimpleWSA
     {
       this.login = login;
       this.password = password;
-      this.isEncrypted = isEncrypted;
       this.appId = appId;
       this.appVersion = appVersion;
       this.domain = domain;
       this.webProxy = webProxy;
     }
 
-    public async Task<string> CreateByRestServiceAddressAsync(string restServiceAddress)
+    public async Task<string> CreateByRestServiceAddressAsync(string baseAddress)
     {
       string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
-      SessionService sessionService = new SessionService(restServiceAddress,
+      SessionService sessionService = new SessionService(baseAddress,
                                                          requestUri,
                                                          this.login,
                                                          this.password,
-                                                         this.isEncrypted,
                                                          this.appId,
                                                          this.appVersion,
                                                          this.domain,
                                                          ErrorCodes.Collection,
                                                          this.webProxy);
-      string token = await sessionService.SendAsync(HttpMethod.GET);
-      SessionContext.Create(restServiceAddress, this.login, this.password, this.isEncrypted, this.appId, this.appVersion, this.domain, this.webProxy, token);
-      return token;
+      return await sessionService.SendAsync(HttpMethod.GET);
     }
 
     private async Task<string> GetRestServiceAddressAsync(string domain, string connectionProviderAddress, WebProxy webProxy)

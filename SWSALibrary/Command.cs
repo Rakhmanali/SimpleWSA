@@ -100,14 +100,16 @@ namespace SimpleWSA
 
       IConvertingService convertingService = new ConvertingService();
 
+      SessionContext sessionContext = SessionContext.GetContext();
+
       if (routineType == RoutineType.Scalar)
       {
-        ScalarRequest scalarRequest = new ScalarRequest(SessionContext.RestServiceAddress,
+        ScalarRequest scalarRequest = new ScalarRequest(sessionContext.BaseAddress,
                                                         SessionContext.route,
-                                                        SessionContext.Token,
+                                                        sessionContext.Token,
                                                         command,
                                                         convertingService,
-                                                        SessionContext.WebProxy);
+                                                        sessionContext.WebProxy);
         scalar_request_label:
         try
         {
@@ -122,7 +124,7 @@ namespace SimpleWSA
             if (rex.Code == "MI008")
             {
               SessionContext.Refresh();
-              scalarRequest.SetToken(SessionContext.Token);
+              scalarRequest.SetToken(sessionContext.Token);
               goto scalar_request_label;
             }
           }
@@ -131,12 +133,12 @@ namespace SimpleWSA
       }
       else if (routineType == RoutineType.NonQuery)
       {
-        NonQueryRequest nonqueryRequest = new NonQueryRequest(SessionContext.RestServiceAddress,
+        NonQueryRequest nonqueryRequest = new NonQueryRequest(sessionContext.BaseAddress,
                                                               SessionContext.route,
-                                                              SessionContext.Token,
+                                                              sessionContext.Token,
                                                               command,
                                                               convertingService,
-                                                              SessionContext.WebProxy);
+                                                              sessionContext.WebProxy);
         nonquery_request_label:
         try
         {
@@ -151,7 +153,7 @@ namespace SimpleWSA
             if (rex.Code == "MI008")
             {
               SessionContext.Refresh();
-              nonqueryRequest.SetToken(SessionContext.Token);
+              nonqueryRequest.SetToken(sessionContext.Token);
               goto nonquery_request_label;
             }
           }
@@ -160,12 +162,12 @@ namespace SimpleWSA
       }
       else if (routineType == RoutineType.DataSet)
       {
-        DataSetRequest dataSetRequest = new DataSetRequest(SessionContext.RestServiceAddress,
+        DataSetRequest dataSetRequest = new DataSetRequest(sessionContext.BaseAddress,
                                                            SessionContext.route,
-                                                           SessionContext.Token,
+                                                           sessionContext.Token,
                                                            command,
                                                            convertingService,
-                                                           SessionContext.WebProxy);
+                                                           sessionContext.WebProxy);
         dataset_request_label:
         try
         {
@@ -180,7 +182,7 @@ namespace SimpleWSA
             if (rex.Code == "MI008")
             {
               SessionContext.Refresh();
-              dataSetRequest.SetToken(SessionContext.Token);
+              dataSetRequest.SetToken(sessionContext.Token);
               goto dataset_request_label;
             }
           }
@@ -206,14 +208,16 @@ namespace SimpleWSA
       ICompressionService compressionService = new CompressionService();
       IConvertingService convertingService = new ConvertingService();
 
+      SessionContext sessionContext = SessionContext.GetContext();
+
       if (routineType == RoutineType.Scalar)
       {
-        ScalarRequest scalarRequest = new ScalarRequest(SessionContext.RestServiceAddress,
+        ScalarRequest scalarRequest = new ScalarRequest(sessionContext.BaseAddress,
                                                         SessionContext.route,
-                                                        SessionContext.Token,
+                                                        sessionContext.Token,
                                                         command,
                                                         convertingService,
-                                                        SessionContext.WebProxy);
+                                                        sessionContext.WebProxy);
         scalar_request_label:
         try
         {
@@ -228,7 +232,7 @@ namespace SimpleWSA
             if (rex.Code == "MI008")
             {
               await SessionContext.RefreshAsync();
-              scalarRequest.SetToken(SessionContext.Token);
+              scalarRequest.SetToken(sessionContext.Token);
               goto scalar_request_label;
             }
           }
@@ -237,12 +241,12 @@ namespace SimpleWSA
       }
       else if (routineType == RoutineType.NonQuery)
       {
-        NonQueryRequest nonqueryRequest = new NonQueryRequest(SessionContext.RestServiceAddress,
+        NonQueryRequest nonqueryRequest = new NonQueryRequest(sessionContext.BaseAddress,
                                                               SessionContext.route,
-                                                              SessionContext.Token,
+                                                              sessionContext.Token,
                                                               command,
                                                               convertingService,
-                                                              SessionContext.WebProxy);
+                                                              sessionContext.WebProxy);
         nonquery_request_label:
         try
         {
@@ -257,7 +261,7 @@ namespace SimpleWSA
             if (rex.Code == "MI008")
             {
               await SessionContext.RefreshAsync();
-              nonqueryRequest.SetToken(SessionContext.Token);
+              nonqueryRequest.SetToken(sessionContext.Token);
               goto nonquery_request_label;
             }
           }
@@ -266,12 +270,12 @@ namespace SimpleWSA
       }
       else if (routineType == RoutineType.DataSet)
       {
-        DataSetRequest dataSetRequest = new DataSetRequest(SessionContext.RestServiceAddress,
+        DataSetRequest dataSetRequest = new DataSetRequest(sessionContext.BaseAddress,
                                                            SessionContext.route,
-                                                           SessionContext.Token,
+                                                           sessionContext.Token,
                                                            command,
                                                            convertingService,
-                                                           SessionContext.WebProxy);
+                                                           sessionContext.WebProxy);
         dataset_request_label:
         try
         {
@@ -286,7 +290,7 @@ namespace SimpleWSA
             if (rex.Code == "MI008")
             {
               await SessionContext.RefreshAsync();
-              dataSetRequest.SetToken(SessionContext.Token);
+              dataSetRequest.SetToken(sessionContext.Token);
               goto dataset_request_label;
             }
           }
@@ -338,13 +342,15 @@ namespace SimpleWSA
 
       IHttpService httpService = new HttpService();
 
+      SessionContext sessionContext = SessionContext.GetContext();
+
       executeall_post_label:
       try
       {
-        string requestUri = string.Format(postFormat, SessionContext.RestServiceAddress, SessionContext.route, SessionContext.Token, (int)outgoingCompressionType);
+        string requestUri = string.Format(postFormat, sessionContext.BaseAddress, SessionContext.route, sessionContext.Token, (int)outgoingCompressionType);
         return (string)httpService.Post(requestUri,
                                         requestString,
-                                        SessionContext.WebProxy,
+                                        sessionContext.WebProxy,
                                         outgoingCompressionType,
                                         returnCompressionType);
       }

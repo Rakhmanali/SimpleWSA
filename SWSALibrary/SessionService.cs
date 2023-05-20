@@ -17,7 +17,6 @@ namespace SimpleWSA
     private readonly string requestUri;
     private readonly string login;
     private readonly string password;
-    private readonly bool isEncrypted;
     private readonly int appId;
     private readonly string appVersion;
     private readonly string domain;
@@ -28,7 +27,6 @@ namespace SimpleWSA
                           string requestUri,
                           string login,
                           string password,
-                          bool isEncrypted,
                           int appId,
                           string appVersion,
                           string domain,
@@ -39,7 +37,6 @@ namespace SimpleWSA
       this.requestUri = requestUri;
       this.login = login;
       this.password = password;
-      this.isEncrypted = isEncrypted;
       this.appId = appId;
       this.appVersion = appVersion;
       this.domain = domain;
@@ -94,7 +91,7 @@ namespace SimpleWSA
         writer.WriteValue(this.ConvertToBase64String(this.password));
         writer.WriteEndElement();
 
-        writer.WriteElementString(Constants.WS_IS_ENCRYPT, this.isEncrypted == true ? "1" : "0");
+        //writer.WriteElementString(Constants.WS_IS_ENCRYPT, this.isEncrypted == true ? "1" : "0");
 
         writer.WriteElementString(Constants.WS_TIMEOUT, "20");
         writer.WriteElementString(Constants.WS_APP_ID, ((int)this.appId).ToString());
@@ -169,6 +166,13 @@ namespace SimpleWSA
       //  result = this.Post(this.baseAddress, this.requestUri, xmlRequest, this.webProxy);
       //}
 
+      if (result != null && result.Trim().Length > 0)
+      {
+        SessionContext sessionContext = new SessionContext(this.baseAddress, this.login, this.password, this.appId,
+                    this.appVersion, this.domain, this.webProxy, result);
+        sessionContext.Create();
+      }
+
       return result;
     }
 
@@ -184,6 +188,13 @@ namespace SimpleWSA
       {
         string xmlRequest = this.CreateXmlRequest();
         result = await this.PostAsync(this.baseAddress, this.requestUri, xmlRequest, this.webProxy);
+      }
+
+      if (result != null && result.Trim().Length > 0)
+      {
+        SessionContext sessionContext = new SessionContext(this.baseAddress, this.login, this.password, this.appId,
+                    this.appVersion, this.domain, this.webProxy, result);
+        sessionContext.Create();
       }
 
       return result;
@@ -212,14 +223,14 @@ namespace SimpleWSA
 
       sb.Append($"&{Constants.WS_IS_TOKEN}=1");
 
-      if (this.isEncrypted == true)
-      {
-        sb.Append($"&{Constants.WS_IS_ENCRYPT}=1");
-      }
-      else
-      {
-        sb.Append($"&{Constants.WS_IS_ENCRYPT}=0");
-      }
+      //if (this.isEncrypted == true)
+      //{
+      //  sb.Append($"&{Constants.WS_IS_ENCRYPT}=1");
+      //}
+      //else
+      //{
+      //  sb.Append($"&{Constants.WS_IS_ENCRYPT}=0");
+      //}
 
       sb.Append($"&{Constants.WS_TIMEOUT}=20");
       sb.Append($"&{Constants.WS_APP_ID}={(int)this.appId}");

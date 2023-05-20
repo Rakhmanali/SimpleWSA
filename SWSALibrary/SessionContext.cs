@@ -8,30 +8,27 @@ namespace SimpleWSA
   {
     public const string route = "/BufferedMode/Service/";
 
-    public static string RestServiceAddress { get; private set; }
-    public static string Login { get; private set; }
-    public static string Password { get; private set; }
-    public static bool IsEncrypted { get; private set; }
-    public static int AppId { get; private set; }
-    public static string AppVersion { get; private set; }
-    public static string Domain { get; private set; }
-    public static WebProxy WebProxy { get; private set; }
-    public static string Token { get; private set; }
+    public string BaseAddress { get; }
+    public string Login { get; }
+    public string Password { get; }
+    public int AppId { get; }
+    public string AppVersion { get; }
+    public string Domain { get; }
+    public WebProxy WebProxy { get; }
+    public string Token { get; }
 
-    public static void Create(string restServiceAddress,
-                              string login,
-                              string password,
-                              bool isEncrypted,
-                              int appId,
-                              string appVersion,
-                              string domain,
-                              WebProxy webProxy,
-                              string token)
+    public SessionContext(string baseAddress,
+                          string login,
+                          string password,
+                          int appId,
+                          string appVersion,
+                          string domain,
+                          WebProxy webProxy,
+                          string token)
     {
-      RestServiceAddress = restServiceAddress;
+      BaseAddress = baseAddress;
       Login = login;
       Password = password;
-      IsEncrypted = isEncrypted;
       AppId = appId;
       AppVersion = appVersion;
       Domain = domain;
@@ -39,36 +36,48 @@ namespace SimpleWSA
       Token = token;
     }
 
+    private static SessionContext sessionContext;
+
+    public void Create()
+    {
+      sessionContext = this;
+    }
+
+    public static SessionContext GetContext()
+    {
+      return sessionContext;
+    }
+
     public static void Refresh()
     {
       string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
-      SessionService sessionService = new SessionService(RestServiceAddress,
+      SessionContext sessionContext = SessionContext.GetContext();
+      SessionService sessionService = new SessionService(sessionContext.BaseAddress,
                                                          requestUri,
-                                                         Login,
-                                                         Password,
-                                                         IsEncrypted,
-                                                         AppId,
-                                                         AppVersion,
-                                                         Domain,
+                                                         sessionContext.Login,
+                                                         sessionContext.Password,
+                                                         sessionContext.AppId,
+                                                         sessionContext.AppVersion,
+                                                         sessionContext.Domain,
                                                          ErrorCodes.Collection,
-                                                         WebProxy);
-      Token = sessionService.Send(HttpMethod.GET);
+                                                         sessionContext.WebProxy);
+      sessionService.Send(HttpMethod.GET);
     }
 
     public static async Task RefreshAsync()
     {
       string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
-      SessionService sessionService = new SessionService(RestServiceAddress,
+      SessionContext sessionContext = SessionContext.GetContext();
+      SessionService sessionService = new SessionService(sessionContext.BaseAddress,
                                                          requestUri,
-                                                         Login,
-                                                         Password,
-                                                         IsEncrypted,
-                                                         AppId,
-                                                         AppVersion,
-                                                         Domain,
+                                                         sessionContext.Login,
+                                                         sessionContext.Password,
+                                                         sessionContext.AppId,
+                                                         sessionContext.AppVersion,
+                                                         sessionContext.Domain,
                                                          ErrorCodes.Collection,
-                                                         WebProxy);
-      Token = await sessionService.SendAsync(HttpMethod.GET);
+                                                         sessionContext.WebProxy);
+      await sessionService.SendAsync(HttpMethod.GET);
     }
   }
 }
