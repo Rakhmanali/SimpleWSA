@@ -3,6 +3,14 @@ using SimpleWSA.Services;
 using System;
 using Xunit;
 
+/* Please, note:
+
+   xUnit, the test class is instantiated – it runs the single test method and 
+   discards the class. It recreates the class again to run the next test method.
+
+   // https://www.clariontech.com/blog/why-should-you-use-xunit-a-unit-testing-framework-for-.net#:~:text=xUnit%20also%20allows%20you%20to,the%20new%20attribute%20called%20Skip.
+*/
+
 namespace Test
 {
   public class ConvertingServiceTests
@@ -86,7 +94,7 @@ namespace Test
 
       DateTimeOffset dateTimeOffset1 = DateTimeOffset.Parse(objects[0] as string);
 
-      Assert.Equal("0001-01-01 23:59:59+02:32", objects[0]);
+      Assert.Equal("23:59:59+02:32", objects[0]);
     }
 
     [Fact]
@@ -97,7 +105,7 @@ namespace Test
 
       DateTimeOffset dateTimeOffset1 = DateTimeOffset.Parse(objects[0] as string);
 
-      Assert.Equal("0001-01-01 23:59:59.6780+02:32", objects[0]);
+      Assert.Equal("23:59:59.6780+02:32", objects[0]);
     }
 
     [Fact]
@@ -108,7 +116,7 @@ namespace Test
 
       DateTimeOffset dateTimeOffset1 = DateTimeOffset.Parse(objects[0] as string);
 
-      Assert.Equal("0001-01-01 23:59:59+00:00", objects[0]);
+      Assert.Equal("23:59:59+00:00", objects[0]);
     }
     #endregion NpgsqlDbType.TimeTZ
 
