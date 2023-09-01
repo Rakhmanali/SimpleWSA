@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 
-namespace SimpleWSA
+namespace SimpleWSA.WSALibrary
 {
   public class WSACoreTests
   {
@@ -26,7 +26,7 @@ namespace SimpleWSA
     [Test]
     public void GetOutBigint()
     {
-      SimpleWSA.Command command = new SimpleWSA.Command("migration.get_out_bigint");
+      WSALibrary.Command command = new WSALibrary.Command("migration.get_out_bigint");
       command.Parameters.Add("p_parameter", PgsqlDbType.Bigint);
       var response = Command.Execute(command, RoutineType.NonQuery);
 

@@ -1,5 +1,5 @@
-﻿using SimpleWSA;
-using SimpleWSA.Services;
+﻿using SimpleWSA.WSALibrary;
+using SimpleWSA.WSALibrary.Services;
 using System;
 using Xunit;
 

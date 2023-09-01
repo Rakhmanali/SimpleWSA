@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>SimpleWSA.WSALibrary</id>
+    <version>1.0.5</version>
+    <title>The data aceess web service client library</title>
+    <authors>Kabekov R.S.</authors>
+    <company>Navitas</company>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>This application provides the data access to PostgreSQL database by the data access web service</description>
+    <copyright>Copyright © 2023</copyright>
+
+    <dependencies>
+      <dependency id="Newtonsoft.Json" version="13.0.3" />
+    </dependencies>
+  </metadata>
+</package>

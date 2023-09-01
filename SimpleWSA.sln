@@ -5,7 +5,7 @@ VisualStudioVersion = 17.7.34009.444
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp", "ConsoleApp\ConsoleApp.csproj", "{48374742-4BF9-4293-AD2E-1C21C66DF4A7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SWSALibrary", "SWSALibrary\SWSALibrary.csproj", "{6213E748-D6B2-4FC4-A494-A44DA0ADE5B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WSALibrary", "WSALibrary\WSALibrary.csproj", "{6213E748-D6B2-4FC4-A494-A44DA0ADE5B3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CE608710-908F-48C4-9D99-5D93018F1EFC}"
 	ProjectSection(SolutionItems) = preProject

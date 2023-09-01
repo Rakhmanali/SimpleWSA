@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SWSALibrary\SWSALibrary.csproj" />
+    <ProjectReference Include="..\WSALibrary\WSALibrary.csproj" />
   </ItemGroup>
 
 </Project>
