@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+    very good source: https://learn.microsoft.com/en-us/nuget/reference/nuspec
+
+-->
+
 <package >
   <metadata>
     <id>SimpleWSA.WSALibrary</id>
@@ -11,7 +18,16 @@
     <copyright>Copyright © 2023</copyright>
 
     <dependencies>
+      <group targetFramework="net6.0">
+        <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net7.0">
+        <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
+      </group>
       <group targetFramework=".NETStandard2.0">
+        <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.1">
         <dependency id="Newtonsoft.Json" version="13.0.3" exclude="Build,Analyzers" />
       </group>
     </dependencies>

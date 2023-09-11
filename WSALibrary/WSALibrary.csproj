@@ -1,18 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
+    <!--<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>-->
+    <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Title>The data aceess web service client library</Title>
     <Description>This application provides the data access to PostgreSQL database by the data access web service</Description>
     <PackageId>SimpleWSA.WSALibrary</PackageId>
     <Authors>Kabekov R.S.</Authors>
     <Company>Navitas</Company>
-    <AssemblyVersion>1.0.4</AssemblyVersion>
-    <PackageVersion>1.0.4</PackageVersion>
+    <AssemblyVersion>1.0.3</AssemblyVersion>
+    <PackageVersion>1.0.3</PackageVersion>
     <AssemblyName>SimpleWSA.WSALibrary</AssemblyName>
     <RootNamespace>SimpleWSA.WSALibrary</RootNamespace>
+    <Copyright>Copyright © 2023</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
