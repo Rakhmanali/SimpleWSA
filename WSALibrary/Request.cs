@@ -1,12 +1,13 @@
-﻿using System;
+﻿using SimpleWSA.WSALibrary.Internal;
+using SimpleWSA.WSALibrary.Services;
+using System;
 using System.Data;
 using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Xml;
-using SimpleWSA.WSALibrary.Internal;
-using SimpleWSA.WSALibrary.Services;
 
 namespace SimpleWSA.WSALibrary
 {
@@ -133,7 +134,8 @@ namespace SimpleWSA.WSALibrary
                 }
                 else
                 {
-                  xmlWriter.WriteElementString(parameterName, Convert.ToString(v, CultureInfo.InvariantCulture));
+                  // 1.234568E+09 ("+") issues the error when the http method is HttpMethod.GET
+                  xmlWriter.WriteElementString(parameterName, HttpUtility.UrlEncode(Convert.ToString(v, CultureInfo.InvariantCulture)));
                 }
               }
             }

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Data;
 
 namespace SimpleWSA.WSALibrary
 {
@@ -139,6 +141,13 @@ namespace SimpleWSA.WSALibrary
     {
       int startIndex = source.IndexOf(fieldName) + fieldName.Length + 2;
       int length = source.Length - 3 - startIndex;
+      return source.Substring(startIndex, length);
+    }
+
+    private static string ExtractArrayFieldFromJsonString(string source, string fieldName)
+    {
+      int startIndex = source.IndexOf(fieldName) + fieldName.Length + 3;
+      int length = source.Length - 4 - startIndex;
       return source.Substring(startIndex, length);
     }
 
@@ -377,7 +386,7 @@ namespace SimpleWSA.WSALibrary
     public void GetOutBigintArray()
     {
       var command = new Command("migration.get_out_bigint_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Bigint|PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter", PgsqlDbType.Bigint | PgsqlDbType.Array);
 
       // {\"migration.get_out_bigint_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[9223372036854775807,9223372036854775806,9223372036854775805]}}}
       var response = Command.Execute(command, RoutineType.NonQuery);
@@ -427,36 +436,13 @@ namespace SimpleWSA.WSALibrary
     [Test]
     public void GetOutByteaArray()
     {
-      //using var npgsqlCommand = new NpgsqlCommand("migration.get_out_bytea_array");
-      //var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Bytea | NpgsqlDbType.Array);
-      //npgsqlParameter.Direction = ParameterDirection.Output;
-      //npgsqlCommand.Parameters.Add(npgsqlParameter);
-      //npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-      //var result = npgsqlCommand.Parameters["p_parameter"].Value;
-      //if (result != null && result.GetType().IsArray)
-      //{
-      //  var objects = result as object[];
-      //  if (objects != null)
-      //  {
-      //    var list = objects.Select(i => Convert.ToString(i))
-      //                      .ToArray<string?>();
-      //    Assert.That(list, Is.EqualTo(new string[3] { Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("hello world!")),
-      //                                                     Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("There are three methods used to adjust a DateOnly structure: AddDays, AddMonths, and AddYears. Each method takes an integer parameter, and increases the date by that measurement.")),
-      //                                                     Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("If a negative number is provided, the date is decreased by that measurement. The methods return a new instance of DateOnly, as the structure is immutable.")) }));
-      //    return;
-      //  }
-      //}
-
-      //Assert.Fail();
-
       var command = new Command("migration.get_out_bytea_array");
       command.Parameters.Add("p_parameter", PgsqlDbType.Bytea | PgsqlDbType.Array);
 
-      
+      // {\"migration.get_out_bytea_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"aGVsbG8gd29ybGQh\",\"VGhlcmUgYXJlIHRocmVlIG1ldGhvZHMgdXNlZCB0byBhZGp1c3QgYSBEYXRlT25seSBzdHJ1Y3R1cmU6IEFkZERheXMsIEFkZE1vbnRocywgYW5kIEFkZFllYXJzLiBFYWNoIG1ldGhvZCB0YWtlcyBhbiBpbnRlZ2VyIHBhcmFtZXRlciwgYW5kIGluY3JlYXNlcyB0aGUgZGF0ZSBieSB0aGF0IG1lYXN1cmVtZW50Lg==\",\"SWYgYSBuZWdhdGl2ZSBudW1iZXIgaXMgcHJvdmlkZWQsIHRoZSBkYXRlIGlzIGRlY3JlYXNlZCBieSB0aGF0IG1lYXN1cmVtZW50LiBUaGUgbWV0aG9kcyByZXR1cm4gYSBuZXcgaW5zdGFuY2Ugb2YgRGF0ZU9ubHksIGFzIHRoZSBzdHJ1Y3R1cmUgaXMgaW1tdXRhYmxlLg==\"]}}}
       var response = Command.Execute(command, RoutineType.NonQuery);
       JObject jobject = JObject.Parse(response);
       object p = jobject["migration.get_out_bytea_array"]!["arguments"]!["p_parameter"]!;
-
       if (p is JArray ja)
       {
         var actual = new List<string?>();
@@ -473,1167 +459,964 @@ namespace SimpleWSA.WSALibrary
       Assert.Fail();
     }
 
-    //    [Test]
-    //    public void GetOutDoublePrecisionArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_double_precision_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Double | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Select(i => Convert.ToDouble(i)).ToArray<double>();
-    //          Assert.That(list, Is.EqualTo(new double[3] { 1234567890.12345, 1234567889.6789, 1234567888.01478 }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutIntArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_int_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Integer | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Select(i => Convert.ToInt32(i)).ToArray<int>();
-    //          Assert.That(list, Is.EqualTo(new int[3] { 2147483647, 2147483646, 2147483645 }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutMoneyArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_money_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Money | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Select(i => Convert.ToDecimal(i)).ToArray<decimal>();
-    //          Assert.That(list, Is.EqualTo(new decimal[3] { 92233720368547758.07m, 92233720368547757.05m, 92233720368547756.06m }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutNumericArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_numeric_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Numeric | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Select(i => Convert.ToDecimal(i)).ToArray<decimal>();
-    //          Assert.That(list, Is.EqualTo(new decimal[3] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutRealArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_real_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Real | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Select(i => Convert.ToSingle(i)).ToArray<float>();
-    //          Assert.That(list, Is.EqualTo(new float[3] { 1.234568E+09f, 1.234568E+09f, 1.234568E+09f }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutSmallintArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_smallint_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Smallint | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Select(i => Convert.ToInt16(i)).ToArray<short>();
-    //          Assert.That(list, Is.EqualTo(new short[3] { 32767, 32766, 32765 }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutTextArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_text_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Text | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Select(i => Convert.ToString(i)).ToArray<string?>();
-    //          Assert.That(list, Is.EqualTo(new string[3] { "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
-    //                                                       "DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.",
-    //                                                       "DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date." }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutDateArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_date_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Date | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Select(i => Convert.ToDateTime(i)).ToArray<DateTime>();
-    //          Assert.That(list, Is.EqualTo(new DateTime[3] { DateTime.Parse("2021-05-18T00:00:00"),
-    //                                                         DateTime.Parse("2020-04-17T00:00:00"),
-    //                                                         DateTime.Parse("2019-03-16T00:00:00")
-    //          }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutTimeArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_time_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Time | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Select(i => Convert.ToString(i))
-    //                            .Where(i => i != null)
-    //                            .Select(i => TimeSpan.Parse(i))
-    //                            .ToArray<TimeSpan>();
-    //          Assert.That(list, Is.EqualTo(new TimeSpan[3] { TimeSpan.Parse("13:44:46.9876000"),
-    //                                                         TimeSpan.Parse("11:43:45.9875000"),
-    //                                                         TimeSpan.Parse("11:42:44.9874000")
-    //          }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutTimetzArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_timetz_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.TimeTZ | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Select(i => Convert.ToString(i))
-    //                            .Where(i => i != null)
-    //                            .Select(i => TimeOnly.Parse(i))
-    //                            .ToArray<TimeOnly>();
-    //          Assert.That(list, Is.EqualTo(new TimeOnly[3] { TimeOnly.FromTimeSpan(new TimeSpan(DateTimeOffset.Parse("0001-01-01T14:41:45.1234+03:00").UtcTicks)),
-    //                                                         TimeOnly.FromTimeSpan(new TimeSpan(DateTimeOffset.Parse("0001-01-01T13:39:44.1233+02:00").UtcTicks)),
-    //                                                         TimeOnly.FromTimeSpan(new TimeSpan(DateTimeOffset.Parse("0001-01-01T11:38:42.1232+01:00").UtcTicks))
-    //          }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-
-    //    [Test]
-    //    public void GetOutTimestampArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_timestamp_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Timestamp | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Where(i => i != null)
-    //                            .Select(i => Convert.ToDateTime(i))
-    //                            .ToArray<DateTime>();
-    //          Assert.That(list, Is.EqualTo(new DateTime[3] { DateTime.Parse("2022-03-18T12:42:46.1234"),
-    //                                                         DateTime.Parse("2020-01-16T10:40:44.1232"),
-    //                                                         DateTime.Parse("2019-09-15T09:39:43.1231")
-    //          }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutTimestamptzArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_timestamptz_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.TimestampTZ | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Where(i => i != null)
-    //                            .Select(i => Convert.ToDateTime(i))
-    //                            .ToArray<DateTime>();
-    //          Assert.That(list, Is.EqualTo(new DateTime[3] { DateTime.Parse("2021-04-18T12:43:47.1234Z"),
-    //                                                         DateTime.Parse("2018-01-15T10:40:44.1231Z"),
-    //                                                         DateTime.Parse("2017-01-14T07:39:44.123Z")
-    //          }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutVarcharArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_varchar_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Varchar | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Where(i => i != null)
-    //                            .Select(i => Convert.ToString(i))
-    //                            .ToArray<string?>();
-    //          Assert.That(list, Is.EqualTo(new string[3] { "PostgreSQL change column type examples",
-    //                                                       "What is the PostgreSQL Function?",
-    //                                                       "PostgreSQL change column type examples"
-    //          }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutUuidArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_uuid_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Uuid | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Where(i => i != null)
-    //                            .Select(i => Convert.ToString(i))
-    //                            .Select(i => Guid.Parse(i))
-    //                            .ToArray();
-    //          Assert.That(list, Is.EqualTo(new Guid[3] { Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394"),
-    //                                                     Guid.Parse("f0c180ba-e291-4089-91b4-3d8d122b5c77"),
-    //                                                     Guid.Parse("670c4c79-521c-40e2-8442-0248a93f8737")
-    //          }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutXmlArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_xml_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Xml | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Where(i => i != null)
-    //                            .Select(i => Convert.ToString(i))
-    //                            .Select(i => i.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty))
-    //                            .ToArray();
-    //          Assert.That(list, Is.EqualTo(new string[3] { "<_routines>\n  <_routine>\n    <_name>formmanager_getfiltered</_name>\n    <_arguments>\n      <_formid>0</_formid>\n      <_form></_form>\n      <_businessids>1</_businessids>\n      <_businessids>941</_businessids>\n      <_businessids>942</_businessids>\n      <_businessids>943</_businessids>\n      <_businessids>944</_businessids>\n      <_businessids>2006</_businessids>\n      <_businessids>2129</_businessids>\n      <_businessids>2135</_businessids>\n      <_businessids>2137</_businessids>\n      <_formtype>1</_formtype>\n      <_formtype>2</_formtype>\n      <_formtype>3</_formtype>\n      <_formtype>4</_formtype>\n      <_formtype>5</_formtype>\n      <_formtype>6</_formtype>\n      <_formtype>7</_formtype>\n      <_formtype>8</_formtype>\n      <_inactive>False</_inactive>\n    </_arguments>\n    <_options>\n      <_writeSchema>1</_writeSchema>\n    </_options>\n  </_routine>\n  <_compression>0</_compression>\n  <_returnType>json</_returnType>\n</_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                                       "<_routines>\n          <_routine>\n            <_name>InitializeSession</_name>\n            <_arguments>\n              <login>sadmin@upstairs.com</login>\n              <password>George555#</password>\n              <isEncrypt>0</isEncrypt>\n              <timeout>20</timeout>\n              <appId>38</appId>\n              <appVersion>3.8.6</appVersion>\n              <domain>naitonmaster</domain>\n            </_arguments>\n          </_routine>\n          <_returnType>xml</_returnType>\n        </_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                                       "<_routines>\n  <_routine>\n    <_name>companymanager_getfilteredcompanieslist</_name>\n    <_arguments>\n      <_companyid>0</_companyid>\n      <_companyname></_companyname>\n      <_countryid>0</_countryid>\n      <_businessgroupid>0</_businessgroupid>\n      <_businessid>1</_businessid>\n      <_email></_email>\n      <_zipcode></_zipcode>\n      <_housenumber></_housenumber>\n      <_statusid>-3</_statusid>\n      <_statusid>4</_statusid>\n      <_statusid>6</_statusid>\n      <_statusid>5</_statusid>\n      <_iban></_iban>\n      <_salesmanagerid>0</_salesmanagerid>\n      <_onlyholding>False</_onlyholding>\n      <_udffilter></_udffilter>\n      <_holding></_holding>\n      <_holdingalso>False</_holdingalso>\n      <_companytypeid>2</_companytypeid>\n      <_segmentid>0</_segmentid>\n      <_segmentudf></_segmentudf>\n      <_discountgroupid>-1</_discountgroupid>\n      <_taxnumber></_taxnumber>\n      <_chamberofcommerce></_chamberofcommerce>\n      <_havechildonly>False</_havechildonly>\n      <_reseller></_reseller>\n      <_inactive>False</_inactive>\n      <_companyids isNull=\"true\" />\n      <_limit>200</_limit>\n    </_arguments>\n    <_options>\n      <_writeSchema>1</_writeSchema>\n    </_options>\n  </_routine>\n  <_compression>{{compression}}</_compression>\n  <_returnType>json</_returnType>\n</_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)
-    //          }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutJsonArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_json_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Json | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Where(i => i != null)
-    //                            .Select(i => Convert.ToString(i))
-    //                            .Select(i => i.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty))
-    //                            .ToArray();
-    //          Assert.That(list, Is.EqualTo(new string[3] { "{\n    \"formmanager_getfiltered\": []\n}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                                       "{\n    \"glossary\": {\n        \"title\": \"example glossary\",\n\t\t\"GlossDiv\": {\n            \"title\": \"S\",\n\t\t\t\"GlossList\": {\n                \"GlossEntry\": {\n                    \"ID\": \"SGML\",\n\t\t\t\t\t\"SortAs\": \"SGML\",\n\t\t\t\t\t\"GlossTerm\": \"Standard Generalized Markup Language\",\n\t\t\t\t\t\"Acronym\": \"SGML\",\n\t\t\t\t\t\"Abbrev\": \"ISO 8879:1986\",\n\t\t\t\t\t\"GlossDef\": {\n                        \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\",\n\t\t\t\t\t\t\"GlossSeeAlso\": [\"GML\", \"XML\"]\n                    },\n\t\t\t\t\t\"GlossSee\": \"markup\"\n                }\n            }\n        }\n    }\n}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                                       "{\"menu\": {\n  \"id\": \"file\",\n  \"value\": \"File\",\n  \"popup\": {\n    \"menuitem\": [\n      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\n      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\n      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\n    ]\n  }\n}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)
-    //          }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutJsonbArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_jsonb_array");
-    //      var npgsqlParameter = new NpgsqlParameter("p_parameter", NpgsqlDbType.Jsonb | NpgsqlDbType.Array);
-    //      npgsqlParameter.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter);
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-    //      var result = npgsqlCommand.Parameters["p_parameter"].Value;
-    //      if (result != null && result.GetType().IsArray)
-    //      {
-    //        var objects = result as object[];
-    //        if (objects != null)
-    //        {
-    //          var list = objects.Where(i => i != null)
-    //                            .Select(i => Convert.ToString(i))
-    //                            .Select(i => i.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty))
-    //                            .ToArray();
-    //          Assert.That(list, Is.EqualTo(new string[3] { "{\"formmanager_getfiltered\": []}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                                       "{\"glossary\": {\"title\": \"example glossary\", \"GlossDiv\": {\"title\": \"S\", \"GlossList\": {\"GlossEntry\": {\"ID\": \"SGML\", \"Abbrev\": \"ISO 8879:1986\", \"SortAs\": \"SGML\", \"Acronym\": \"SGML\", \"GlossDef\": {\"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \"GlossSeeAlso\": [\"GML\", \"XML\"]}, \"GlossSee\": \"markup\", \"GlossTerm\": \"Standard Generalized Markup Language\"}}}}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                                       "{\"menu\": {\"id\": \"file\", \"popup\": {\"menuitem\": [{\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"}, {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"}, {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}]}, \"value\": \"File\"}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)
-    //          }));
-    //          return;
-    //        }
-    //      }
-
-    //      Assert.Fail();
-    //    }
-
-    //    [Test]
-    //    public void GetOutAll()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_all");
-
-    //      var npgsqlParameter1 = new NpgsqlParameter("p_parameter1", NpgsqlDbType.Bigint);
-    //      npgsqlParameter1.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter1);
-
-    //      var npgsqlParameter2 = new NpgsqlParameter("p_parameter2", NpgsqlDbType.Boolean);
-    //      npgsqlParameter2.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter2);
-
-    //      var npgsqlParameter3 = new NpgsqlParameter("p_parameter3", NpgsqlDbType.Bytea);
-    //      npgsqlParameter3.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter3);
-
-    //      var npgsqlParameter4 = new NpgsqlParameter("p_parameter4", NpgsqlDbType.Double);
-    //      npgsqlParameter4.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter4);
-
-    //      var npgsqlParameter5 = new NpgsqlParameter("p_parameter5", NpgsqlDbType.Integer);
-    //      npgsqlParameter5.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter5);
-
-    //      var npgsqlParameter6 = new NpgsqlParameter("p_parameter6", NpgsqlDbType.Money);
-    //      npgsqlParameter6.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter6);
-
-    //      var npgsqlParameter7 = new NpgsqlParameter("p_parameter7", NpgsqlDbType.Numeric);
-    //      npgsqlParameter7.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter7);
-
-    //      var npgsqlParameter8 = new NpgsqlParameter("p_parameter8", NpgsqlDbType.Real);
-    //      npgsqlParameter8.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter8);
-
-    //      var npgsqlParameter9 = new NpgsqlParameter("p_parameter9", NpgsqlDbType.Smallint);
-    //      npgsqlParameter9.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter9);
-
-    //      var npgsqlParameter10 = new NpgsqlParameter("p_parameter10", NpgsqlDbType.Text);
-    //      npgsqlParameter10.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter10);
-
-    //      var npgsqlParameter11 = new NpgsqlParameter("p_parameter11", NpgsqlDbType.Date);
-    //      npgsqlParameter11.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter11);
-
-    //      var npgsqlParameter12 = new NpgsqlParameter("p_parameter12", NpgsqlDbType.Time);
-    //      npgsqlParameter12.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter12);
-
-    //      var npgsqlParameter13 = new NpgsqlParameter("p_parameter13", NpgsqlDbType.TimeTZ);
-    //      npgsqlParameter13.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter13);
-
-    //      var npgsqlParameter14 = new NpgsqlParameter("p_parameter14", NpgsqlDbType.Timestamp);
-    //      npgsqlParameter14.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter14);
-
-    //      var npgsqlParameter15 = new NpgsqlParameter("p_parameter15", NpgsqlDbType.TimestampTZ);
-    //      npgsqlParameter15.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter15);
-
-    //      var npgsqlParameter16 = new NpgsqlParameter("p_parameter16", NpgsqlDbType.Varchar);
-    //      npgsqlParameter16.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter16);
-
-    //      var npgsqlParameter17 = new NpgsqlParameter("p_parameter17", NpgsqlDbType.Uuid);
-    //      npgsqlParameter17.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter17);
-
-    //      var npgsqlParameter18 = new NpgsqlParameter("p_parameter18", NpgsqlDbType.Xml);
-    //      npgsqlParameter18.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter18);
-
-    //      var npgsqlParameter19 = new NpgsqlParameter("p_parameter19", NpgsqlDbType.Json);
-    //      npgsqlParameter19.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter19);
-
-    //      var npgsqlParameter20 = new NpgsqlParameter("p_parameter20", NpgsqlDbType.Jsonb);
-    //      npgsqlParameter20.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter20);
-
-
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-
-    //      var result1 = Convert.ToInt64(npgsqlCommand.Parameters["p_parameter1"].Value);
-    //      long expected1 = 9223372036854775807;
-    //      Assert.That(result1, Is.EqualTo(expected1));
-
-    //      var result2 = Convert.ToBoolean(npgsqlCommand.Parameters["p_parameter2"].Value);
-    //      var expected2 = true;
-    //      Assert.That(result2, Is.EqualTo(expected2));
-
-    //      var result3 = Convert.ToString(npgsqlCommand.Parameters["p_parameter3"].Value);
-    //      var expected3 = "aGVsbG8gd29ybGQh";
-    //      Assert.That(result3, Is.EqualTo(expected3));
-
-    //      var result4 = Convert.ToDouble(npgsqlCommand.Parameters["p_parameter4"].Value);
-    //      double expected4 = 1234567890.12345;
-    //      Assert.That(result4, Is.EqualTo(expected4));
-
-    //      var result5 = Convert.ToInt32(npgsqlCommand.Parameters["p_parameter5"].Value);
-    //      int expected5 = 2147483647;
-    //      Assert.That(result5, Is.EqualTo(expected5));
-
-    //      var result6 = Convert.ToDecimal(npgsqlCommand.Parameters["p_parameter6"].Value);
-    //      decimal expected6 = 92233720368547758.07m;
-    //      Assert.That(result6, Is.EqualTo(expected6));
-
-    //      var result7 = Convert.ToDecimal(npgsqlCommand.Parameters["p_parameter7"].Value);
-    //      decimal expected7 = 123456789012345678.1234567890m;
-    //      Assert.That(result7, Is.EqualTo(expected7));
-
-    //      var result8 = Convert.ToDecimal(npgsqlCommand.Parameters["p_parameter8"].Value);
-    //      float expected8 = 1.234568E+09f;
-    //      Assert.That(result8, Is.EqualTo(expected8));
-
-    //      var result9 = Convert.ToDecimal(npgsqlCommand.Parameters["p_parameter9"].Value);
-    //      short expected9 = 32767;
-    //      Assert.That(result9, Is.EqualTo(expected9));
-
-    //      var result10 = Convert.ToString(npgsqlCommand.Parameters["p_parameter10"].Value);
-    //      var expected10 = "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.";
-    //      Assert.That(result10, Is.EqualTo(expected10));
-
-    //      var result11 = Convert.ToDateTime(npgsqlCommand.Parameters["p_parameter11"].Value);
-    //      var expected11 = DateTime.Parse("2021-05-18T00:00:00");
-    //      Assert.That(result11, Is.EqualTo(expected11));
-
-    //      var result12 = new TimeSpan(Convert.ToDateTime(npgsqlCommand.Parameters["p_parameter12"].Value).Ticks);
-    //      var expected12 = TimeSpan.Parse("13:44:46.9876000");
-    //      Assert.That(result12, Is.EqualTo(expected12));
-
-    //      var result13 = TimeOnly.FromDateTime(Convert.ToDateTime(npgsqlCommand.Parameters["p_parameter13"].Value));
-    //      var expected13 = TimeOnly.FromDateTime(DateTimeOffset.Parse("0001-01-02T14:41:45.1234+03:00").UtcDateTime);
-    //      Assert.That(result13, Is.EqualTo(expected13));
-
-    //      var result14 = Convert.ToDateTime(npgsqlCommand.Parameters["p_parameter14"].Value);
-    //      var expected14 = DateTime.Parse("2022-03-18T12:42:46.1234");
-    //      Assert.That(result14, Is.EqualTo(expected14));
-
-    //      var result15 = Convert.ToDateTime(npgsqlCommand.Parameters["p_parameter15"].Value);
-    //      var expected15 = DateTime.Parse("2021-04-18T12:43:47.1234Z");
-    //      Assert.That(result15, Is.EqualTo(expected15));
-
-    //      var result16 = Convert.ToString(npgsqlCommand.Parameters["p_parameter16"].Value);
-    //      var expected16 = "PostgreSQL change column type examples";
-    //      Assert.That(result16, Is.EqualTo(expected16));
-
-    //      var sv = Convert.ToString(npgsqlCommand.Parameters["p_parameter17"].Value);
-    //      if (sv != null)
-    //      {
-    //        var result17 = Guid.Parse(sv);
-    //        var expected17 = Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394");
-    //        Assert.That(result17, Is.EqualTo(expected17));
-    //      }
-    //      else
-    //      {
-    //        Assert.Fail();
-    //      }
-
-    //      var result18 = Convert.ToString(npgsqlCommand.Parameters["p_parameter18"].Value);
-    //      if (result18 != null)
-    //      {
-    //        var expected18 = @"<_routines>
-    //  <_routine>
-    //    <_name>formmanager_getfiltered</_name>
-    //    <_arguments>
-    //      <_formid>0</_formid>
-    //      <_form></_form>
-    //      <_businessids>1</_businessids>
-    //      <_businessids>941</_businessids>
-    //      <_businessids>942</_businessids>
-    //      <_businessids>943</_businessids>
-    //      <_businessids>944</_businessids>
-    //      <_businessids>2006</_businessids>
-    //      <_businessids>2129</_businessids>
-    //      <_businessids>2135</_businessids>
-    //      <_businessids>2137</_businessids>
-    //      <_formtype>1</_formtype>
-    //      <_formtype>2</_formtype>
-    //      <_formtype>3</_formtype>
-    //      <_formtype>4</_formtype>
-    //      <_formtype>5</_formtype>
-    //      <_formtype>6</_formtype>
-    //      <_formtype>7</_formtype>
-    //      <_formtype>8</_formtype>
-    //      <_inactive>False</_inactive>
-    //    </_arguments>
-    //    <_options>
-    //      <_writeSchema>1</_writeSchema>
-    //    </_options>
-    //  </_routine>
-    //  <_compression>0</_compression>
-    //  <_returnType>json</_returnType>
-    //</_routines>";
-    //        Assert.That(result18.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                    Is.EqualTo(expected18.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)));
-    //      }
-    //      else
-    //      {
-    //        Assert.Fail();
-    //      }
-
-    //      var result19 = Convert.ToString(npgsqlCommand.Parameters["p_parameter19"].Value);
-    //      if (result19 != null)
-    //      {
-    //        var expected19 = @"{ ""formmanager_getfiltered"": [] }";
-    //        Assert.That(result19.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                    Is.EqualTo(expected19.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)));
-    //      }
-    //      else
-    //      {
-    //        Assert.Fail();
-    //      }
-
-    //      var result20 = Convert.ToString(npgsqlCommand.Parameters["p_parameter20"].Value);
-    //      if (result20 != null)
-    //      {
-    //        string expected20 = @"{ ""formmanager_getfiltered"": [] }";
-    //        Assert.That(result20.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                    Is.EqualTo(expected20.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)));
-    //      }
-    //      else
-    //      {
-    //        Assert.Fail();
-    //      }
-    //    }
-
-    //    [Test]
-    //    public void GetOutAllArray()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_out_all_array");
-
-    //      var npgsqlParameter1 = new NpgsqlParameter("p_parameter1", NpgsqlDbType.Bigint | NpgsqlDbType.Array);
-    //      npgsqlParameter1.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter1);
-
-    //      var npgsqlParameter2 = new NpgsqlParameter("p_parameter2", NpgsqlDbType.Boolean | NpgsqlDbType.Array);
-    //      npgsqlParameter2.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter2);
-
-    //      var npgsqlParameter3 = new NpgsqlParameter("p_parameter3", NpgsqlDbType.Bytea | NpgsqlDbType.Array);
-    //      npgsqlParameter3.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter3);
-
-    //      var npgsqlParameter4 = new NpgsqlParameter("p_parameter4", NpgsqlDbType.Double | NpgsqlDbType.Array);
-    //      npgsqlParameter4.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter4);
-
-    //      var npgsqlParameter5 = new NpgsqlParameter("p_parameter5", NpgsqlDbType.Integer | NpgsqlDbType.Array);
-    //      npgsqlParameter5.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter5);
-
-    //      var npgsqlParameter6 = new NpgsqlParameter("p_parameter6", NpgsqlDbType.Money | NpgsqlDbType.Array);
-    //      npgsqlParameter6.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter6);
-
-    //      var npgsqlParameter7 = new NpgsqlParameter("p_parameter7", NpgsqlDbType.Numeric | NpgsqlDbType.Array);
-    //      npgsqlParameter7.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter7);
-
-    //      var npgsqlParameter8 = new NpgsqlParameter("p_parameter8", NpgsqlDbType.Real | NpgsqlDbType.Array);
-    //      npgsqlParameter8.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter8);
-
-    //      var npgsqlParameter9 = new NpgsqlParameter("p_parameter9", NpgsqlDbType.Smallint | NpgsqlDbType.Array);
-    //      npgsqlParameter9.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter9);
-
-    //      var npgsqlParameter10 = new NpgsqlParameter("p_parameter10", NpgsqlDbType.Text | NpgsqlDbType.Array);
-    //      npgsqlParameter10.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter10);
-
-    //      var npgsqlParameter11 = new NpgsqlParameter("p_parameter11", NpgsqlDbType.Date | NpgsqlDbType.Array);
-    //      npgsqlParameter11.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter11);
-
-    //      var npgsqlParameter12 = new NpgsqlParameter("p_parameter12", NpgsqlDbType.Time | NpgsqlDbType.Array);
-    //      npgsqlParameter12.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter12);
-
-    //      var npgsqlParameter13 = new NpgsqlParameter("p_parameter13", NpgsqlDbType.TimeTZ | NpgsqlDbType.Array);
-    //      npgsqlParameter13.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter13);
-
-    //      var npgsqlParameter14 = new NpgsqlParameter("p_parameter14", NpgsqlDbType.Timestamp | NpgsqlDbType.Array);
-    //      npgsqlParameter14.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter14);
-
-    //      var npgsqlParameter15 = new NpgsqlParameter("p_parameter15", NpgsqlDbType.TimestampTZ | NpgsqlDbType.Array);
-    //      npgsqlParameter15.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter15);
-
-    //      var npgsqlParameter16 = new NpgsqlParameter("p_parameter16", NpgsqlDbType.Varchar | NpgsqlDbType.Array);
-    //      npgsqlParameter16.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter16);
-
-    //      var npgsqlParameter17 = new NpgsqlParameter("p_parameter17", NpgsqlDbType.Uuid | NpgsqlDbType.Array);
-    //      npgsqlParameter17.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter17);
-
-    //      var npgsqlParameter18 = new NpgsqlParameter("p_parameter18", NpgsqlDbType.Xml | NpgsqlDbType.Array);
-    //      npgsqlParameter18.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter18);
-
-    //      var npgsqlParameter19 = new NpgsqlParameter("p_parameter19", NpgsqlDbType.Json | NpgsqlDbType.Array);
-    //      npgsqlParameter19.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter19);
-
-    //      var npgsqlParameter20 = new NpgsqlParameter("p_parameter20", NpgsqlDbType.Jsonb | NpgsqlDbType.Array);
-    //      npgsqlParameter20.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter20);
-
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
-
-    //      TestIt<long>(npgsqlCommand.Parameters["p_parameter1"].Value,
-    //                   new long[] { 9223372036854775807, 9223372036854775806, 9223372036854775805 });
-
-    //      TestIt<bool>(npgsqlCommand.Parameters["p_parameter2"].Value,
-    //                   new bool[] { true, false, true });
-
-    //      TestIt<string>(npgsqlCommand.Parameters["p_parameter3"].Value,
-    //                     new string[] { "aGVsbG8gd29ybGQh", "VGhlcmUgYXJlIHRocmVlIG1ldGhvZHMgdXNlZCB0byBhZGp1c3QgYSBEYXRlT25seSBzdHJ1Y3R1cmU6IEFkZERheXMsIEFkZE1vbnRocywgYW5kIEFkZFllYXJzLiBFYWNoIG1ldGhvZCB0YWtlcyBhbiBpbnRlZ2VyIHBhcmFtZXRlciwgYW5kIGluY3JlYXNlcyB0aGUgZGF0ZSBieSB0aGF0IG1lYXN1cmVtZW50Lg==", "SWYgYSBuZWdhdGl2ZSBudW1iZXIgaXMgcHJvdmlkZWQsIHRoZSBkYXRlIGlzIGRlY3JlYXNlZCBieSB0aGF0IG1lYXN1cmVtZW50LiBUaGUgbWV0aG9kcyByZXR1cm4gYSBuZXcgaW5zdGFuY2Ugb2YgRGF0ZU9ubHksIGFzIHRoZSBzdHJ1Y3R1cmUgaXMgaW1tdXRhYmxlLg==" });
-
-    //      TestIt<double>(npgsqlCommand.Parameters["p_parameter4"].Value,
-    //                     new double[] { 1234567890.12345, 1234567889.6789, 1234567888.01478 });
-
-    //      TestIt<int>(npgsqlCommand.Parameters["p_parameter5"].Value,
-    //                  new int[] { 2147483647, 2147483646, 2147483645 });
-
-    //      TestIt<decimal>(npgsqlCommand.Parameters["p_parameter6"].Value,
-    //                      new decimal[] { 92233720368547758.07m, 92233720368547757.05m, 92233720368547756.06m });
-
-    //      TestIt<decimal>(npgsqlCommand.Parameters["p_parameter7"].Value,
-    //                      new decimal[] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m });
-
-    //      TestIt<float>(npgsqlCommand.Parameters["p_parameter8"].Value,
-    //                      new float[] { 1.234568E+09f, 1.234568E+09f, 1.234568E+09f });
-
-    //      TestIt<short>(npgsqlCommand.Parameters["p_parameter9"].Value,
-    //                new short[] { 32767, 32766, 32765 });
-
-    //      TestIt<string>(npgsqlCommand.Parameters["p_parameter10"].Value,
-    //                new string[] { "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
-    //                               "DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.",
-    //                               "DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date." });
-
-    //      TestIt<DateTime>(npgsqlCommand.Parameters["p_parameter11"].Value,
-    //                new DateTime[] { DateTime.Parse("2021-05-18T00:00:00"), DateTime.Parse("2020-04-17T00:00:00"), DateTime.Parse("2019-03-16T00:00:00") });
-
-    //      TestIt<TimeSpan>(npgsqlCommand.Parameters["p_parameter12"].Value,
-    //                new TimeSpan[] { TimeSpan.Parse("13:44:46.9876000"), TimeSpan.Parse("11:43:45.9875000"), TimeSpan.Parse("11:42:44.9874000") });
-
-    //      var oa13 = npgsqlCommand.Parameters["p_parameter13"].Value as object[];
-    //      if (oa13 != null)
-    //      {
-    //        var result13 = oa13.Select(x => TimeOnly.FromTimeSpan((TimeSpan)x)).ToArray();
-    //        var expected13 = new TimeOnly[] { TimeOnly.FromDateTime(DateTimeOffset.Parse("0001-01-02T14:41:45.1234+03:00").UtcDateTime),
-    //                                          TimeOnly.FromDateTime(DateTimeOffset.Parse("0001-01-02T13:39:44.1233+02:00").UtcDateTime),
-    //                                          TimeOnly.FromDateTime(DateTimeOffset.Parse("0001-01-02T11:38:42.1232+01:00").UtcDateTime)};
-    //        Assert.That(result13, Is.EqualTo(expected13));
-    //      }
-    //      else
-    //      {
-    //        Assert.Fail();
-    //      }
-
-    //      TestIt<DateTime>(npgsqlCommand.Parameters["p_parameter14"].Value,
-    //                new DateTime[] { DateTime.Parse("2022-03-18T12:42:46.1234"), DateTime.Parse("2020-01-16T10:40:44.1232"), DateTime.Parse("2019-09-15T09:39:43.1231") });
-
-    //      TestIt<DateTime>(npgsqlCommand.Parameters["p_parameter15"].Value,
-    //          new DateTime[] { DateTime.Parse("2021-04-18T12:43:47.1234Z"), DateTime.Parse("2018-01-15T10:40:44.1231Z"), DateTime.Parse("2017-01-14T07:39:44.123Z") });
-
-    //      TestIt<string>(npgsqlCommand.Parameters["p_parameter16"].Value,
-    //          new string[] { "PostgreSQL change column type examples", "What is the PostgreSQL Function?", "PostgreSQL change column type examples" });
-
-    //      TestIt<string>(npgsqlCommand.Parameters["p_parameter17"].Value,
-    //          new string[] { "79130b53-3113-41d1-99ec-26e41b238394", "f0c180ba-e291-4089-91b4-3d8d122b5c77", "670c4c79-521c-40e2-8442-0248a93f8737" });
-
-    //      var oa18 = npgsqlCommand.Parameters["p_parameter18"].Value as object[];
-    //      if (oa18 != null)
-    //      {
-    //        var result18 = oa18.Select(x => Convert.ToString(x))
-    //                           .Where(x => x != null)
-    //                           .Select(x => x.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)).ToArray();
-    //        var expected18 = new string[] { "<_routines>\n  <_routine>\n    <_name>formmanager_getfiltered</_name>\n    <_arguments>\n      <_formid>0</_formid>\n      <_form></_form>\n      <_businessids>1</_businessids>\n      <_businessids>941</_businessids>\n      <_businessids>942</_businessids>\n      <_businessids>943</_businessids>\n      <_businessids>944</_businessids>\n      <_businessids>2006</_businessids>\n      <_businessids>2129</_businessids>\n      <_businessids>2135</_businessids>\n      <_businessids>2137</_businessids>\n      <_formtype>1</_formtype>\n      <_formtype>2</_formtype>\n      <_formtype>3</_formtype>\n      <_formtype>4</_formtype>\n      <_formtype>5</_formtype>\n      <_formtype>6</_formtype>\n      <_formtype>7</_formtype>\n      <_formtype>8</_formtype>\n      <_inactive>False</_inactive>\n    </_arguments>\n    <_options>\n      <_writeSchema>1</_writeSchema>\n    </_options>\n  </_routine>\n  <_compression>0</_compression>\n  <_returnType>json</_returnType>\n</_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                        "<_routines>\n          <_routine>\n            <_name>InitializeSession</_name>\n            <_arguments>\n              <login>sadmin@upstairs.com</login>\n              <password>George555#</password>\n              <isEncrypt>0</isEncrypt>\n              <timeout>20</timeout>\n              <appId>38</appId>\n              <appVersion>3.8.6</appVersion>\n              <domain>naitonmaster</domain>\n            </_arguments>\n          </_routine>\n          <_returnType>xml</_returnType>\n        </_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                        "<_routines>\n  <_routine>\n    <_name>companymanager_getfilteredcompanieslist</_name>\n    <_arguments>\n      <_companyid>0</_companyid>\n      <_companyname></_companyname>\n      <_countryid>0</_countryid>\n      <_businessgroupid>0</_businessgroupid>\n      <_businessid>1</_businessid>\n      <_email></_email>\n      <_zipcode></_zipcode>\n      <_housenumber></_housenumber>\n      <_statusid>-3</_statusid>\n      <_statusid>4</_statusid>\n      <_statusid>6</_statusid>\n      <_statusid>5</_statusid>\n      <_iban></_iban>\n      <_salesmanagerid>0</_salesmanagerid>\n      <_onlyholding>False</_onlyholding>\n      <_udffilter></_udffilter>\n      <_holding></_holding>\n      <_holdingalso>False</_holdingalso>\n      <_companytypeid>2</_companytypeid>\n      <_segmentid>0</_segmentid>\n      <_segmentudf></_segmentudf>\n      <_discountgroupid>-1</_discountgroupid>\n      <_taxnumber></_taxnumber>\n      <_chamberofcommerce></_chamberofcommerce>\n      <_havechildonly>False</_havechildonly>\n      <_reseller></_reseller>\n      <_inactive>False</_inactive>\n      <_companyids isNull=\"true\" />\n      <_limit>200</_limit>\n    </_arguments>\n    <_options>\n      <_writeSchema>1</_writeSchema>\n    </_options>\n  </_routine>\n  <_compression>{{compression}}</_compression>\n  <_returnType>json</_returnType>\n</_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)};
-    //        Assert.That(result18, Is.EqualTo(expected18));
-    //      }
-    //      else
-    //      {
-    //        Assert.Fail();
-    //      }
-
-    //      var oa19 = npgsqlCommand.Parameters["p_parameter19"].Value as object[];
-    //      if (oa19 != null)
-    //      {
-    //        var result19 = oa19.Select(x => Convert.ToString(x))
-    //                           .Where(x => x != null)
-    //                           .Select(x => x.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)).ToArray();
-    //        var expected19 = new string[] { "{\n    \"formmanager_getfiltered\": []\n}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                        "{\n    \"glossary\": {\n        \"title\": \"example glossary\",\n\t\t\"GlossDiv\": {\n            \"title\": \"S\",\n\t\t\t\"GlossList\": {\n                \"GlossEntry\": {\n                    \"ID\": \"SGML\",\n\t\t\t\t\t\"SortAs\": \"SGML\",\n\t\t\t\t\t\"GlossTerm\": \"Standard Generalized Markup Language\",\n\t\t\t\t\t\"Acronym\": \"SGML\",\n\t\t\t\t\t\"Abbrev\": \"ISO 8879:1986\",\n\t\t\t\t\t\"GlossDef\": {\n                        \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\",\n\t\t\t\t\t\t\"GlossSeeAlso\": [\"GML\", \"XML\"]\n                    },\n\t\t\t\t\t\"GlossSee\": \"markup\"\n                }\n            }\n        }\n    }\n}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                        "{\"menu\": {\n  \"id\": \"file\",\n  \"value\": \"File\",\n  \"popup\": {\n    \"menuitem\": [\n      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\n      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\n      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\n    ]\n  }\n}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)};
-    //        Assert.That(result19, Is.EqualTo(expected19));
-    //      }
-    //      else
-    //      {
-    //        Assert.Fail();
-    //      }
-    //      var oa20 = npgsqlCommand.Parameters["p_parameter20"].Value as object[];
-    //      if (oa20 != null)
-    //      {
-    //        var result20 = oa20.Select(x => Convert.ToString(x))
-    //                           .Where(x => x != null)
-    //                           .Select(x => x.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)).ToArray();
-    //        var expected20 = new string[] { "{\"formmanager_getfiltered\": []}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                        "{\"glossary\": {\"title\": \"example glossary\", \"GlossDiv\": {\"title\": \"S\", \"GlossList\": {\"GlossEntry\": {\"ID\": \"SGML\", \"Abbrev\": \"ISO 8879:1986\", \"SortAs\": \"SGML\", \"Acronym\": \"SGML\", \"GlossDef\": {\"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \"GlossSeeAlso\": [\"GML\", \"XML\"]}, \"GlossSee\": \"markup\", \"GlossTerm\": \"Standard Generalized Markup Language\"}}}}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
-    //                                        "{\"menu\": {\"id\": \"file\", \"popup\": {\"menuitem\": [{\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"}, {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"}, {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}]}, \"value\": \"File\"}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)};
-    //        Assert.That(result20, Is.EqualTo(expected20));
-    //      }
-    //      else
-    //      {
-    //        Assert.Fail();
-    //      }
-    //    }
+    [Test]
+    public void GetOutDoublePrecisionArray()
+    {
+      var command = new Command("migration.get_out_double_precision_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Double | PgsqlDbType.Array);
+
+      // {\"migration.get_out_double_precision_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[1234567890.12345,1234567889.6789,1234567888.01478]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_double_precision_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<double>();
+        foreach (var item in ja)
+        {
+          actual.Add(Convert.ToDouble(item));
+        }
+        Assert.That(actual, Is.EqualTo(new double[3] { 1234567890.12345, 1234567889.6789, 1234567888.01478 }));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutIntArray()
+    {
+      var command = new Command("migration.get_out_int_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Integer | PgsqlDbType.Array);
+
+      // {\"migration.get_out_int_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[2147483647,2147483646,2147483645]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_int_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<int>();
+        foreach (var item in ja)
+        {
+          actual.Add(Convert.ToInt32(item));
+        }
+        Assert.That(actual, Is.EqualTo(new int[3] { 2147483647, 2147483646, 2147483645 }));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutMoneyArray()
+    {
+      var command = new Command("migration.get_out_money_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Money | PgsqlDbType.Array);
+
+      // {\"migration.get_out_money_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[92233720368547758.07,92233720368547757.05,92233720368547756.06]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
+      var actual = ppv.Split(',').Select(v => Convert.ToDecimal(v)).ToList();
+      Assert.That(actual, Is.EqualTo(new decimal[3] { 92233720368547758.07m, 92233720368547757.05m, 92233720368547756.06m }));
+    }
+
+    [Test]
+    public void GetOutNumericArray()
+    {
+      var command = new Command("migration.get_out_numeric_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Numeric | PgsqlDbType.Array);
+
+      // {\"migration.get_out_numeric_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[123456789012345678.1234567890,123456789012345677.1234567889,123456789012345676.1234567888]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
+      var actual = ppv.Split(',').Select(v => Convert.ToDecimal(v)).ToList();
+      Assert.That(actual, Is.EqualTo(new decimal[3] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m }));
+    }
+
+    [Test]
+    public void GetOutRealArray()
+    {
+      var command = new Command("migration.get_out_real_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Real | PgsqlDbType.Array);
+
+      // {\"migration.get_out_real_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[1.234568E+09,1.234568E+09,1.234568E+09]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
+      var actual = ppv.Split(',').Select(v => Convert.ToSingle(v)).ToList();
+      Assert.That(actual, Is.EqualTo(new float[3] { 1.234568E+09f, 1.234568E+09f, 1.234568E+09f }));
+    }
+
+    [Test]
+    public void GetOutSmallintArray()
+    {
+      var command = new Command("migration.get_out_smallint_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Smallint | PgsqlDbType.Array);
+
+      // {\"migration.get_out_smallint_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[32767,32766,32765]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_smallint_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<short>();
+        foreach (var item in ja)
+        {
+          actual.Add(Convert.ToInt16(item));
+        }
+        Assert.That(actual, Is.EqualTo(new short[3] { 32767, 32766, 32765 }));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutTextArray()
+    {
+      var command = new Command("migration.get_out_text_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Text | PgsqlDbType.Array);
+
+      // {\"migration.get_out_text_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.\",\"DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.\",\"DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date.\"]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_text_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<string?>();
+        foreach (var item in ja)
+        {
+          actual.Add(Convert.ToString(item));
+        }
+        Assert.That(actual, Is.EqualTo(new string[3] { "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                                                       "DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.",
+                                                       "DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date."
+        }));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutDateArray()
+    {
+      var command = new Command("migration.get_out_date_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Date | PgsqlDbType.Array);
+
+      // {\"migration.get_out_date_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"2021-05-18T00:00:00\",\"2020-04-17T00:00:00\",\"2019-03-16T00:00:00\"]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_date_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<DateTime>();
+        foreach (var item in ja)
+        {
+          actual.Add(Convert.ToDateTime(item));
+        }
+        Assert.That(actual, Is.EqualTo(new DateTime[3] { DateTime.Parse("2021-05-18T00:00:00"),
+                                                         DateTime.Parse("2020-04-17T00:00:00"),
+                                                         DateTime.Parse("2019-03-16T00:00:00")
+              }));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutTimeArray()
+    {
+      var command = new Command("migration.get_out_time_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Time | PgsqlDbType.Array);
+
+      // {\"migration.get_out_time_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"13:44:46.9876000\",\"11:43:45.9875000\",\"11:42:44.9874000\"]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_time_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<TimeSpan>();
+        foreach (var item in ja)
+        {
+          actual.Add(TimeSpan.Parse(Convert.ToString(item)!));
+        }
+        Assert.That(actual, Is.EqualTo(new TimeSpan[3] { TimeSpan.Parse("13:44:46.9876000"),
+                                                         TimeSpan.Parse("11:43:45.9875000"),
+                                                         TimeSpan.Parse("11:42:44.9874000")
+              }));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutTimetzArray()
+    {
+      var command = new Command("migration.get_out_timetz_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.TimeTZ | PgsqlDbType.Array);
+
+      // {\"migration.get_out_timetz_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"0001-01-02T14:41:45.1234+03:00\",\"0001-01-02T13:39:44.1233+02:00\",\"0001-01-02T11:38:42.1232+01:00\"]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
+      var actual = ppv.Replace("\"", string.Empty).Split(',').Select(x => DateTimeOffset.Parse(x)).ToArray();
+      Assert.That(actual, Is.EqualTo(new DateTimeOffset[3] { DateTimeOffset.Parse("0001-01-02T14:41:45.1234+03:00"),
+                                                             DateTimeOffset.Parse("0001-01-02T13:39:44.1233+02:00"),
+                                                             DateTimeOffset.Parse("0001-01-02T11:38:42.1232+01:00")
+      }));
+    }
+
+
+    [Test]
+    public void GetOutTimestampArray()
+    {
+      var command = new Command("migration.get_out_timestamp_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Timestamp | PgsqlDbType.Array);
+
+      // {\"migration.get_out_timestamp_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"2022-03-18T12:42:46.1234\",\"2020-01-16T10:40:44.1232\",\"2019-09-15T09:39:43.1231\"]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
+      var actual = ppv.Replace("\"", string.Empty).Split(',').Select(x => DateTime.Parse(x)).ToArray();
+      Assert.That(actual, Is.EqualTo(new DateTime[3] { DateTime.Parse("2022-03-18T12:42:46.1234"),
+                                                       DateTime.Parse("2020-01-16T10:40:44.1232"),
+                                                       DateTime.Parse("2019-09-15T09:39:43.1231")
+      }));
+    }
+
+    [Test]
+    public void GetOutTimestamptzArray()
+    {
+      var command = new Command("migration.get_out_timestamptz_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.TimestampTZ | PgsqlDbType.Array);
+
+      // {\"migration.get_out_timestamptz_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"2021-04-18T12:43:47.1234Z\",\"2018-01-15T10:40:44.1231Z\",\"2017-01-14T07:39:44.123Z\"]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
+      var actual = ppv.Replace("\"", string.Empty).Split(',').Select(x => DateTime.Parse(x)).ToArray();
+      Assert.That(actual, Is.EqualTo(new DateTime[3] { DateTime.Parse("2021-04-18T12:43:47.1234Z"),
+                                                       DateTime.Parse("2018-01-15T10:40:44.1231Z"),
+                                                       DateTime.Parse("2017-01-14T07:39:44.123Z")
+      }));
+    }
+
+    [Test]
+    public void GetOutVarcharArray()
+    {
+      var command = new Command("migration.get_out_varchar_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Varchar | PgsqlDbType.Array);
+
+      // {\"migration.get_out_varchar_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"PostgreSQL change column type examples\",\"What is the PostgreSQL Function?\",\"PostgreSQL change column type examples\"]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_varchar_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<string>();
+        foreach (var item in ja)
+        {
+          actual.Add(Convert.ToString(item)!);
+        }
+        Assert.That(actual, Is.EqualTo(new string[3] { "PostgreSQL change column type examples",
+                                                       "What is the PostgreSQL Function?",
+                                                       "PostgreSQL change column type examples"
+              }));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutUuidArray()
+    {
+      var command = new Command("migration.get_out_uuid_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Uuid | PgsqlDbType.Array);
+
+      // {\"migration.get_out_uuid_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"79130b53-3113-41d1-99ec-26e41b238394\",\"f0c180ba-e291-4089-91b4-3d8d122b5c77\",\"670c4c79-521c-40e2-8442-0248a93f8737\"]}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_uuid_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<Guid>();
+        foreach (var item in ja)
+        {
+          actual.Add(Guid.Parse(Convert.ToString(item)!));
+        }
+        Assert.That(actual, Is.EqualTo(new Guid[3] { Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394"),
+                                                     Guid.Parse("f0c180ba-e291-4089-91b4-3d8d122b5c77"),
+                                                     Guid.Parse("670c4c79-521c-40e2-8442-0248a93f8737")
+        }));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutXmlArray()
+    {
+      var command = new Command("migration.get_out_xml_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Xml | PgsqlDbType.Array);
+
+      /*
+
+      {\"migration.get_out_xml_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"<_routines>\\n  <_routine>\\n    <_name>formmanager_getfiltered</_name>\\n    <_arguments>\\n      <_formid>0</_formid>\\n      <_form></_form>\\n      <_businessids>1</_businessids>\\n      <_businessids>941</_businessids>\\n      <_businessids>942</_businessids>\\n      <_businessids>943</_businessids>\\n      <_businessids>944</_businessids>\\n      <_businessids>2006</_businessids>\\n      <_businessids>2129</_businessids>\\n      <_businessids>2135</_businessids>\\n      <_businessids>2137</_businessids>\\n      <_formtype>1</_formtype>\\n      <_formtype>2</_formtype>\\n      <_formtype>3</_formtype>\\n      <_formtype>4</_formtype>\\n      <_formtype>5</_formtype>\\n      <_formtype>6</_formtype>\\n      <_formtype>7</_formtype>\\n      <_formtype>8</_formtype>\\n      <_inactive>False</_inactive>\\n    </_arguments>\\n    <_options>\\n      <_writeSchema>1</_writeSchema>\\n    </_options>\\n  </_routine>\\n  <_compr
+         ession>0</_compression>\\n  <_returnType>json</_returnType>\\n</_routines>\",\"<_routines>\\n          <_routine>\\n            <_name>InitializeSession</_name>\\n            <_arguments>\\n              <login>sadmin@upstairs.com</login>\\n              <password>George555#</password>\\n              <isEncrypt>0</isEncrypt>\\n              <timeout>20</timeout>\\n              <appId>38</appId>\\n              <appVersion>3.8.6</appVersion>\\n              <domain>naitonmaster</domain>\\n            </_arguments>\\n          </_routine>\\n          <_returnType>xml</_returnType>\\n        </_routines>\",\"<_routines>\\n  <_routine>\\n    <_name>companymanager_getfilteredcompanieslist</_name>\\n    <_arguments>\\n      <_companyid>0</_companyid>\\n      <_companyname></_companyname>\\n      <_countryid>0</_countryid>\\n      <_businessgroupid>0</_businessgroupid>\\n      <_businessid>1</_businessid>\\n      <_email></_email>\\n      <_zipcode></_zipcode>\\n      <_housenumber></_housenumber>\\n      <_statusi
+         d>-3</_statusid>\\n      <_statusid>4</_statusid>\\n      <_statusid>6</_statusid>\\n      <_statusid>5</_statusid>\\n      <_iban></_iban>\\n      <_salesmanagerid>0</_salesmanagerid>\\n      <_onlyholding>False</_onlyholding>\\n      <_udffilter></_udffilter>\\n      <_holding></_holding>\\n      <_holdingalso>False</_holdingalso>\\n      <_companytypeid>2</_companytypeid>\\n      <_segmentid>0</_segmentid>\\n      <_segmentudf></_segmentudf>\\n      <_discountgroupid>-1</_discountgroupid>\\n      <_taxnumber></_taxnumber>\\n      <_chamberofcommerce></_chamberofcommerce>\\n      <_havechildonly>False</_havechildonly>\\n      <_reseller></_reseller>\\n      <_inactive>False</_inactive>\\n      <_companyids isNull=\\\"true\\\" />\\n      <_limit>200</_limit>\\n    </_arguments>\\n    <_options>\\n      <_writeSchema>1</_writeSchema>\\n    </_options>\\n  </_routine>\\n  <_compression>{{compression}}</_compression>\\n  <_returnType>json</_returnType>\\n</_routines>\"]}}}
+
+      */
+
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_xml_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<string>();
+        foreach (var item in ja)
+        {
+          actual.Add(Convert.ToString(item)!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty));
+        }
+        Assert.That(actual, Is.EqualTo(new string[3] { "<_routines>\n  <_routine>\n    <_name>formmanager_getfiltered</_name>\n    <_arguments>\n      <_formid>0</_formid>\n      <_form></_form>\n      <_businessids>1</_businessids>\n      <_businessids>941</_businessids>\n      <_businessids>942</_businessids>\n      <_businessids>943</_businessids>\n      <_businessids>944</_businessids>\n      <_businessids>2006</_businessids>\n      <_businessids>2129</_businessids>\n      <_businessids>2135</_businessids>\n      <_businessids>2137</_businessids>\n      <_formtype>1</_formtype>\n      <_formtype>2</_formtype>\n      <_formtype>3</_formtype>\n      <_formtype>4</_formtype>\n      <_formtype>5</_formtype>\n      <_formtype>6</_formtype>\n      <_formtype>7</_formtype>\n      <_formtype>8</_formtype>\n      <_inactive>False</_inactive>\n    </_arguments>\n    <_options>\n      <_writeSchema>1</_writeSchema>\n    </_options>\n  </_routine>\n  <_compression>0</_compression>\n  <_returnType>json</_returnType>\n</_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                                       "<_routines>\n          <_routine>\n            <_name>InitializeSession</_name>\n            <_arguments>\n              <login>sadmin@upstairs.com</login>\n              <password>George555#</password>\n              <isEncrypt>0</isEncrypt>\n              <timeout>20</timeout>\n              <appId>38</appId>\n              <appVersion>3.8.6</appVersion>\n              <domain>naitonmaster</domain>\n            </_arguments>\n          </_routine>\n          <_returnType>xml</_returnType>\n        </_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                                       "<_routines>\n  <_routine>\n    <_name>companymanager_getfilteredcompanieslist</_name>\n    <_arguments>\n      <_companyid>0</_companyid>\n      <_companyname></_companyname>\n      <_countryid>0</_countryid>\n      <_businessgroupid>0</_businessgroupid>\n      <_businessid>1</_businessid>\n      <_email></_email>\n      <_zipcode></_zipcode>\n      <_housenumber></_housenumber>\n      <_statusid>-3</_statusid>\n      <_statusid>4</_statusid>\n      <_statusid>6</_statusid>\n      <_statusid>5</_statusid>\n      <_iban></_iban>\n      <_salesmanagerid>0</_salesmanagerid>\n      <_onlyholding>False</_onlyholding>\n      <_udffilter></_udffilter>\n      <_holding></_holding>\n      <_holdingalso>False</_holdingalso>\n      <_companytypeid>2</_companytypeid>\n      <_segmentid>0</_segmentid>\n      <_segmentudf></_segmentudf>\n      <_discountgroupid>-1</_discountgroupid>\n      <_taxnumber></_taxnumber>\n      <_chamberofcommerce></_chamberofcommerce>\n      <_havechildonly>False</_havechildonly>\n      <_reseller></_reseller>\n      <_inactive>False</_inactive>\n      <_companyids isNull=\"true\" />\n      <_limit>200</_limit>\n    </_arguments>\n    <_options>\n      <_writeSchema>1</_writeSchema>\n    </_options>\n  </_routine>\n  <_compression>{{compression}}</_compression>\n  <_returnType>json</_returnType>\n</_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)
+        }));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutJsonArray()
+    {
+      var command = new Command("migration.get_out_json_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Json | PgsqlDbType.Array);
+
+      /*
+
+      {\"migration.get_out_json_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"{\\n    \\\"formmanager_getfiltered\\\": []\\n}\",\"{\\n    \\\"glossary\\\": {\\n        \\\"title\\\": \\\"example glossary\\\",\\n\\t\\t\\\"GlossDiv\\\": {\\n            \\\"title\\\": \\\"S\\\",\\n\\t\\t\\t\\\"GlossList\\\": {\\n                \\\"GlossEntry\\\": {\\n                    \\\"ID\\\": \\\"SGML\\\",\\n\\t\\t\\t\\t\\t\\\"SortAs\\\": \\\"SGML\\\",\\n\\t\\t\\t\\t\\t\\\"GlossTerm\\\": \\\"Standard Generalized Markup Language\\\",\\n\\t\\t\\t\\t\\t\\\"Acronym\\\": \\\"SGML\\\",\\n\\t\\t\\t\\t\\t\\\"Abbrev\\\": \\\"ISO 8879:1986\\\",\\n\\t\\t\\t\\t\\t\\\"GlossDef\\\": {\\n                        \\\"para\\\": \\\"A meta-markup language, used to create markup languages such as DocBook.\\\",\\n\\t\\t\\t\\t\\t\\t\\\"GlossSeeAlso\\\": [\\\"GML\\\", \\\"XML\\\"]\\n                    },\\n\\t\\t\\t\\t\\t\\\"GlossSee\\\": \\\"markup\\\"\\n                }\\n            }\\n        }\\n    }\\n}\",\"{\\\"menu\\\": {\
+       \n  \\\"id\\\": \\\"file\\\",\\n  \\\"value\\\": \\\"File\\\",\\n  \\\"popup\\\": {\\n    \\\"menuitem\\\": [\\n      {\\\"value\\\": \\\"New\\\", \\\"onclick\\\": \\\"CreateNewDoc()\\\"},\\n      {\\\"value\\\": \\\"Open\\\", \\\"onclick\\\": \\\"OpenDoc()\\\"},\\n      {\\\"value\\\": \\\"Close\\\", \\\"onclick\\\": \\\"CloseDoc()\\\"}\\n    ]\\n  }\\n}}\"]}}}
+
+      */
+
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_json_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<string>();
+        foreach (var item in ja)
+        {
+          actual.Add(Convert.ToString(item)!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty));
+        }
+        Assert.That(actual, Is.EqualTo(new string[3] { "{\n    \"formmanager_getfiltered\": []\n}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                                       "{\n    \"glossary\": {\n        \"title\": \"example glossary\",\n\t\t\"GlossDiv\": {\n            \"title\": \"S\",\n\t\t\t\"GlossList\": {\n                \"GlossEntry\": {\n                    \"ID\": \"SGML\",\n\t\t\t\t\t\"SortAs\": \"SGML\",\n\t\t\t\t\t\"GlossTerm\": \"Standard Generalized Markup Language\",\n\t\t\t\t\t\"Acronym\": \"SGML\",\n\t\t\t\t\t\"Abbrev\": \"ISO 8879:1986\",\n\t\t\t\t\t\"GlossDef\": {\n                        \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\",\n\t\t\t\t\t\t\"GlossSeeAlso\": [\"GML\", \"XML\"]\n                    },\n\t\t\t\t\t\"GlossSee\": \"markup\"\n                }\n            }\n        }\n    }\n}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                                       "{\"menu\": {\n  \"id\": \"file\",\n  \"value\": \"File\",\n  \"popup\": {\n    \"menuitem\": [\n      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\n      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\n      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\n    ]\n  }\n}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)
+              }));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutJsonbArray()
+    {
+      var command = new Command("migration.get_out_jsonb_array");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Jsonb | PgsqlDbType.Array);
+
+      /*
+
+        {\"migration.get_out_jsonb_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"{\\\"formmanager_getfiltered\\\": []}\",\"{\\\"glossary\\\": {\\\"title\\\": \\\"example glossary\\\", \\\"GlossDiv\\\": {\\\"title\\\": \\\"S\\\", \\\"GlossList\\\": {\\\"GlossEntry\\\": {\\\"ID\\\": \\\"SGML\\\", \\\"Abbrev\\\": \\\"ISO 8879:1986\\\", \\\"SortAs\\\": \\\"SGML\\\", \\\"Acronym\\\": \\\"SGML\\\", \\\"GlossDef\\\": {\\\"para\\\": \\\"A meta-markup language, used to create markup languages such as DocBook.\\\", \\\"GlossSeeAlso\\\": [\\\"GML\\\", \\\"XML\\\"]}, \\\"GlossSee\\\": \\\"markup\\\", \\\"GlossTerm\\\": \\\"Standard Generalized Markup Language\\\"}}}}}\",\"{\\\"menu\\\": {\\\"id\\\": \\\"file\\\", \\\"popup\\\": {\\\"menuitem\\\": [{\\\"value\\\": \\\"New\\\", \\\"onclick\\\": \\\"CreateNewDoc()\\\"}, {\\\"value\\\": \\\"Open\\\", \\\"onclick\\\": \\\"OpenDoc()\\\"}, {\\\"value\\\": \\\"Close\\\", \\\"onclick\\\": \\\"CloseDoc()\\\"}]}, \\\"value\\\": \\\"File\\\"}}\"]}}}
+      
+      */
+
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_jsonb_array"]!["arguments"]!["p_parameter"]!;
+      if (p is JArray ja)
+      {
+        var actual = new List<string>();
+        foreach (var item in ja)
+        {
+          actual.Add(Convert.ToString(item)!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty));
+        }
+        Assert.That(actual, Is.EqualTo(new string[3] { "{\"formmanager_getfiltered\": []}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                                       "{\"glossary\": {\"title\": \"example glossary\", \"GlossDiv\": {\"title\": \"S\", \"GlossList\": {\"GlossEntry\": {\"ID\": \"SGML\", \"Abbrev\": \"ISO 8879:1986\", \"SortAs\": \"SGML\", \"Acronym\": \"SGML\", \"GlossDef\": {\"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \"GlossSeeAlso\": [\"GML\", \"XML\"]}, \"GlossSee\": \"markup\", \"GlossTerm\": \"Standard Generalized Markup Language\"}}}}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                                       "{\"menu\": {\"id\": \"file\", \"popup\": {\"menuitem\": [{\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"}, {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"}, {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}]}, \"value\": \"File\"}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)
+        }));
+        return;
+      }
+
+      Assert.Fail();
+    }
     #endregion array
 
-    //    #region with in and out parameters
+    [Test]
+    public void GetOutAll()
+    {
+      var command = new Command("migration.get_out_all");
 
-    //    [Test]
-    //    public void GetInOutBigint()
-    //    {
-    //      GetInOutTest<long>("migration.get_in_and_out_bigint", 9223372036854775807, NpgsqlDbType.Bigint);
-    //    }
+      command.Parameters.Add("p_parameter1", PgsqlDbType.Bigint);
+      command.Parameters.Add("p_parameter2", PgsqlDbType.Boolean);
+      command.Parameters.Add("p_parameter3", PgsqlDbType.Bytea);
+      command.Parameters.Add("p_parameter4", PgsqlDbType.Double);
+      command.Parameters.Add("p_parameter5", PgsqlDbType.Integer);
+      command.Parameters.Add("p_parameter6", PgsqlDbType.Money);
+      command.Parameters.Add("p_parameter7", PgsqlDbType.Numeric);
+      command.Parameters.Add("p_parameter8", PgsqlDbType.Real);
+      command.Parameters.Add("p_parameter9", PgsqlDbType.Smallint);
+      command.Parameters.Add("p_parameter10", PgsqlDbType.Text);
+      command.Parameters.Add("p_parameter11", PgsqlDbType.Date);
+      command.Parameters.Add("p_parameter12", PgsqlDbType.Time);
+      command.Parameters.Add("p_parameter13", PgsqlDbType.TimeTZ);
+      command.Parameters.Add("p_parameter14", PgsqlDbType.Timestamp);
+      command.Parameters.Add("p_parameter15", PgsqlDbType.TimestampTZ);
+      command.Parameters.Add("p_parameter16", PgsqlDbType.Varchar);
+      command.Parameters.Add("p_parameter17", PgsqlDbType.Uuid);
+      command.Parameters.Add("p_parameter18", PgsqlDbType.Xml);
+      command.Parameters.Add("p_parameter19", PgsqlDbType.Json);
+      command.Parameters.Add("p_parameter20", PgsqlDbType.Jsonb);
 
-    //    [Test]
-    //    public void GetInOutBoolean()
-    //    {
-    //      GetInOutTest<bool>("migration.get_in_and_out_boolean", true, NpgsqlDbType.Boolean);
-    //    }
+      /*
 
-    //    [Test]
-    //    public void GetInOutBytea()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_in_and_out_bytea");
+      {\"migration.get_out_all\":{\"returnValue\":-1,\"arguments\":{\"p_parameter1\":9223372036854775807,\"p_parameter2\":true,\"p_parameter3\":\"aGVsbG8gd29ybGQh\",\"p_parameter4\":1234567890.12345,\"p_parameter5\":2147483647,\"p_parameter6\":92233720368547758.07,\"p_parameter7\":123456789012345678.1234567890,\"p_parameter8\":1.234568E+09,\"p_parameter9\":32767,\"p_parameter10\":\"PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.\",\"p_parameter11\":\"2021-05-18T00:00:00\",\"p_parameter12\":\"13:44:46.9876000\",\"p_parameter13\":\"0001-01-02T14:41:45.1234+03:00\",\"p_parameter14\":\"2022-03-18T12:42:46.1234\",\"p_parameter15\":\"2021-04-18T12:43:47.1234Z\",\"p_parameter16\":\"PostgreSQL change column type examples\",\"p_parameter17\":\"79130b53-3113-41d1-99ec-26e41b
+       238394\",\"p_parameter18\":\"<_routines>\\n  <_routine>\\n    <_name>formmanager_getfiltered</_name>\\n    <_arguments>\\n      <_formid>0</_formid>\\n      <_form></_form>\\n      <_businessids>1</_businessids>\\n      <_businessids>941</_businessids>\\n      <_businessids>942</_businessids>\\n      <_businessids>943</_businessids>\\n      <_businessids>944</_businessids>\\n      <_businessids>2006</_businessids>\\n      <_businessids>2129</_businessids>\\n      <_businessids>2135</_businessids>\\n      <_businessids>2137</_businessids>\\n      <_formtype>1</_formtype>\\n      <_formtype>2</_formtype>\\n      <_formtype>3</_formtype>\\n      <_formtype>4</_formtype>\\n      <_formtype>5</_formtype>\\n      <_formtype>6</_formtype>\\n      <_formtype>7</_formtype>\\n      <_formtype>8</_formtype>\\n      <_inactive>False</_inactive>\\n    </_arguments>\\n    <_options>\\n      <_writeSchema>1</_writeSchema>\\n    </_options>\\n  </_routine>\\n  <_compression>0</_compression>\\n  <_returnType>json</_returnType>
+       \\n</_routines>\",\"p_parameter19\":\"{\\n    \\\"formmanager_getfiltered\\\": []\\n}\",\"p_parameter20\":\"{\\\"formmanager_getfiltered\\\": []}\"}}}
 
-    //      var npgsqlParameter1 = new NpgsqlParameter("p_parameter1", NpgsqlDbType.Bytea);
-    //      byte[] expected = System.Text.Encoding.UTF8.GetBytes("hello world from bytea testing");
-    //      npgsqlParameter1.Value = expected;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter1);
+      */
 
-    //      var npgsqlParameter2 = new NpgsqlParameter("p_parameter2", NpgsqlDbType.Bytea);
-    //      npgsqlParameter2.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter2);
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      JObject jobject = JObject.Load(reader);
 
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
+      object pp1v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter1"]!;
+      var actual1 = Convert.ToInt64(pp1v);
+      long expected1 = 9223372036854775807;
+      Assert.That(actual1, Is.EqualTo(expected1));
 
-    //      var value = npgsqlCommand.Parameters["p_parameter2"].Value;
-    //      if (value != null)
-    //      {
-    //        var result = Convert.FromBase64String((string)value);
-    //        Assert.That(result, Is.EqualTo(expected));
-    //      }
-    //      else
-    //      {
-    //        Assert.Fail();
-    //      }
-    //    }
+      object pp2v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter2"]!;
+      var actual2 = Convert.ToBoolean(pp2v);
+      bool expected2 = true;
+      Assert.That(actual2, Is.EqualTo(expected2));
 
-    //    [Test]
-    //    public void GetInOutDoublePrecision()
-    //    {
-    //      GetInOutTest<double>("migration.get_in_and_out_double_precision", 1234567888.01478, NpgsqlDbType.Double);
-    //    }
+      object pp3v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter3"]!;
+      var actual3 = pp3v.ToString();
+      string expected3 = "aGVsbG8gd29ybGQh";
+      Assert.That(actual3, Is.EqualTo(expected3));
 
-    //    [Test]
-    //    public void GetInOutInteger()
-    //    {
-    //      GetInOutTest<int>("migration.get_in_and_out_integer", 2147483645, NpgsqlDbType.Integer);
-    //    }
+      object pp4v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter4"]!;
+      var actual4 = Convert.ToDouble(pp4v);
+      double expected4 = 1234567890.12345;
+      Assert.That(actual4, Is.EqualTo(expected4));
 
-    //    [Test]
-    //    public void GetInOutMoney()
-    //    {
-    //      GetInOutTest<decimal>("migration.get_in_and_out_money", 92233720368547756.06m, NpgsqlDbType.Money);
-    //    }
+      object pp5v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter5"]!;
+      var actual5 = Convert.ToDouble(pp5v);
+      int expected5 = 2147483647;
+      Assert.That(actual5, Is.EqualTo(expected5));
 
-    //    [Test]
-    //    public void GetInOutNumeric()
-    //    {
-    //      GetInOutTest<decimal>("migration.get_in_and_out_numeric", 123456789012345676.1234567888m, NpgsqlDbType.Numeric);
-    //    }
+      object pp6v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter6"]!;
+      var actual6 = Convert.ToDecimal(pp6v);
+      decimal expected6 = 92233720368547758.07m;
+      Assert.That(actual6, Is.EqualTo(expected6));
 
-    //    [Test]
-    //    public void GetInOutReal()
-    //    {
-    //      GetInOutTest<float>("migration.get_in_and_out_real", 1234567888.12343f, NpgsqlDbType.Real);
-    //    }
+      object pp7v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter7"]!;
+      var actual7 = Convert.ToDecimal(pp7v);
+      decimal expected7 = 123456789012345678.1234567890m;
+      Assert.That(actual7, Is.EqualTo(expected7));
 
-    //    [Test]
-    //    public void GetInOutSmallint()
-    //    {
-    //      GetInOutTest<short>("migration.get_in_and_out_smallint", (short)32765, NpgsqlDbType.Smallint);
-    //    }
+      object pp8v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter8"]!;
+      var actual8 = Convert.ToSingle(pp8v);
+      float expected8 = 1.234568E+09f;
+      Assert.That(actual8, Is.EqualTo(expected8));
 
-    //    [Test]
-    //    public void GetInOutText()
-    //    {
-    //      GetInOutTest<string>("migration.get_in_and_out_text", "Hello world from Text testing", NpgsqlDbType.Text);
-    //    }
+      object pp9v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter9"]!;
+      var actual9 = Convert.ToInt16(pp9v);
+      short expected9 = 32767;
+      Assert.That(actual9, Is.EqualTo(expected9));
 
-    //    [Test]
-    //    public void GetInOutDate()
-    //    {
-    //      GetInOutTest<DateTime>("migration.get_in_and_out_date", DateTime.Parse("2019.03.16"), NpgsqlDbType.Date);
-    //    }
+      object pp10v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter10"]!;
+      var actual10 = Convert.ToString(pp10v);
+      var expected10 = "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.";
+      Assert.That(actual10, Is.EqualTo(expected10));
 
-    //    // TO DO:
-    //    // About OUT direction parameter:
-    //    //   The IN direction parameter of the NpgsqlDbType.Time type can consume .NET TimeSpan as source,
-    //    //   but keeps the valuie in the .NET DateTime object.
-    //    //   In the following example, this sentence is acceptable:
-    //    // 
-    //    //   npgsqlParameter1.Value = TimeSpan.Parse("10:10:12.123");     
-    //    //
-    //    //   , but the type of npgsqlParameter1.Value is .NET DateTime 
-    //    //
-    //    // About OUT direction parameter:
-    //    //   although the dawa returns TimeSpan npgsql 2.2.7 converts it to DateTime to consume. By taking in mind,
-    //    //   that PostgreSQL time is the time span during a day, selecting Ticks of the DateTime is the right decision
-    //    [Test]
-    //    public void GetInOutTime()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_in_and_out_time");
+      object pp11v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter11"]!;
+      var actual11 = Convert.ToDateTime(pp11v);
+      var expected11 = DateTime.Parse("2021-05-18T00:00:00");
+      Assert.That(actual11, Is.EqualTo(expected11));
 
-    //      var npgsqlParameter1 = new NpgsqlParameter("p_parameter1", NpgsqlDbType.Time);
-    //      npgsqlParameter1.Value = TimeSpan.Parse("10:10:12.123");
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter1);
+      object pp12v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter12"]!;
+      var actual12 = TimeSpan.Parse(Convert.ToString(pp12v)!);
+      var expected12 = TimeSpan.Parse("13:44:46.9876000");
+      Assert.That(actual12, Is.EqualTo(expected12));
 
-    //      var npgsqlParameter2 = new NpgsqlParameter("p_parameter2", NpgsqlDbType.Time);
-    //      npgsqlParameter2.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter2);
+      object pp13v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter13"]!;
+      var actual13 = DateTimeOffset.Parse(Convert.ToString(pp13v)!);
+      var expected13 = DateTimeOffset.Parse("0001-01-02T14:41:45.1234+03:00");
+      Assert.That(actual13, Is.EqualTo(expected13));
 
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
+      object pp14v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter14"]!;
+      var actual14 = DateTime.Parse(Convert.ToString(pp14v)!);
+      var expected14 = DateTime.Parse("2022-03-18T12:42:46.1234");
+      Assert.That(actual14, Is.EqualTo(expected14));
 
-    //      var result = new TimeSpan(Convert.ToDateTime(npgsqlCommand.Parameters["p_parameter2"].Value).Ticks);
-    //      var expected = new TimeSpan(Convert.ToDateTime(npgsqlCommand.Parameters["p_parameter1"].Value).Ticks);
-    //      Assert.That(result, Is.EqualTo(expected));
-    //    }
+      object pp15v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter15"]!;
+      var actual15 = DateTime.Parse(Convert.ToString(pp15v)!);
+      var expected15 = DateTime.Parse("2021-04-18T12:43:47.1234Z");
+      Assert.That(actual15, Is.EqualTo(expected15));
 
-    //    /*
-    //       TO DO: using timetz in the project is not recommended. npgsql 2.2.7 consumes .NET TimeSpan insted of
-    //              DateTimeOffset for NpgsqlDbType.TimeTZ, this is a problem 1.
-    //              The problem 2 is although the dawa returns DateTimeOffset, npgsql 2.2.7 converts it to DateTime to consume,
-    //              where the date part is "0001-01-01". By taking in mind, that PostgreSQL time is the time span during a day, 
-    //              it is enough the extracting the time part of returning value as a result.
-    //    */
-    //    [Test]
-    //    public void GetInOutTimetz()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_in_and_out_timetz");
-    //      var npgsqlParameter1 = new NpgsqlParameter("p_parameter1", NpgsqlDbType.TimeTZ);
+      object pp16v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter16"]!;
+      var actual16 = Convert.ToString(pp16v)!;
+      var expected16 = "PostgreSQL change column type examples";
+      Assert.That(actual16, Is.EqualTo(expected16));
 
-    //      var timeSpan = new TimeSpan(DateTimeOffset.Parse("0001-01-01T10:10:12.256+03").UtcTicks);
-    //      npgsqlParameter1.Value = timeSpan;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter1);
+      object pp17v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter17"]!;
+      var actual17 = Guid.Parse(Convert.ToString(pp17v)!);
+      var expected17 = Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394");
+      Assert.That(actual17, Is.EqualTo(expected17));
 
-    //      var npgsqlParameter2 = new NpgsqlParameter("p_parameter2", NpgsqlDbType.TimeTZ);
-    //      npgsqlParameter2.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter2);
+      object pp18v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter18"]!;
+      var actual18 = Convert.ToString(pp18v)!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+      var expected18 = @"<_routines>
+        <_routine>
+          <_name>formmanager_getfiltered</_name>
+          <_arguments>
+            <_formid>0</_formid>
+            <_form></_form>
+            <_businessids>1</_businessids>
+            <_businessids>941</_businessids>
+            <_businessids>942</_businessids>
+            <_businessids>943</_businessids>
+            <_businessids>944</_businessids>
+            <_businessids>2006</_businessids>
+            <_businessids>2129</_businessids>
+            <_businessids>2135</_businessids>
+            <_businessids>2137</_businessids>
+            <_formtype>1</_formtype>
+            <_formtype>2</_formtype>
+            <_formtype>3</_formtype>
+            <_formtype>4</_formtype>
+            <_formtype>5</_formtype>
+            <_formtype>6</_formtype>
+            <_formtype>7</_formtype>
+            <_formtype>8</_formtype>
+            <_inactive>False</_inactive>
+          </_arguments>
+          <_options>
+            <_writeSchema>1</_writeSchema>
+          </_options>
+        </_routine>
+        <_compression>0</_compression>
+        <_returnType>json</_returnType>
+      </_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+      Assert.That(actual18, Is.EqualTo(expected18));
 
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
+      object pp19v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter19"]!;
+      var actual19 = Convert.ToString(pp19v)!.Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+      var expected19 = @"{ ""formmanager_getfiltered"": [] }".Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty); ;
+      Assert.That(actual19, Is.EqualTo(expected19));
 
-    //      var result = TimeOnly.FromDateTime((DateTime)npgsqlCommand.Parameters["p_parameter2"].Value);
-    //      var expected = TimeOnly.FromDateTime((DateTime)npgsqlCommand.Parameters["p_parameter1"].Value);
-    //      Assert.That(result, Is.EqualTo(expected));
-    //    }
+      object pp20v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter20"]!;
+      var actual20 = Convert.ToString(pp20v)!.Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+      var expected20 = @"{ ""formmanager_getfiltered"": [] }".Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty); ;
+      Assert.That(actual20, Is.EqualTo(expected20));
+    }
 
-    //    [Test]
-    //    public void GetInOutTimestamp()
-    //    {
-    //      GetInOutTest<DateTime>("migration.get_in_and_out_timestamp", DateTime.Parse("2023-05-23 10:10:12.256"), NpgsqlDbType.Timestamp);
-    //    }
+    private static void TestIt<T>(object source, object expected)
+    {
+      var ja = source as JArray;
+      if (ja != null)
+      {
+        var actual1 = ja.Select(x => (T)Convert.ChangeType(x, typeof(T))).ToArray();
+        Assert.That(actual1, Is.EqualTo(expected));
+        return;
+      }
+      Assert.Fail();
+    }
 
-    //    [Test]
-    //    public void GetInOutTimestamptz()
-    //    {
-    //      GetInOutTest<DateTime>("migration.get_in_and_out_timestamptz", DateTime.Parse("2023-05-23 10:10:12.256+05"), NpgsqlDbType.TimestampTZ);
-    //    }
+    [Test]
+    public void GetOutAllArray()
+    {
+      var command = new Command("migration.get_out_all_array");
 
-    //    [Test]
-    //    public void GetInOutVachar()
-    //    {
-    //      GetInOutTest<string>("migration.get_in_and_out_varchar", "hello world!", NpgsqlDbType.Varchar);
-    //    }
+      command.Parameters.Add("p_parameter1", PgsqlDbType.Bigint | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter2", PgsqlDbType.Boolean | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter3", PgsqlDbType.Bytea | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter4", PgsqlDbType.Double | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter5", PgsqlDbType.Integer | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter6", PgsqlDbType.Money | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter7", PgsqlDbType.Numeric | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter8", PgsqlDbType.Real | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter9", PgsqlDbType.Smallint | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter10", PgsqlDbType.Text | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter11", PgsqlDbType.Date | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter12", PgsqlDbType.Time | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter13", PgsqlDbType.TimeTZ | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter14", PgsqlDbType.Timestamp | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter15", PgsqlDbType.TimestampTZ | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter16", PgsqlDbType.Varchar | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter17", PgsqlDbType.Uuid | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter18", PgsqlDbType.Xml | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter19", PgsqlDbType.Json | PgsqlDbType.Array);
+      command.Parameters.Add("p_parameter20", PgsqlDbType.Jsonb | PgsqlDbType.Array);
 
-    //    [Test]
-    //    public void GetInOutUuid()
-    //    {
-    //      GetInOutTest<string>("migration.get_in_and_out_uuid", "79130b53-3113-41d1-99ec-26e41b238394", NpgsqlDbType.Uuid);
-    //    }
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      JObject jobject = JObject.Load(reader);
 
-    //    [Test]
-    //    public void GetInOutXml()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_in_and_out_xml");
-    //      var npgsqlParameter1 = new NpgsqlParameter("p_parameter1", NpgsqlDbType.Xml);
-    //      npgsqlParameter1.Value = @"<_routines>
-    //  <_routine>
-    //    <_name>formmanager_getfiltered</_name>
-    //    <_arguments>
-    //      <_formid>0</_formid>
-    //      <_form></_form>
-    //      <_businessids>1</_businessids>
-    //      <_businessids>941</_businessids>
-    //      <_businessids>942</_businessids>
-    //      <_businessids>943</_businessids>
-    //      <_businessids>944</_businessids>
-    //      <_businessids>2006</_businessids>
-    //      <_businessids>2129</_businessids>
-    //      <_businessids>2135</_businessids>
-    //      <_businessids>2137</_businessids>
-    //      <_formtype>1</_formtype>
-    //      <_formtype>2</_formtype>
-    //      <_formtype>3</_formtype>
-    //      <_formtype>4</_formtype>
-    //      <_formtype>5</_formtype>
-    //      <_formtype>6</_formtype>
-    //      <_formtype>7</_formtype>
-    //      <_formtype>8</_formtype>
-    //      <_inactive>False</_inactive>
-    //    </_arguments>
-    //    <_options>
-    //      <_writeSchema>1</_writeSchema>
-    //    </_options>
-    //  </_routine>
-    //  <_compression>0</_compression>
-    //  <_returnType>json</_returnType>
-    //</_routines>";
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter1);
+      TestIt<long>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter1"]!,
+                   new long[] { 9223372036854775807, 9223372036854775806, 9223372036854775805 });
 
-    //      var npgsqlParameter2 = new NpgsqlParameter("p_parameter2", NpgsqlDbType.Xml);
-    //      npgsqlParameter2.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter2);
+      TestIt<bool>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter2"]!,
+                   new bool[] { true, false, true });
 
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
+      TestIt<string>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter3"]!,
+                     new string[] { "aGVsbG8gd29ybGQh", "VGhlcmUgYXJlIHRocmVlIG1ldGhvZHMgdXNlZCB0byBhZGp1c3QgYSBEYXRlT25seSBzdHJ1Y3R1cmU6IEFkZERheXMsIEFkZE1vbnRocywgYW5kIEFkZFllYXJzLiBFYWNoIG1ldGhvZCB0YWtlcyBhbiBpbnRlZ2VyIHBhcmFtZXRlciwgYW5kIGluY3JlYXNlcyB0aGUgZGF0ZSBieSB0aGF0IG1lYXN1cmVtZW50Lg==", "SWYgYSBuZWdhdGl2ZSBudW1iZXIgaXMgcHJvdmlkZWQsIHRoZSBkYXRlIGlzIGRlY3JlYXNlZCBieSB0aGF0IG1lYXN1cmVtZW50LiBUaGUgbWV0aG9kcyByZXR1cm4gYSBuZXcgaW5zdGFuY2Ugb2YgRGF0ZU9ubHksIGFzIHRoZSBzdHJ1Y3R1cmUgaXMgaW1tdXRhYmxlLg==" });
 
-    //      var result = Convert.ToString(npgsqlCommand.Parameters["p_parameter2"].Value)!.Replace("\r", string.Empty).Replace("\n", string.Empty);
-    //      var expected = Convert.ToString(npgsqlCommand.Parameters["p_parameter1"].Value)!.Replace("\r", string.Empty).Replace("\n", string.Empty);
-    //      Assert.That(result, Is.EqualTo(expected));
-    //    }
+      TestIt<double>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter4"]!,
+                     new double[] { 1234567890.12345, 1234567889.6789, 1234567888.01478 });
 
-    //    [Test]
-    //    public void GetInOutJson()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_in_and_out_json");
-    //      var npgsqlParameter1 = new NpgsqlParameter("p_parameter1", NpgsqlDbType.Json);
-    //      npgsqlParameter1.Value = "{\r\n    \"glossary\": {\r\n        \"title\": \"example glossary\",\r\n\t\t\"GlossDiv\": {\r\n            \"title\": \"S\",\r\n\t\t\t\"GlossList\": {\r\n                \"GlossEntry\": {\r\n                    \"ID\": \"SGML\",\r\n\t\t\t\t\t\"SortAs\": \"SGML\",\r\n\t\t\t\t\t\"GlossTerm\": \"Standard Generalized Markup Language\",\r\n\t\t\t\t\t\"Acronym\": \"SGML\",\r\n\t\t\t\t\t\"Abbrev\": \"ISO 8879:1986\",\r\n\t\t\t\t\t\"GlossDef\": {\r\n                        \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\",\r\n\t\t\t\t\t\t\"GlossSeeAlso\": [\"GML\", \"XML\"]\r\n                    },\r\n\t\t\t\t\t\"GlossSee\": \"markup\"\r\n                }\r\n            }\r\n        }\r\n    }\r\n}";
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter1);
+      TestIt<int>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter5"]!,
+                  new int[] { 2147483647, 2147483646, 2147483645 });
 
-    //      var npgsqlParameter2 = new NpgsqlParameter("p_parameter2", NpgsqlDbType.Json);
-    //      npgsqlParameter2.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter2);
+      TestIt<decimal>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter6"]!,
+                      new decimal[] { 92233720368547758.07m, 92233720368547757.05m, 92233720368547756.06m });
 
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
+      TestIt<decimal>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter7"]!,
+                      new decimal[] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m });
 
-    //      var result = Convert.ToString(npgsqlCommand.Parameters["p_parameter2"].Value)!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
-    //      var expected = Convert.ToString(npgsqlCommand.Parameters["p_parameter1"].Value)!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty); ;
-    //      Assert.That(result, Is.EqualTo(expected));
-    //    }
+      TestIt<float>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter8"]!,
+                      new float[] { 1.234568E+09f, 1.234568E+09f, 1.234568E+09f });
 
-    //    [Test]
-    //    public void GetInOutJsonb()
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand("migration.get_in_and_out_json");
-    //      var npgsqlParameter1 = new NpgsqlParameter("p_parameter1", NpgsqlDbType.Jsonb);
-    //      npgsqlParameter1.Value = "{\r\n    \"glossary\": {\r\n        \"title\": \"example glossary\",\r\n\t\t\"GlossDiv\": {\r\n            \"title\": \"S\",\r\n\t\t\t\"GlossList\": {\r\n                \"GlossEntry\": {\r\n                    \"ID\": \"SGML\",\r\n\t\t\t\t\t\"SortAs\": \"SGML\",\r\n\t\t\t\t\t\"GlossTerm\": \"Standard Generalized Markup Language\",\r\n\t\t\t\t\t\"Acronym\": \"SGML\",\r\n\t\t\t\t\t\"Abbrev\": \"ISO 8879:1986\",\r\n\t\t\t\t\t\"GlossDef\": {\r\n                        \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\",\r\n\t\t\t\t\t\t\"GlossSeeAlso\": [\"GML\", \"XML\"]\r\n                    },\r\n\t\t\t\t\t\"GlossSee\": \"markup\"\r\n                }\r\n            }\r\n        }\r\n    }\r\n}";
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter1);
+      TestIt<short>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter9"]!,
+                new short[] { 32767, 32766, 32765 });
 
-    //      var npgsqlParameter2 = new NpgsqlParameter("p_parameter2", NpgsqlDbType.Jsonb);
-    //      npgsqlParameter2.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter2);
+      TestIt<string>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter10"]!,
+                new string[] { "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                                   "DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.",
+                                   "DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date." });
 
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
+      TestIt<DateTime>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter11"]!,
+                new DateTime[] { DateTime.Parse("2021-05-18T00:00:00"), DateTime.Parse("2020-04-17T00:00:00"), DateTime.Parse("2019-03-16T00:00:00") });
 
-    //      var result = Convert.ToString(npgsqlCommand.Parameters["p_parameter2"].Value)!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
-    //      var expected = Convert.ToString(npgsqlCommand.Parameters["p_parameter1"].Value)!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty); ;
-    //      Assert.That(result, Is.EqualTo(expected));
-    //    }
+      TestIt<TimeSpan>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter12"]!,
+                new TimeSpan[] { TimeSpan.Parse("13:44:46.9876000"), TimeSpan.Parse("11:43:45.9875000"), TimeSpan.Parse("11:42:44.9874000") });
 
-    //    public void GetInOutTest<T>(string postgreSQLFunctionName, object value, NpgsqlDbType npgsqlDbType)
-    //    {
-    //      using var npgsqlCommand = new NpgsqlCommand(postgreSQLFunctionName);
+      TestIt<DateTimeOffset>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter13"]!,
+                new DateTimeOffset[] { DateTimeOffset.Parse("0001-01-02T14:41:45.1234+03:00"), DateTimeOffset.Parse("0001-01-02T13:39:44.1233+02:00"), DateTimeOffset.Parse("0001-01-02T11:38:42.1232+01:00") });
 
-    //      var npgsqlParameter1 = new NpgsqlParameter("p_parameter1", npgsqlDbType);
-    //      npgsqlParameter1.Value = value;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter1);
+      TestIt<DateTime>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter14"]!,
+                new DateTime[] { DateTime.Parse("2022-03-18T12:42:46.1234"), DateTime.Parse("2020-01-16T10:40:44.1232"), DateTime.Parse("2019-09-15T09:39:43.1231") });
 
-    //      var npgsqlParameter2 = new NpgsqlParameter("p_parameter2", npgsqlDbType);
-    //      npgsqlParameter2.Direction = ParameterDirection.Output;
-    //      npgsqlCommand.Parameters.Add(npgsqlParameter2);
+      TestIt<DateTime>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter15"]!,
+          new DateTime[] { DateTime.Parse("2021-04-18T12:43:47.1234Z"), DateTime.Parse("2018-01-15T10:40:44.1231Z"), DateTime.Parse("2017-01-14T07:39:44.123Z") });
 
-    //      npgsqlCommand.WExecuteNonQuery(returnCompressionType: CompressionType.GZip);
+      TestIt<string>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter16"]!,
+          new string[] { "PostgreSQL change column type examples", "What is the PostgreSQL Function?", "PostgreSQL change column type examples" });
 
-    //      var result = Convert.ChangeType(npgsqlCommand.Parameters["p_parameter2"].Value, typeof(T));
-    //      var expected = (T)npgsqlParameter1.Value;
-    //      Assert.That(result, Is.EqualTo(expected));
-    //    }
+      TestIt<string>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter17"]!,
+          new string[] { "79130b53-3113-41d1-99ec-26e41b238394", "f0c180ba-e291-4089-91b4-3d8d122b5c77", "670c4c79-521c-40e2-8442-0248a93f8737" });
+
+      var ja18 = jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter18"]! as JArray;
+      if (ja18 != null)
+      {
+        var result18 = ja18.Select(x => Convert.ToString(x))
+                         .Where(x => x != null)
+                         .Select(x => x!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)).ToArray();
+        var expected18 = new string[] { "<_routines>\n  <_routine>\n    <_name>formmanager_getfiltered</_name>\n    <_arguments>\n      <_formid>0</_formid>\n      <_form></_form>\n      <_businessids>1</_businessids>\n      <_businessids>941</_businessids>\n      <_businessids>942</_businessids>\n      <_businessids>943</_businessids>\n      <_businessids>944</_businessids>\n      <_businessids>2006</_businessids>\n      <_businessids>2129</_businessids>\n      <_businessids>2135</_businessids>\n      <_businessids>2137</_businessids>\n      <_formtype>1</_formtype>\n      <_formtype>2</_formtype>\n      <_formtype>3</_formtype>\n      <_formtype>4</_formtype>\n      <_formtype>5</_formtype>\n      <_formtype>6</_formtype>\n      <_formtype>7</_formtype>\n      <_formtype>8</_formtype>\n      <_inactive>False</_inactive>\n    </_arguments>\n    <_options>\n      <_writeSchema>1</_writeSchema>\n    </_options>\n  </_routine>\n  <_compression>0</_compression>\n  <_returnType>json</_returnType>\n</_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                        "<_routines>\n          <_routine>\n            <_name>InitializeSession</_name>\n            <_arguments>\n              <login>sadmin@upstairs.com</login>\n              <password>George555#</password>\n              <isEncrypt>0</isEncrypt>\n              <timeout>20</timeout>\n              <appId>38</appId>\n              <appVersion>3.8.6</appVersion>\n              <domain>naitonmaster</domain>\n            </_arguments>\n          </_routine>\n          <_returnType>xml</_returnType>\n        </_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                        "<_routines>\n  <_routine>\n    <_name>companymanager_getfilteredcompanieslist</_name>\n    <_arguments>\n      <_companyid>0</_companyid>\n      <_companyname></_companyname>\n      <_countryid>0</_countryid>\n      <_businessgroupid>0</_businessgroupid>\n      <_businessid>1</_businessid>\n      <_email></_email>\n      <_zipcode></_zipcode>\n      <_housenumber></_housenumber>\n      <_statusid>-3</_statusid>\n      <_statusid>4</_statusid>\n      <_statusid>6</_statusid>\n      <_statusid>5</_statusid>\n      <_iban></_iban>\n      <_salesmanagerid>0</_salesmanagerid>\n      <_onlyholding>False</_onlyholding>\n      <_udffilter></_udffilter>\n      <_holding></_holding>\n      <_holdingalso>False</_holdingalso>\n      <_companytypeid>2</_companytypeid>\n      <_segmentid>0</_segmentid>\n      <_segmentudf></_segmentudf>\n      <_discountgroupid>-1</_discountgroupid>\n      <_taxnumber></_taxnumber>\n      <_chamberofcommerce></_chamberofcommerce>\n      <_havechildonly>False</_havechildonly>\n      <_reseller></_reseller>\n      <_inactive>False</_inactive>\n      <_companyids isNull=\"true\" />\n      <_limit>200</_limit>\n    </_arguments>\n    <_options>\n      <_writeSchema>1</_writeSchema>\n    </_options>\n  </_routine>\n  <_compression>{{compression}}</_compression>\n  <_returnType>json</_returnType>\n</_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)};
+        Assert.That(result18, Is.EqualTo(expected18));
+      }
+      else
+      {
+        Assert.Fail();
+      }
+
+      var ja19 = jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter19"]! as JArray;
+      if (ja19 != null)
+      {
+        var result19 = ja19.Select(x => Convert.ToString(x))
+                           .Where(x => x != null)
+                           .Select(x => x!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)).ToArray();
+        var expected19 = new string[] { "{\n    \"formmanager_getfiltered\": []\n}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                            "{\n    \"glossary\": {\n        \"title\": \"example glossary\",\n\t\t\"GlossDiv\": {\n            \"title\": \"S\",\n\t\t\t\"GlossList\": {\n                \"GlossEntry\": {\n                    \"ID\": \"SGML\",\n\t\t\t\t\t\"SortAs\": \"SGML\",\n\t\t\t\t\t\"GlossTerm\": \"Standard Generalized Markup Language\",\n\t\t\t\t\t\"Acronym\": \"SGML\",\n\t\t\t\t\t\"Abbrev\": \"ISO 8879:1986\",\n\t\t\t\t\t\"GlossDef\": {\n                        \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\",\n\t\t\t\t\t\t\"GlossSeeAlso\": [\"GML\", \"XML\"]\n                    },\n\t\t\t\t\t\"GlossSee\": \"markup\"\n                }\n            }\n        }\n    }\n}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                            "{\"menu\": {\n  \"id\": \"file\",\n  \"value\": \"File\",\n  \"popup\": {\n    \"menuitem\": [\n      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\n      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\n      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\n    ]\n  }\n}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)};
+        Assert.That(result19, Is.EqualTo(expected19));
+      }
+      else
+      {
+        Assert.Fail();
+      }
+
+      var ja20 = jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter20"]! as JArray;
+      if (ja20 != null)
+      {
+        var result20 = ja20.Select(x => Convert.ToString(x))
+                           .Where(x => x != null)
+                           .Select(x => x.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)).ToArray();
+        var expected20 = new string[] { "{\"formmanager_getfiltered\": []}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                            "{\"glossary\": {\"title\": \"example glossary\", \"GlossDiv\": {\"title\": \"S\", \"GlossList\": {\"GlossEntry\": {\"ID\": \"SGML\", \"Abbrev\": \"ISO 8879:1986\", \"SortAs\": \"SGML\", \"Acronym\": \"SGML\", \"GlossDef\": {\"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \"GlossSeeAlso\": [\"GML\", \"XML\"]}, \"GlossSee\": \"markup\", \"GlossTerm\": \"Standard Generalized Markup Language\"}}}}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
+                                            "{\"menu\": {\"id\": \"file\", \"popup\": {\"menuitem\": [{\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"}, {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"}, {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}]}, \"value\": \"File\"}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)};
+        Assert.That(result20, Is.EqualTo(expected20));
+      }
+      else
+      {
+        Assert.Fail();
+      }
+    }
+
+    #region with in and out parameters
+
+    public void GetInOutTest<T>(string postgreSQLFunctionName, object value, PgsqlDbType pgsqlDbType)
+    {
+      var command = new Command(postgreSQLFunctionName);
+      command.Parameters.Add("p_parameter1", pgsqlDbType, value);
+      command.Parameters.Add("p_parameter2", pgsqlDbType);
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      JObject jobject = JObject.Load(reader);
+
+      var actual = Convert.ChangeType(jobject[postgreSQLFunctionName]!["arguments"]!["p_parameter2"]!, typeof(T));
+      var expected = (T)value;
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void GetInOutBigint()
+    {
+      GetInOutTest<long>("migration.get_in_and_out_bigint", 9223372036854775807, PgsqlDbType.Bigint);
+    }
+
+    [Test]
+    public void GetInOutBoolean()
+    {
+      GetInOutTest<bool>("migration.get_in_and_out_boolean", true, PgsqlDbType.Boolean);
+    }
+
+    [Test]
+    public void GetInOutBytea()
+    {
+      var command = new Command("migration.get_in_and_out_bytea");
+      var expected = System.Text.Encoding.UTF8.GetBytes("hello world from bytea testing");
+      command.Parameters.Add("p_parameter1", PgsqlDbType.Bytea, expected);
+      command.Parameters.Add("p_parameter2", PgsqlDbType.Bytea);
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      JObject jobject = JObject.Load(reader);
+      var actual = Convert.FromBase64String(Convert.ToString(jobject["migration.get_in_and_out_bytea"]!["arguments"]!["p_parameter2"]!)!);
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void GetInOutDoublePrecision()
+    {
+      GetInOutTest<double>("migration.get_in_and_out_double_precision", 1234567888.01478, PgsqlDbType.Double);
+    }
+
+    [Test]
+    public void GetInOutInteger()
+    {
+      GetInOutTest<int>("migration.get_in_and_out_integer", 2147483645, PgsqlDbType.Integer);
+    }
+
+    [Test]
+    public void GetInOutMoney()
+    {
+      GetInOutTest<decimal>("migration.get_in_and_out_money", 92233720368547756.06m, PgsqlDbType.Money);
+    }
+
+    [Test]
+    public void GetInOutNumeric()
+    {
+      GetInOutTest<decimal>("migration.get_in_and_out_numeric", 123456789012345676.1234567888m, PgsqlDbType.Numeric);
+    }
+
+    [Test]
+    public void GetInOutReal()
+    {
+      GetInOutTest<float>("migration.get_in_and_out_real", 1234567888.12343f, PgsqlDbType.Real);
+    }
+
+    [Test]
+    public void GetInOutSmallint()
+    {
+      GetInOutTest<short>("migration.get_in_and_out_smallint", (short)32765, PgsqlDbType.Smallint);
+    }
+
+    [Test]
+    public void GetInOutText()
+    {
+      GetInOutTest<string>("migration.get_in_and_out_text", "Hello world from Text testing", PgsqlDbType.Text);
+    }
+
+    [Test]
+    public void GetInOutDate()
+    {
+      GetInOutTest<DateTime>("migration.get_in_and_out_date", DateTime.Parse("2019.03.16"), PgsqlDbType.Date);
+    }
+
+    [Test]
+    public void GetInOutTime()
+    {
+      GetInOutTest<TimeSpan>("migration.get_in_and_out_time", TimeSpan.Parse("10:10:12.123"), PgsqlDbType.Time);
+    }
+
+    [Test]
+    public void GetInOutTimetz()
+    {
+      GetInOutTest<DateTimeOffset>("migration.get_in_and_out_timetz", DateTimeOffset.Parse("0001-01-02T10:10:12.256+03"), PgsqlDbType.TimeTZ);
+    }
+
+    [Test]
+    public void GetInOutTimestamp()
+    {
+      GetInOutTest<DateTime>("migration.get_in_and_out_timestamp", DateTime.Parse("2023-05-23 10:10:12.256"), PgsqlDbType.Timestamp);
+    }
+
+    [Test]
+    public void GetInOutTimestamptz()
+    {
+      GetInOutTest<DateTime>("migration.get_in_and_out_timestamptz", DateTime.Parse("2023-05-23 10:10:12.256+05"), PgsqlDbType.TimestampTZ);
+    }
+
+    [Test]
+    public void GetInOutVachar()
+    {
+      GetInOutTest<string>("migration.get_in_and_out_varchar", "hello world!", PgsqlDbType.Varchar);
+    }
+
+    [Test]
+    public void GetInOutUuid()
+    {
+      GetInOutTest<string>("migration.get_in_and_out_uuid", "79130b53-3113-41d1-99ec-26e41b238394", PgsqlDbType.Uuid);
+    }
+
+    [Test]
+    public void GetInOutXml()
+    {
+      var command = new Command("migration.get_in_and_out_xml");
+      var expected = @"<_routines>
+      <_routine>
+        <_name>formmanager_getfiltered</_name>
+        <_arguments>
+          <_formid>0</_formid>
+          <_form></_form>
+          <_businessids>1</_businessids>
+          <_businessids>941</_businessids>
+          <_businessids>942</_businessids>
+          <_businessids>943</_businessids>
+          <_businessids>944</_businessids>
+          <_businessids>2006</_businessids>
+          <_businessids>2129</_businessids>
+          <_businessids>2135</_businessids>
+          <_businessids>2137</_businessids>
+          <_formtype>1</_formtype>
+          <_formtype>2</_formtype>
+          <_formtype>3</_formtype>
+          <_formtype>4</_formtype>
+          <_formtype>5</_formtype>
+          <_formtype>6</_formtype>
+          <_formtype>7</_formtype>
+          <_formtype>8</_formtype>
+          <_inactive>False</_inactive>
+        </_arguments>
+        <_options>
+          <_writeSchema>1</_writeSchema>
+        </_options>
+      </_routine>
+      <_compression>0</_compression>
+      <_returnType>json</_returnType>
+    </_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty);
+
+      command.Parameters.Add("p_parameter1", PgsqlDbType.Xml, expected);
+      command.Parameters.Add("p_parameter2", PgsqlDbType.Xml);
+
+      // TO DO: this test works when the http method is HttpMethod.POST, and does not work for HttpMethod.GET
+      var response = Command.Execute(command, RoutineType.NonQuery, HttpMethod.POST);
+
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      JObject jobject = JObject.Load(reader);
+      var actual = Convert.ToString(jobject["migration.get_in_and_out_xml"]!["arguments"]!["p_parameter2"]!)!.Replace("\r", string.Empty).Replace("\n", string.Empty); ;
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void GetInOutJson()
+    {
+      var command = new Command("migration.get_in_and_out_json");
+      var expected = "{\r\n    \"glossary\": {\r\n        \"title\": \"example glossary\",\r\n\t\t\"GlossDiv\": {\r\n            \"title\": \"S\",\r\n\t\t\t\"GlossList\": {\r\n                \"GlossEntry\": {\r\n                    \"ID\": \"SGML\",\r\n\t\t\t\t\t\"SortAs\": \"SGML\",\r\n\t\t\t\t\t\"GlossTerm\": \"Standard Generalized Markup Language\",\r\n\t\t\t\t\t\"Acronym\": \"SGML\",\r\n\t\t\t\t\t\"Abbrev\": \"ISO 8879:1986\",\r\n\t\t\t\t\t\"GlossDef\": {\r\n                        \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\",\r\n\t\t\t\t\t\t\"GlossSeeAlso\": [\"GML\", \"XML\"]\r\n                    },\r\n\t\t\t\t\t\"GlossSee\": \"markup\"\r\n                }\r\n            }\r\n        }\r\n    }\r\n}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty); ;
+      command.Parameters.Add("p_parameter1", PgsqlDbType.Json, expected);
+      command.Parameters.Add("p_parameter2", PgsqlDbType.Json);
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      JObject jobject = JObject.Load(reader);
+      var actual = Convert.ToString(jobject["migration.get_in_and_out_json"]!["arguments"]!["p_parameter2"]!)!.Replace("\r", string.Empty).Replace("\n", string.Empty); ;
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    static void Sort(JObject jObj)
+    {
+      var props = jObj.Properties().ToList();
+      foreach (var prop in props)
+      {
+        prop.Remove();
+      }
+
+      foreach (var prop in props.OrderBy(p => p.Name))
+      {
+        jObj.Add(prop);
+        if (prop.Value is JObject)
+          Sort((JObject)prop.Value);
+        if (prop.Value is JArray)
+        {
+          Int32 iCount = prop.Value.Count();
+          for (Int32 iIterator = 0; iIterator < iCount; iIterator++)
+            if (prop.Value[iIterator] is JObject)
+              Sort((JObject)prop.Value[iIterator]);
+        }
+      }
+    }
+
+    [Test]
+    public void GetInOutJsonb()
+    {
+      var command = new Command("migration.get_in_and_out_jsonb");
+      var value = "{\r\n    \"glossary\": {\r\n        \"title\": \"example glossary\",\r\n\t\t\"GlossDiv\": {\r\n            \"title\": \"S\",\r\n\t\t\t\"GlossList\": {\r\n                \"GlossEntry\": {\r\n                    \"ID\": \"SGML\",\r\n\t\t\t\t\t\"SortAs\": \"SGML\",\r\n\t\t\t\t\t\"GlossTerm\": \"Standard Generalized Markup Language\",\r\n\t\t\t\t\t\"Acronym\": \"SGML\",\r\n\t\t\t\t\t\"Abbrev\": \"ISO 8879:1986\",\r\n\t\t\t\t\t\"GlossDef\": {\r\n                        \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\",\r\n\t\t\t\t\t\t\"GlossSeeAlso\": [\"GML\", \"XML\"]\r\n                    },\r\n\t\t\t\t\t\"GlossSee\": \"markup\"\r\n                }\r\n            }\r\n        }\r\n    }\r\n}";
+      command.Parameters.Add("p_parameter1", PgsqlDbType.Jsonb, value);
+      command.Parameters.Add("p_parameter2", PgsqlDbType.Jsonb);
+
+      var response = Command.Execute(command, RoutineType.NonQuery, HttpMethod.POST);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      JObject jobject = JObject.Load(reader);
+
+      // we need to convert both json strings to JObject, and after that to order JObject by values,
+      // because PostgreSQL keeps jsonb objects by their inner optimization, which violates the order of key - values of the json object
+
+      var expected = JObject.Parse(value);
+      Sort(expected);
+
+      var actual = JObject.Parse(Convert.ToString(jobject["migration.get_in_and_out_jsonb"]!["arguments"]!["p_parameter2"]!)!);
+      Sort(actual);
+
+      Assert.That(actual, Is.EqualTo(expected));
+    }
 
     //    #region array
 
@@ -2043,7 +1826,7 @@ namespace SimpleWSA.WSALibrary
     //      Assert.Fail();
     //    }
     //    #endregion array
-    //    #endregion with in and out parameters
+    #endregion with in and out parameters
     #endregion non query
 
 
