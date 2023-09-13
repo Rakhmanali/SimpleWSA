@@ -352,7 +352,6 @@ MigrationBackup/
 ConsoleApp/
 *.zip
 
-Temp/
+/Temp/
 
-FunctionalTests/appsettings.json
 /FunctionalTests/appsettings.json

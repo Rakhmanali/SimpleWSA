@@ -25,34 +25,32 @@ namespace SimpleWSA.WSALibrary
     }
 
     #region non query
+    public static void TestNonQueryOutObject<T>(string postgreSQLFunctionName, object value, PgsqlDbType pgsqlDbType, HttpMethod httpMethod = HttpMethod.GET)
+    {
+      var command = new Command(postgreSQLFunctionName);
+      command.Parameters.Add("p_parameter", pgsqlDbType);
+      var response = Command.Execute(command, RoutineType.NonQuery, httpMethod);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      JObject jobject = JObject.Load(reader);
+      var actual = Convert.ChangeType(jobject[postgreSQLFunctionName]!["arguments"]!["p_parameter"]!, typeof(T));
+      var expected = (T)value;
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
     [Test]
     public void GetOutBigint()
     {
-      WSALibrary.Command command = new Command("migration.get_out_bigint");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Bigint);
-      var response = Command.Execute(command, RoutineType.NonQuery);
-
-      // {\"migration.get_out_bigint\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":9223372036854775807}}}
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_bigint"]!["arguments"]!["p_parameter"]!;
-      long actual = Convert.ToInt64(p);
-      long expected = 9223372036854775807;
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<long>("migration.get_out_bigint", 9223372036854775807, PgsqlDbType.Bigint);
+      TestNonQueryOutObject<long>("migration.get_out_bigint", 9223372036854775807, PgsqlDbType.Bigint, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutBoolean()
     {
-      var command = new Command("migration.get_out_boolean");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Boolean);
-      var response = Command.Execute(command, RoutineType.NonQuery);
-
-      // {\"migration.get_out_boolean\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":true}}}
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_boolean"]!["arguments"]!["p_parameter"]!;
-      bool actual = Convert.ToBoolean(p);
-      bool expected = true;
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<bool>("migration.get_out_boolean", true, PgsqlDbType.Boolean);
+      TestNonQueryOutObject<bool>("migration.get_out_boolean", true, PgsqlDbType.Boolean, HttpMethod.POST);
     }
 
     [Test]
@@ -80,227 +78,103 @@ namespace SimpleWSA.WSALibrary
     [Test]
     public void GetOutDoublePrecision()
     {
-      var command = new Command("migration.get_out_double_precision");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Double);
-      var response = Command.Execute(command, RoutineType.NonQuery);
-
-      // {\"migration.get_out_double_precision\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":1234567890.12345}}}
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_double_precision"]!["arguments"]!["p_parameter"]!;
-      double actual = Convert.ToDouble(p);
-      double expected = 1234567890.12345;
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<double>("migration.get_out_double_precision", 1234567890.12345, PgsqlDbType.Double);
+      TestNonQueryOutObject<double>("migration.get_out_double_precision", 1234567890.12345, PgsqlDbType.Double, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutInt()
     {
-      var command = new Command("migration.get_out_int");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Integer);
-      var response = Command.Execute(command, RoutineType.NonQuery);
-
-      // {\"migration.get_out_int\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":2147483647}}}
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_int"]!["arguments"]!["p_parameter"]!;
-      int actual = Convert.ToInt32(p);
-      int expected = 2147483647;
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<int>("migration.get_out_int", 2147483647, PgsqlDbType.Integer);
+      TestNonQueryOutObject<int>("migration.get_out_int", 2147483647, PgsqlDbType.Integer, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutMoney()
     {
-      var command = new Command("migration.get_out_money");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Money);
-      var response = Command.Execute(command, RoutineType.NonQuery);
-
-      // {\"migration.get_out_money\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":92233720368547758.07}}}
-      var ppv = ExtractFieldFromJsonString(response, "p_parameter");
-
-      var actual = Convert.ToDecimal(ppv);
-      decimal expected = 92233720368547758.07m;
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<decimal>("migration.get_out_money", 92233720368547758.07m, PgsqlDbType.Money);
+      TestNonQueryOutObject<decimal>("migration.get_out_money", 92233720368547758.07m, PgsqlDbType.Money, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutNumeric()
     {
-      var command = new Command("migration.get_out_numeric");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Numeric);
-      var response = Command.Execute(command, RoutineType.NonQuery);
-
-      // {\"migration.get_out_numeric\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":123456789012345678.1234567890}}}
-      var ppv = ExtractFieldFromJsonString(response, "p_parameter");
-
-      decimal actual = Convert.ToDecimal(ppv);
-      decimal expected = 123456789012345678.1234567890m;
-      Assert.That(actual, Is.EqualTo(expected));
-    }
-
-    private static string ExtractFieldFromJsonString(string source, string fieldName)
-    {
-      int startIndex = source.IndexOf(fieldName) + fieldName.Length + 2;
-      int length = source.Length - 3 - startIndex;
-      return source.Substring(startIndex, length);
-    }
-
-    private static string ExtractArrayFieldFromJsonString(string source, string fieldName)
-    {
-      int startIndex = source.IndexOf(fieldName) + fieldName.Length + 3;
-      int length = source.Length - 4 - startIndex;
-      return source.Substring(startIndex, length);
+      TestNonQueryOutObject<decimal>("migration.get_out_numeric", 123456789012345678.1234567890m, PgsqlDbType.Numeric);
+      TestNonQueryOutObject<decimal>("migration.get_out_numeric", 123456789012345678.1234567890m, PgsqlDbType.Numeric, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutReal()
     {
-      var command = new Command("migration.get_out_real");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Real);
-      var response = Command.Execute(command, RoutineType.NonQuery);
-
-      // {\"migration.get_out_real\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":1.234568E+09}}}
-      var ppv = ExtractFieldFromJsonString(response, "p_parameter");
-
-      var actual = Convert.ToSingle(ppv);
-      float expected = 1.234568E+09f;
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<float>("migration.get_out_real", 1.234568E+09f, PgsqlDbType.Real);
+      TestNonQueryOutObject<float>("migration.get_out_real", 1.234568E+09f, PgsqlDbType.Real, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutSmallint()
     {
-      var command = new Command("migration.get_out_smallint");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Smallint);
-      var response = Command.Execute(command, RoutineType.NonQuery);
-
-      // {\"migration.get_out_smallint\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":32767}}}
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_smallint"]!["arguments"]!["p_parameter"]!;
-      short actual = Convert.ToInt16(p);
-      short expected = 32767;
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<short>("migration.get_out_smallint", (short)32767, PgsqlDbType.Smallint);
+      TestNonQueryOutObject<short>("migration.get_out_smallint", (short)32767, PgsqlDbType.Smallint, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutText()
     {
-      var command = new Command("migration.get_out_text");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Text);
-
-      // {\"migration.get_out_text\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.\"}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_text"]!["arguments"]!["p_parameter"]!;
-      string? actual = Convert.ToString(p);
-      var expected = "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.";
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<string>("migration.get_out_text",
+                                    "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                                    PgsqlDbType.Text);
+      TestNonQueryOutObject<string>("migration.get_out_text",
+                                    "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                                    PgsqlDbType.Text, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutDate()
     {
-      var ñommand = new Command("migration.get_out_date");
-      ñommand.Parameters.Add("p_parameter", PgsqlDbType.Date);
-
-      // {\"migration.get_out_date\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"2021-05-18T00:00:00\"}}}
-      var response = Command.Execute(ñommand, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_date"]!["arguments"]!["p_parameter"]!;
-      DateTime actual = Convert.ToDateTime(p);
-      DateTime expected = DateTime.Parse("2021-05-18T00:00:00");
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<DateTime>("migration.get_out_date", DateTime.Parse("2021-05-18T00:00:00"), PgsqlDbType.Date);
+      TestNonQueryOutObject<DateTime>("migration.get_out_date", DateTime.Parse("2021-05-18T00:00:00"), PgsqlDbType.Date, HttpMethod.POST);
     }
 
-    // TO DO: although the dawa returns TimeSpan npgsql 2.2.7 converts it to DateTime to consume. By taking in mind,
-    // that PostgreSQL time is the time span during a day, selecting Ticks of the DateTime is the right decision
     [Test]
     public void GetOutTime()
     {
-      var command = new Command("migration.get_out_time");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Time);
-
-      // {\"migration.get_out_time\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"13:44:46.9876000\"}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_time"]!["arguments"]!["p_parameter"]!;
-      var actual = TimeSpan.Parse(p.ToString());
-      TimeSpan expected = TimeSpan.Parse("13:44:46.9876000");
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<TimeSpan>("migration.get_out_time", TimeSpan.Parse("13:44:46.9876000"), PgsqlDbType.Time);
+      TestNonQueryOutObject<TimeSpan>("migration.get_out_time", TimeSpan.Parse("13:44:46.9876000"), PgsqlDbType.Time, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutTimetz()
     {
-      var command = new Command("migration.get_out_timetz");
-      command.Parameters.Add("p_parameter", PgsqlDbType.TimeTZ);
-
-      // {\"migration.get_out_timetz\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"0001-01-02T14:41:45.1234+03:00\"}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      var ppv = ExtractFieldFromJsonString(response, "p_parameter").Replace("\"", string.Empty);
-      var actual = DateTimeOffset.Parse(ppv);
-
-      DateTimeOffset expected = DateTimeOffset.Parse("0001-01-02T16:41:45.1234+05:00");
-      Assert.That(actual.UtcDateTime, Is.EqualTo(expected.UtcDateTime));
+      TestNonQueryOutObject<DateTimeOffset>("migration.get_out_timetz", DateTimeOffset.Parse("0001-01-02T16:41:45.1234+05:00"), PgsqlDbType.TimeTZ);
+      TestNonQueryOutObject<DateTimeOffset>("migration.get_out_timetz", DateTimeOffset.Parse("0001-01-02T16:41:45.1234+05:00"), PgsqlDbType.TimeTZ, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutTimestamp()
     {
-      var command = new Command("migration.get_out_timestamp");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Timestamp);
-
-      // {\"migration.get_out_timestamp\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"2022-03-18T12:42:46.1234\"}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_timestamp"]!["arguments"]!["p_parameter"]!;
-      var actual = Convert.ToDateTime(p);
-      var expected = DateTime.Parse("2022-03-18T12:42:46.1234");
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<DateTime>("migration.get_out_timestamp", DateTime.Parse("2022-03-18T12:42:46.1234"), PgsqlDbType.Timestamp);
+      TestNonQueryOutObject<DateTime>("migration.get_out_timestamp", DateTime.Parse("2022-03-18T12:42:46.1234"), PgsqlDbType.Timestamp, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutTimestamptz()
     {
-      var command = new Command("migration.get_out_timestamptz");
-      command.Parameters.Add("p_parameter", PgsqlDbType.TimestampTZ);
-
-      // {\"migration.get_out_timestamptz\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"2021-04-18T12:43:47.1234Z\"}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_timestamptz"]!["arguments"]!["p_parameter"]!;
-      var actual = Convert.ToDateTime(p).ToLocalTime();
-      var expected = DateTime.Parse("2021-04-18T12:43:47.1234Z");
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<DateTime>("migration.get_out_timestamptz", DateTime.Parse("2021-04-18T12:43:47.1234Z"), PgsqlDbType.TimestampTZ);
+      TestNonQueryOutObject<DateTime>("migration.get_out_timestamptz", DateTime.Parse("2021-04-18T12:43:47.1234Z"), PgsqlDbType.TimestampTZ, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutVarchar()
     {
-      var command = new Command("migration.get_out_varchar");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Varchar);
-
-      // {\"migration.get_out_varchar\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"PostgreSQL change column type examples\"}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_varchar"]!["arguments"]!["p_parameter"]!;
-      var actual = Convert.ToString(p);
-      var expected = "PostgreSQL change column type examples";
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<string>("migration.get_out_varchar", "PostgreSQL change column type examples", PgsqlDbType.Varchar);
+      TestNonQueryOutObject<string>("migration.get_out_varchar", "PostgreSQL change column type examples", PgsqlDbType.Varchar, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutUuid()
     {
-      var command = new Command("migration.get_out_uuid");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Uuid);
-
-      // {\"migration.get_out_uuid\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"79130b53-3113-41d1-99ec-26e41b238394\"}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_uuid"]!["arguments"]!["p_parameter"]!;
-      var actual = Guid.Parse(Convert.ToString(p));
-      var expected = Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394");
-      Assert.That(actual, Is.EqualTo(expected));
+      TestNonQueryOutObject<Guid>("migration.get_out_uuid", Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394"), PgsqlDbType.Uuid);
+      TestNonQueryOutObject<Guid>("migration.get_out_uuid", Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394"), PgsqlDbType.Uuid, HttpMethod.POST);
     }
 
     [Test]
@@ -381,57 +255,40 @@ namespace SimpleWSA.WSALibrary
     }
 
     #region array
-
-    [Test]
-    public void GetOutBigintArray()
+    public static void TestNonQueryOutArrayObject<T>(string postgreSQLFunctionName, object value, PgsqlDbType pgsqlDbType, HttpMethod httpMethod = HttpMethod.GET)
     {
-      var command = new Command("migration.get_out_bigint_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Bigint | PgsqlDbType.Array);
-
-      // {\"migration.get_out_bigint_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[9223372036854775807,9223372036854775806,9223372036854775805]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_bigint_array"]!["arguments"]!["p_parameter"]!;
-
-      if (p is JArray ja)
+      var command = new Command(postgreSQLFunctionName);
+      command.Parameters.Add("p_parameter", pgsqlDbType);
+      var response = Command.Execute(command, RoutineType.NonQuery, httpMethod);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      JObject jobject = JObject.Load(reader);
+      var ppv = jobject[command.Name]!["arguments"]!["p_parameter"];
+      if (ppv is JArray ja)
       {
-        var actual = new List<long>();
-        foreach (var item in ja)
-        {
-          actual.Add(Convert.ToInt64(item));
-        }
-        Assert.That(actual, Is.EqualTo(new long[3] { 9223372036854775807, 9223372036854775806, 9223372036854775805 }));
+        var actual = ja.Select(x => Convert.ChangeType(x, typeof(T))).ToArray();
+        var expected = value as T[];
+        Assert.That(actual, Is.EqualTo(expected));
         return;
       }
 
       Assert.Fail();
+    }
+
+    [Test]
+    public void GetOutBigintArray()
+    {
+      TestNonQueryOutArrayObject<long>("migration.get_out_bigint_array", new long[3] { 9223372036854775807, 9223372036854775806, 9223372036854775805 }, PgsqlDbType.Bigint | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<long>("migration.get_out_bigint_array", new long[3] { 9223372036854775807, 9223372036854775806, 9223372036854775805 }, PgsqlDbType.Bigint | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutBooleanArray()
     {
-      var command = new Command("migration.get_out_boolean_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Boolean | PgsqlDbType.Array);
-
-      // {\"migration.get_out_boolean_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[true,false,true]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_boolean_array"]!["arguments"]!["p_parameter"]!;
-
-      if (p is JArray ja)
-      {
-        var actual = new List<bool>();
-        foreach (var item in ja)
-        {
-          actual.Add(Convert.ToBoolean(item));
-        }
-        Assert.That(actual, Is.EqualTo(new bool[3] { true, false, true }));
-        return;
-      }
-
-      Assert.Fail();
+      TestNonQueryOutArrayObject<bool>("migration.get_out_boolean_array", new bool[3] { true, false, true }, PgsqlDbType.Boolean | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<bool>("migration.get_out_boolean_array", new bool[3] { true, false, true }, PgsqlDbType.Boolean | PgsqlDbType.Array, HttpMethod.POST);
     }
-
 
     [Test]
     public void GetOutByteaArray()
@@ -462,296 +319,180 @@ namespace SimpleWSA.WSALibrary
     [Test]
     public void GetOutDoublePrecisionArray()
     {
-      var command = new Command("migration.get_out_double_precision_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Double | PgsqlDbType.Array);
-
-      // {\"migration.get_out_double_precision_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[1234567890.12345,1234567889.6789,1234567888.01478]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_double_precision_array"]!["arguments"]!["p_parameter"]!;
-      if (p is JArray ja)
-      {
-        var actual = new List<double>();
-        foreach (var item in ja)
-        {
-          actual.Add(Convert.ToDouble(item));
-        }
-        Assert.That(actual, Is.EqualTo(new double[3] { 1234567890.12345, 1234567889.6789, 1234567888.01478 }));
-        return;
-      }
-
-      Assert.Fail();
+      TestNonQueryOutArrayObject<double>("migration.get_out_double_precision_array", new double[3] { 1234567890.12345, 1234567889.6789, 1234567888.01478 },
+        PgsqlDbType.Double | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<double>("migration.get_out_double_precision_array", new double[3] { 1234567890.12345, 1234567889.6789, 1234567888.01478 },
+        PgsqlDbType.Double | PgsqlDbType.Array,
+        HttpMethod.POST);
     }
 
     [Test]
     public void GetOutIntArray()
     {
-      var command = new Command("migration.get_out_int_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Integer | PgsqlDbType.Array);
-
-      // {\"migration.get_out_int_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[2147483647,2147483646,2147483645]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_int_array"]!["arguments"]!["p_parameter"]!;
-      if (p is JArray ja)
-      {
-        var actual = new List<int>();
-        foreach (var item in ja)
-        {
-          actual.Add(Convert.ToInt32(item));
-        }
-        Assert.That(actual, Is.EqualTo(new int[3] { 2147483647, 2147483646, 2147483645 }));
-        return;
-      }
-
-      Assert.Fail();
+      TestNonQueryOutArrayObject<int>("migration.get_out_int_array", new int[3] { 2147483647, 2147483646, 2147483645 }, PgsqlDbType.Integer | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<int>("migration.get_out_int_array", new int[3] { 2147483647, 2147483646, 2147483645 }, PgsqlDbType.Integer | PgsqlDbType.Array,
+        HttpMethod.POST);
     }
 
     [Test]
     public void GetOutMoneyArray()
     {
-      var command = new Command("migration.get_out_money_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Money | PgsqlDbType.Array);
-
-      // {\"migration.get_out_money_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[92233720368547758.07,92233720368547757.05,92233720368547756.06]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
-      var actual = ppv.Split(',').Select(v => Convert.ToDecimal(v)).ToList();
-      Assert.That(actual, Is.EqualTo(new decimal[3] { 92233720368547758.07m, 92233720368547757.05m, 92233720368547756.06m }));
+      TestNonQueryOutArrayObject<decimal>("migration.get_out_money_array", new decimal[3] { 92233720368547758.07m, 92233720368547757.05m, 92233720368547756.06m },
+        PgsqlDbType.Money | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<decimal>("migration.get_out_money_array", new decimal[3] { 92233720368547758.07m, 92233720368547757.05m, 92233720368547756.06m },
+        PgsqlDbType.Money | PgsqlDbType.Array,
+        HttpMethod.POST);
     }
 
     [Test]
     public void GetOutNumericArray()
     {
-      var command = new Command("migration.get_out_numeric_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Numeric | PgsqlDbType.Array);
-
-      // {\"migration.get_out_numeric_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[123456789012345678.1234567890,123456789012345677.1234567889,123456789012345676.1234567888]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
-      var actual = ppv.Split(',').Select(v => Convert.ToDecimal(v)).ToList();
-      Assert.That(actual, Is.EqualTo(new decimal[3] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m }));
+      TestNonQueryOutArrayObject<decimal>("migration.get_out_numeric_array", new decimal[3] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m },
+        PgsqlDbType.Numeric | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<decimal>("migration.get_out_numeric_array", new decimal[3] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m },
+        PgsqlDbType.Numeric | PgsqlDbType.Array,
+        HttpMethod.POST);
     }
 
     [Test]
     public void GetOutRealArray()
     {
-      var command = new Command("migration.get_out_real_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Real | PgsqlDbType.Array);
-
-      // {\"migration.get_out_real_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[1.234568E+09,1.234568E+09,1.234568E+09]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
-      var actual = ppv.Split(',').Select(v => Convert.ToSingle(v)).ToList();
-      Assert.That(actual, Is.EqualTo(new float[3] { 1.234568E+09f, 1.234568E+09f, 1.234568E+09f }));
+      TestNonQueryOutArrayObject<float>("migration.get_out_real_array", new float[3] { 1.234568E+09f, 1.234568E+09f, 1.234568E+09f },
+        PgsqlDbType.Real | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<float>("migration.get_out_real_array", new float[3] { 1.234568E+09f, 1.234568E+09f, 1.234568E+09f },
+        PgsqlDbType.Real | PgsqlDbType.Array,
+        HttpMethod.POST);
     }
 
     [Test]
     public void GetOutSmallintArray()
     {
-      var command = new Command("migration.get_out_smallint_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Smallint | PgsqlDbType.Array);
-
-      // {\"migration.get_out_smallint_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[32767,32766,32765]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_smallint_array"]!["arguments"]!["p_parameter"]!;
-      if (p is JArray ja)
-      {
-        var actual = new List<short>();
-        foreach (var item in ja)
-        {
-          actual.Add(Convert.ToInt16(item));
-        }
-        Assert.That(actual, Is.EqualTo(new short[3] { 32767, 32766, 32765 }));
-        return;
-      }
-
-      Assert.Fail();
+      TestNonQueryOutArrayObject<short>("migration.get_out_smallint_array", new short[3] { 32767, 32766, 32765 },
+        PgsqlDbType.Smallint | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<short>("migration.get_out_smallint_array", new short[3] { 32767, 32766, 32765 },
+        PgsqlDbType.Smallint | PgsqlDbType.Array,
+        HttpMethod.POST);
     }
 
     [Test]
     public void GetOutTextArray()
     {
-      var command = new Command("migration.get_out_text_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Text | PgsqlDbType.Array);
-
-      // {\"migration.get_out_text_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.\",\"DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.\",\"DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date.\"]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_text_array"]!["arguments"]!["p_parameter"]!;
-      if (p is JArray ja)
-      {
-        var actual = new List<string?>();
-        foreach (var item in ja)
-        {
-          actual.Add(Convert.ToString(item));
-        }
-        Assert.That(actual, Is.EqualTo(new string[3] { "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
-                                                       "DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.",
-                                                       "DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date."
-        }));
-        return;
-      }
-
-      Assert.Fail();
+      TestNonQueryOutArrayObject<string>("migration.get_out_text_array",
+        new string[3] { "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                        "DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.",
+                        "DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date."
+        }, PgsqlDbType.Text | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<string>("migration.get_out_text_array",
+        new string[3] { "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                        "DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.",
+                        "DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date."
+        }, PgsqlDbType.Text | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutDateArray()
     {
-      var command = new Command("migration.get_out_date_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Date | PgsqlDbType.Array);
-
-      // {\"migration.get_out_date_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"2021-05-18T00:00:00\",\"2020-04-17T00:00:00\",\"2019-03-16T00:00:00\"]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_date_array"]!["arguments"]!["p_parameter"]!;
-      if (p is JArray ja)
-      {
-        var actual = new List<DateTime>();
-        foreach (var item in ja)
-        {
-          actual.Add(Convert.ToDateTime(item));
-        }
-        Assert.That(actual, Is.EqualTo(new DateTime[3] { DateTime.Parse("2021-05-18T00:00:00"),
-                                                         DateTime.Parse("2020-04-17T00:00:00"),
-                                                         DateTime.Parse("2019-03-16T00:00:00")
-              }));
-        return;
-      }
-
-      Assert.Fail();
+      TestNonQueryOutArrayObject<DateTime>("migration.get_out_date_array", new DateTime[3] { DateTime.Parse("2021-05-18T00:00:00"),
+                                                                                             DateTime.Parse("2020-04-17T00:00:00"),
+                                                                                             DateTime.Parse("2019-03-16T00:00:00") },
+                                            PgsqlDbType.Date | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<DateTime>("migration.get_out_date_array", new DateTime[3] { DateTime.Parse("2021-05-18T00:00:00"),
+                                                                                             DateTime.Parse("2020-04-17T00:00:00"),
+                                                                                             DateTime.Parse("2019-03-16T00:00:00") },
+                                            PgsqlDbType.Date | PgsqlDbType.Array,
+                                            HttpMethod.POST);
     }
 
     [Test]
     public void GetOutTimeArray()
     {
-      var command = new Command("migration.get_out_time_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Time | PgsqlDbType.Array);
-
-      // {\"migration.get_out_time_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"13:44:46.9876000\",\"11:43:45.9875000\",\"11:42:44.9874000\"]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_time_array"]!["arguments"]!["p_parameter"]!;
-      if (p is JArray ja)
-      {
-        var actual = new List<TimeSpan>();
-        foreach (var item in ja)
-        {
-          actual.Add(TimeSpan.Parse(Convert.ToString(item)!));
-        }
-        Assert.That(actual, Is.EqualTo(new TimeSpan[3] { TimeSpan.Parse("13:44:46.9876000"),
-                                                         TimeSpan.Parse("11:43:45.9875000"),
-                                                         TimeSpan.Parse("11:42:44.9874000")
-              }));
-        return;
-      }
-
-      Assert.Fail();
+      TestNonQueryOutArrayObject<TimeSpan>("migration.get_out_time_array", new TimeSpan[3] { TimeSpan.Parse("13:44:46.9876000"),
+                                                                                             TimeSpan.Parse("11:43:45.9875000"),
+                                                                                             TimeSpan.Parse("11:42:44.9874000")
+                                                                                           },
+                                           PgsqlDbType.Time | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<TimeSpan>("migration.get_out_time_array", new TimeSpan[3] { TimeSpan.Parse("13:44:46.9876000"),
+                                                                                             TimeSpan.Parse("11:43:45.9875000"),
+                                                                                             TimeSpan.Parse("11:42:44.9874000")
+                                                                                           },
+                                           PgsqlDbType.Time | PgsqlDbType.Array,
+                                           HttpMethod.POST);
     }
 
     [Test]
     public void GetOutTimetzArray()
     {
-      var command = new Command("migration.get_out_timetz_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.TimeTZ | PgsqlDbType.Array);
-
-      // {\"migration.get_out_timetz_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"0001-01-02T14:41:45.1234+03:00\",\"0001-01-02T13:39:44.1233+02:00\",\"0001-01-02T11:38:42.1232+01:00\"]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
-      var actual = ppv.Replace("\"", string.Empty).Split(',').Select(x => DateTimeOffset.Parse(x)).ToArray();
-      Assert.That(actual, Is.EqualTo(new DateTimeOffset[3] { DateTimeOffset.Parse("0001-01-02T14:41:45.1234+03:00"),
-                                                             DateTimeOffset.Parse("0001-01-02T13:39:44.1233+02:00"),
-                                                             DateTimeOffset.Parse("0001-01-02T11:38:42.1232+01:00")
-      }));
+      TestNonQueryOutArrayObject<DateTimeOffset>("migration.get_out_timetz_array",
+        new DateTimeOffset[3] { DateTimeOffset.Parse("0001-01-02T14:41:45.1234+03:00"),
+                                DateTimeOffset.Parse("0001-01-02T13:39:44.1233+02:00"),
+                                DateTimeOffset.Parse("0001-01-02T11:38:42.1232+01:00")
+        }, PgsqlDbType.TimeTZ | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<DateTimeOffset>("migration.get_out_timetz_array",
+        new DateTimeOffset[3] { DateTimeOffset.Parse("0001-01-02T14:41:45.1234+03:00"),
+                                DateTimeOffset.Parse("0001-01-02T13:39:44.1233+02:00"),
+                                DateTimeOffset.Parse("0001-01-02T11:38:42.1232+01:00")
+        }, PgsqlDbType.TimeTZ | PgsqlDbType.Array, HttpMethod.POST);
     }
 
 
     [Test]
     public void GetOutTimestampArray()
     {
-      var command = new Command("migration.get_out_timestamp_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Timestamp | PgsqlDbType.Array);
-
-      // {\"migration.get_out_timestamp_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"2022-03-18T12:42:46.1234\",\"2020-01-16T10:40:44.1232\",\"2019-09-15T09:39:43.1231\"]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
-      var actual = ppv.Replace("\"", string.Empty).Split(',').Select(x => DateTime.Parse(x)).ToArray();
-      Assert.That(actual, Is.EqualTo(new DateTime[3] { DateTime.Parse("2022-03-18T12:42:46.1234"),
-                                                       DateTime.Parse("2020-01-16T10:40:44.1232"),
-                                                       DateTime.Parse("2019-09-15T09:39:43.1231")
-      }));
+      TestNonQueryOutArrayObject<DateTime>("migration.get_out_timestamp_array",
+        new DateTime[3] { DateTime.Parse("2022-03-18T12:42:46.1234"),
+                          DateTime.Parse("2020-01-16T10:40:44.1232"),
+                          DateTime.Parse("2019-09-15T09:39:43.1231") },
+        PgsqlDbType.Timestamp | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<DateTime>("migration.get_out_timestamp_array",
+        new DateTime[3] { DateTime.Parse("2022-03-18T12:42:46.1234"),
+                          DateTime.Parse("2020-01-16T10:40:44.1232"),
+                          DateTime.Parse("2019-09-15T09:39:43.1231") },
+        PgsqlDbType.Timestamp | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutTimestamptzArray()
     {
-      var command = new Command("migration.get_out_timestamptz_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.TimestampTZ | PgsqlDbType.Array);
-
-      // {\"migration.get_out_timestamptz_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"2021-04-18T12:43:47.1234Z\",\"2018-01-15T10:40:44.1231Z\",\"2017-01-14T07:39:44.123Z\"]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      var ppv = ExtractArrayFieldFromJsonString(response, "p_parameter");
-      var actual = ppv.Replace("\"", string.Empty).Split(',').Select(x => DateTime.Parse(x)).ToArray();
-      Assert.That(actual, Is.EqualTo(new DateTime[3] { DateTime.Parse("2021-04-18T14:43:47.1234+02:00"),
-                                                       DateTime.Parse("2018-01-15T10:40:44.1231Z"),
-                                                       DateTime.Parse("2017-01-14T07:39:44.123Z")
-      }));
+      TestNonQueryOutArrayObject<DateTime>("migration.get_out_timestamptz_array",
+        new DateTime[3] { DateTime.Parse("2021-04-18T14:43:47.1234+02:00"),
+                          DateTime.Parse("2018-01-15T10:40:44.1231Z"),
+                          DateTime.Parse("2017-01-14T07:39:44.123Z") },
+        PgsqlDbType.TimestampTZ | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<DateTime>("migration.get_out_timestamptz_array",
+        new DateTime[3] { DateTime.Parse("2021-04-18T14:43:47.1234+02:00"),
+                          DateTime.Parse("2018-01-15T10:40:44.1231Z"),
+                          DateTime.Parse("2017-01-14T07:39:44.123Z") },
+        PgsqlDbType.TimestampTZ | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutVarcharArray()
     {
-      var command = new Command("migration.get_out_varchar_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Varchar | PgsqlDbType.Array);
-
-      // {\"migration.get_out_varchar_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"PostgreSQL change column type examples\",\"What is the PostgreSQL Function?\",\"PostgreSQL change column type examples\"]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_varchar_array"]!["arguments"]!["p_parameter"]!;
-      if (p is JArray ja)
-      {
-        var actual = new List<string>();
-        foreach (var item in ja)
-        {
-          actual.Add(Convert.ToString(item)!);
-        }
-        Assert.That(actual, Is.EqualTo(new string[3] { "PostgreSQL change column type examples",
-                                                       "What is the PostgreSQL Function?",
-                                                       "PostgreSQL change column type examples"
-              }));
-        return;
-      }
-
-      Assert.Fail();
+      TestNonQueryOutArrayObject<string>("migration.get_out_varchar_array",
+        new string[3] { "PostgreSQL change column type examples",
+                        "What is the PostgreSQL Function?",
+                        "PostgreSQL change column type examples"
+              }, PgsqlDbType.Varchar | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<string>("migration.get_out_varchar_array",
+        new string[3] { "PostgreSQL change column type examples",
+                        "What is the PostgreSQL Function?",
+                        "PostgreSQL change column type examples"
+              }, PgsqlDbType.Varchar | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetOutUuidArray()
     {
-      var command = new Command("migration.get_out_uuid_array");
-      command.Parameters.Add("p_parameter", PgsqlDbType.Uuid | PgsqlDbType.Array);
-
-      // {\"migration.get_out_uuid_array\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":[\"79130b53-3113-41d1-99ec-26e41b238394\",\"f0c180ba-e291-4089-91b4-3d8d122b5c77\",\"670c4c79-521c-40e2-8442-0248a93f8737\"]}}}
-      var response = Command.Execute(command, RoutineType.NonQuery);
-      JObject jobject = JObject.Parse(response);
-      object p = jobject["migration.get_out_uuid_array"]!["arguments"]!["p_parameter"]!;
-      if (p is JArray ja)
-      {
-        var actual = new List<Guid>();
-        foreach (var item in ja)
-        {
-          actual.Add(Guid.Parse(Convert.ToString(item)!));
-        }
-        Assert.That(actual, Is.EqualTo(new Guid[3] { Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394"),
-                                                     Guid.Parse("f0c180ba-e291-4089-91b4-3d8d122b5c77"),
-                                                     Guid.Parse("670c4c79-521c-40e2-8442-0248a93f8737")
-        }));
-        return;
-      }
-
-      Assert.Fail();
+      TestNonQueryOutArrayObject<Guid>("migration.get_out_uuid_array",
+        new Guid[3] { Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394"),
+                      Guid.Parse("f0c180ba-e291-4089-91b4-3d8d122b5c77"),
+                      Guid.Parse("670c4c79-521c-40e2-8442-0248a93f8737")
+        }, PgsqlDbType.Uuid | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<Guid>("migration.get_out_uuid_array",
+        new Guid[3] { Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394"),
+                      Guid.Parse("f0c180ba-e291-4089-91b4-3d8d122b5c77"),
+                      Guid.Parse("670c4c79-521c-40e2-8442-0248a93f8737")
+        }, PgsqlDbType.Uuid | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
@@ -1160,7 +901,7 @@ namespace SimpleWSA.WSALibrary
       {
         var result20 = ja20.Select(x => Convert.ToString(x))
                            .Where(x => x != null)
-                           .Select(x => x.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)).ToArray();
+                           .Select(x => x!.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)).ToArray();
         var expected20 = new string[] { "{\"formmanager_getfiltered\": []}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
                                             "{\"glossary\": {\"title\": \"example glossary\", \"GlossDiv\": {\"title\": \"S\", \"GlossList\": {\"GlossEntry\": {\"ID\": \"SGML\", \"Abbrev\": \"ISO 8879:1986\", \"SortAs\": \"SGML\", \"Acronym\": \"SGML\", \"GlossDef\": {\"para\": \"A meta-markup language, used to create markup languages such as DocBook.\", \"GlossSeeAlso\": [\"GML\", \"XML\"]}, \"GlossSee\": \"markup\", \"GlossTerm\": \"Standard Generalized Markup Language\"}}}}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty),
                                             "{\"menu\": {\"id\": \"file\", \"popup\": {\"menuitem\": [{\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"}, {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"}, {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}]}, \"value\": \"File\"}}".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty)};
@@ -1173,18 +914,16 @@ namespace SimpleWSA.WSALibrary
     }
 
     #region with in and out parameters
-
-    public static void GetInOutTest<T>(string postgreSQLFunctionName, object value, PgsqlDbType pgsqlDbType)
+    public static void TestNonQueryInOutObject<T>(string postgreSQLFunctionName, object value, PgsqlDbType pgsqlDbType, HttpMethod httpMethod = HttpMethod.GET)
     {
       var command = new Command(postgreSQLFunctionName);
       command.Parameters.Add("p_parameter1", pgsqlDbType, value);
       command.Parameters.Add("p_parameter2", pgsqlDbType);
-      var response = Command.Execute(command, RoutineType.NonQuery);
+      var response = Command.Execute(command, RoutineType.NonQuery, httpMethod);
       var reader = new JsonTextReader(new StringReader(response));
       reader.FloatParseHandling = FloatParseHandling.Decimal;
       reader.DateParseHandling = DateParseHandling.None;
       JObject jobject = JObject.Load(reader);
-
       var actual = Convert.ChangeType(jobject[postgreSQLFunctionName]!["arguments"]!["p_parameter2"]!, typeof(T));
       var expected = (T)value;
       Assert.That(actual, Is.EqualTo(expected));
@@ -1193,13 +932,15 @@ namespace SimpleWSA.WSALibrary
     [Test]
     public void GetInOutBigint()
     {
-      GetInOutTest<long>("migration.get_in_and_out_bigint", 9223372036854775807, PgsqlDbType.Bigint);
+      TestNonQueryInOutObject<long>("migration.get_in_and_out_bigint", 9223372036854775807, PgsqlDbType.Bigint);
+      TestNonQueryInOutObject<long>("migration.get_in_and_out_bigint", 9223372036854775807, PgsqlDbType.Bigint, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutBoolean()
     {
-      GetInOutTest<bool>("migration.get_in_and_out_boolean", true, PgsqlDbType.Boolean);
+      TestNonQueryInOutObject<bool>("migration.get_in_and_out_boolean", true, PgsqlDbType.Boolean);
+      TestNonQueryInOutObject<bool>("migration.get_in_and_out_boolean", true, PgsqlDbType.Boolean, HttpMethod.POST);
     }
 
     [Test]
@@ -1221,85 +962,99 @@ namespace SimpleWSA.WSALibrary
     [Test]
     public void GetInOutDoublePrecision()
     {
-      GetInOutTest<double>("migration.get_in_and_out_double_precision", 1234567888.01478, PgsqlDbType.Double);
+      TestNonQueryInOutObject<double>("migration.get_in_and_out_double_precision", 1234567888.01478, PgsqlDbType.Double);
+      TestNonQueryInOutObject<double>("migration.get_in_and_out_double_precision", 1234567888.01478, PgsqlDbType.Double, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutInteger()
     {
-      GetInOutTest<int>("migration.get_in_and_out_integer", 2147483645, PgsqlDbType.Integer);
+      TestNonQueryInOutObject<int>("migration.get_in_and_out_integer", 2147483645, PgsqlDbType.Integer);
+      TestNonQueryInOutObject<int>("migration.get_in_and_out_integer", 2147483645, PgsqlDbType.Integer, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutMoney()
     {
-      GetInOutTest<decimal>("migration.get_in_and_out_money", 92233720368547756.06m, PgsqlDbType.Money);
+      TestNonQueryInOutObject<decimal>("migration.get_in_and_out_money", 92233720368547756.06m, PgsqlDbType.Money);
+      TestNonQueryInOutObject<decimal>("migration.get_in_and_out_money", 92233720368547756.06m, PgsqlDbType.Money, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutNumeric()
     {
-      GetInOutTest<decimal>("migration.get_in_and_out_numeric", 123456789012345676.1234567888m, PgsqlDbType.Numeric);
+      TestNonQueryInOutObject<decimal>("migration.get_in_and_out_numeric", 123456789012345676.1234567888m, PgsqlDbType.Numeric);
+      TestNonQueryInOutObject<decimal>("migration.get_in_and_out_numeric", 123456789012345676.1234567888m, PgsqlDbType.Numeric, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutReal()
     {
-      GetInOutTest<float>("migration.get_in_and_out_real", 1234567888.12343f, PgsqlDbType.Real);
+      TestNonQueryInOutObject<float>("migration.get_in_and_out_real", 1234567888.12343f, PgsqlDbType.Real);
+      TestNonQueryInOutObject<float>("migration.get_in_and_out_real", 1234567888.12343f, PgsqlDbType.Real, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutSmallint()
     {
-      GetInOutTest<short>("migration.get_in_and_out_smallint", (short)32765, PgsqlDbType.Smallint);
+      TestNonQueryInOutObject<short>("migration.get_in_and_out_smallint", (short)32765, PgsqlDbType.Smallint);
+      TestNonQueryInOutObject<short>("migration.get_in_and_out_smallint", (short)32765, PgsqlDbType.Smallint, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutText()
     {
-      GetInOutTest<string>("migration.get_in_and_out_text", "Hello world from Text testing", PgsqlDbType.Text);
+      TestNonQueryInOutObject<string>("migration.get_in_and_out_text", "Hello world from Text testing", PgsqlDbType.Text);
+      TestNonQueryInOutObject<string>("migration.get_in_and_out_text", "Hello world from Text testing", PgsqlDbType.Text, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutDate()
     {
-      GetInOutTest<DateTime>("migration.get_in_and_out_date", DateTime.Parse("2019.03.16"), PgsqlDbType.Date);
+      TestNonQueryInOutObject<DateTime>("migration.get_in_and_out_date", DateTime.Parse("2019.03.16"), PgsqlDbType.Date);
+      TestNonQueryInOutObject<DateTime>("migration.get_in_and_out_date", DateTime.Parse("2019.03.16"), PgsqlDbType.Date, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutTime()
     {
-      GetInOutTest<TimeSpan>("migration.get_in_and_out_time", TimeSpan.Parse("10:10:12.123"), PgsqlDbType.Time);
+      TestNonQueryInOutObject<TimeSpan>("migration.get_in_and_out_time", TimeSpan.Parse("10:10:12.123"), PgsqlDbType.Time);
+      TestNonQueryInOutObject<TimeSpan>("migration.get_in_and_out_time", TimeSpan.Parse("10:10:12.123"), PgsqlDbType.Time, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutTimetz()
     {
-      GetInOutTest<DateTimeOffset>("migration.get_in_and_out_timetz", DateTimeOffset.Parse("0001-01-02T10:10:12.256+03"), PgsqlDbType.TimeTZ);
+      TestNonQueryInOutObject<DateTimeOffset>("migration.get_in_and_out_timetz", DateTimeOffset.Parse("0001-01-02T10:10:12.256+03"), PgsqlDbType.TimeTZ);
+      TestNonQueryInOutObject<DateTimeOffset>("migration.get_in_and_out_timetz", DateTimeOffset.Parse("0001-01-02T10:10:12.256+03"), PgsqlDbType.TimeTZ, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutTimestamp()
     {
-      GetInOutTest<DateTime>("migration.get_in_and_out_timestamp", DateTime.Parse("2023-05-23 10:10:12.256"), PgsqlDbType.Timestamp);
+      TestNonQueryInOutObject<DateTime>("migration.get_in_and_out_timestamp", DateTime.Parse("2023-05-23 10:10:12.256"), PgsqlDbType.Timestamp);
+      TestNonQueryInOutObject<DateTime>("migration.get_in_and_out_timestamp", DateTime.Parse("2023-05-23 10:10:12.256"), PgsqlDbType.Timestamp, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutTimestamptz()
     {
-      GetInOutTest<DateTime>("migration.get_in_and_out_timestamptz", DateTime.Parse("2023-05-23 10:10:12.256+05"), PgsqlDbType.TimestampTZ);
+      TestNonQueryInOutObject<DateTime>("migration.get_in_and_out_timestamptz", DateTime.Parse("2023-05-23 10:10:12.256+05"), PgsqlDbType.TimestampTZ);
+      TestNonQueryInOutObject<DateTime>("migration.get_in_and_out_timestamptz", DateTime.Parse("2023-05-23 10:10:12.256+05"), PgsqlDbType.TimestampTZ, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutVachar()
     {
-      GetInOutTest<string>("migration.get_in_and_out_varchar", "hello world!", PgsqlDbType.Varchar);
+      TestNonQueryInOutObject<string>("migration.get_in_and_out_varchar", "hello world!", PgsqlDbType.Varchar);
+      TestNonQueryInOutObject<string>("migration.get_in_and_out_varchar", "hello world!", PgsqlDbType.Varchar, HttpMethod.POST);
     }
 
     [Test]
     public void GetInOutUuid()
     {
-      GetInOutTest<string>("migration.get_in_and_out_uuid", "79130b53-3113-41d1-99ec-26e41b238394", PgsqlDbType.Uuid);
+      TestNonQueryInOutObject<string>("migration.get_in_and_out_uuid", "79130b53-3113-41d1-99ec-26e41b238394", PgsqlDbType.Uuid);
+      TestNonQueryInOutObject<string>("migration.get_in_and_out_uuid", "79130b53-3113-41d1-99ec-26e41b238394", PgsqlDbType.Uuid, HttpMethod.POST);
     }
 
     [Test]
@@ -1419,7 +1174,6 @@ namespace SimpleWSA.WSALibrary
     }
 
     #region array
-
     private static void GetInOutArrayTest<T>(string postgreSQLFunctionName, object value, PgsqlDbType pgsqlDbType)
     {
       var command = new Command(postgreSQLFunctionName);
@@ -1430,7 +1184,6 @@ namespace SimpleWSA.WSALibrary
       reader.FloatParseHandling = FloatParseHandling.Decimal;
       reader.DateParseHandling = DateParseHandling.None;
       JObject jobject = JObject.Load(reader);
-
       var pp2v = jobject[postgreSQLFunctionName]!["arguments"]!["p_parameter2"];
       if (pp2v is JArray ja)
       {
@@ -1790,13 +1543,11 @@ namespace SimpleWSA.WSALibrary
       }
       Assert.Fail();
     }
-
     #endregion array
     #endregion with in and out parameters
     #endregion non query
 
     #region execute scalar
-
     private static void TestScalarObject<T>(string postgreSQLFunctionName, object value, PgsqlDbType pgsqlDbType, HttpMethod httpMethod = HttpMethod.GET)
     {
       var command = new Command(postgreSQLFunctionName);
@@ -1807,8 +1558,8 @@ namespace SimpleWSA.WSALibrary
       reader.FloatParseHandling = FloatParseHandling.Decimal;
       reader.DateParseHandling = DateParseHandling.None;
       var jobject = JObject.Load(reader);
-      var pp2v = jobject[command.Name]!["returnValue"];
-      var actual = Convert.ChangeType(pp2v, typeof(T));
+      var rv = jobject[command.Name]!["returnValue"];
+      var actual = Convert.ChangeType(rv, typeof(T));
       var expected = (T)value;
       Assert.That(actual, Is.EqualTo(expected));
     }
@@ -2063,8 +1814,7 @@ namespace SimpleWSA.WSALibrary
       Assert.That(aJObject, Is.EqualTo(eJObject));
     }
     #region array
-
-    public void TestScalarArrayObject<T>(string postgreSQLFunctionName, object value, PgsqlDbType pgsqlDbType, HttpMethod httpMethod = HttpMethod.GET)
+    public static void TestScalarArrayObject<T>(string postgreSQLFunctionName, object value, PgsqlDbType pgsqlDbType, HttpMethod httpMethod = HttpMethod.GET)
     {
       var command = new Command(postgreSQLFunctionName);
       var parameter = new Parameter("p_parameter", pgsqlDbType, value);
@@ -2074,9 +1824,9 @@ namespace SimpleWSA.WSALibrary
       reader.FloatParseHandling = FloatParseHandling.Decimal;
       reader.DateParseHandling = DateParseHandling.None;
       var jobject = JObject.Load(reader);
-      var pp2v = jobject[command.Name]!["returnValue"];
+      var rv = jobject[command.Name]!["returnValue"];
 
-      if (pp2v is JArray ja)
+      if (rv is JArray ja)
       {
         var actual = ja.Select(x => Convert.ChangeType(x, typeof(T))).ToArray();
         var expected = value as T[];
@@ -2299,18 +2049,18 @@ namespace SimpleWSA.WSALibrary
     [Test]
     public void GetUuidArray()
     {
-      TestScalarArrayObject<string>("migration.get_uuid_array", new string[]
+      TestScalarArrayObject<Guid>("migration.get_uuid_array", new Guid[]
       {
-            "0573ac3f-1014-4469-a409-50590be0072d",
-            "7dfe6902-fec0-4173-a9c4-9fd0b471eed3",
-            "a0553c33-29af-42fb-bbd6-d9668dc08478"
+            Guid.Parse("0573ac3f-1014-4469-a409-50590be0072d"),
+            Guid.Parse("7dfe6902-fec0-4173-a9c4-9fd0b471eed3"),
+            Guid.Parse("a0553c33-29af-42fb-bbd6-d9668dc08478")
       },
       PgsqlDbType.Uuid | PgsqlDbType.Array);
-      TestScalarArrayObject<string>("migration.get_uuid_array", new string[]
+      TestScalarArrayObject<Guid>("migration.get_uuid_array", new Guid[]
       {
-            "0573ac3f-1014-4469-a409-50590be0072d",
-            "7dfe6902-fec0-4173-a9c4-9fd0b471eed3",
-            "a0553c33-29af-42fb-bbd6-d9668dc08478"
+            Guid.Parse("0573ac3f-1014-4469-a409-50590be0072d"),
+            Guid.Parse("7dfe6902-fec0-4173-a9c4-9fd0b471eed3"),
+            Guid.Parse("a0553c33-29af-42fb-bbd6-d9668dc08478")
       },
       PgsqlDbType.Uuid | PgsqlDbType.Array,
       HttpMethod.POST);
@@ -2507,76 +2257,87 @@ namespace SimpleWSA.WSALibrary
     public void GetBigintArray_EmptyBigintArray()
     {
       GetTArray_EmptyTArray<bool>("migration.get_bigint_array", new long[] { }, PgsqlDbType.Bigint | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<bool>("migration.get_bigint_array", new long[] { }, PgsqlDbType.Bigint | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetBooleanArray_EmptyBooleanArray()
     {
       GetTArray_EmptyTArray<bool>("migration.get_boolean_array", new bool[] { }, PgsqlDbType.Boolean | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<bool>("migration.get_boolean_array", new bool[] { }, PgsqlDbType.Boolean | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetByteaArray_EmptyByteaArray()
     {
       GetTArray_EmptyTArray<byte[]>("migration.get_bytea_array", new byte[][] { }, PgsqlDbType.Bytea | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<byte[]>("migration.get_bytea_array", new byte[][] { }, PgsqlDbType.Bytea | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetDoublePrecisionArray_EmptyDoublePrecisionArray()
     {
       GetTArray_EmptyTArray<double>("migration.get_double_precision_array", new double[] { }, PgsqlDbType.Double | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<double>("migration.get_double_precision_array", new double[] { }, PgsqlDbType.Double | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetIntArray_EmptyIntArray()
     {
       GetTArray_EmptyTArray<int>("migration.get_int_array", new int[] { }, PgsqlDbType.Integer | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<int>("migration.get_int_array", new int[] { }, PgsqlDbType.Integer | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetNumericArray_EmptyNumericArray()
     {
       GetTArray_EmptyTArray<decimal>("migration.get_numeric_array", new decimal[] { }, PgsqlDbType.Numeric | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<decimal>("migration.get_numeric_array", new decimal[] { }, PgsqlDbType.Numeric | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetMoneyArray_EmptyMoneyArray()
     {
       GetTArray_EmptyTArray<decimal>("migration.get_money_array", new decimal[] { }, PgsqlDbType.Money | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<decimal>("migration.get_money_array", new decimal[] { }, PgsqlDbType.Money | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetRealArray_EmptyRealArray()
     {
       GetTArray_EmptyTArray<float>("migration.get_real_array", new float[] { }, PgsqlDbType.Real | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<float>("migration.get_real_array", new float[] { }, PgsqlDbType.Real | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetSmallintArray_EmptySmallintArray()
     {
       GetTArray_EmptyTArray<short>("migration.get_smallint_array", new short[] { }, PgsqlDbType.Smallint | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<short>("migration.get_smallint_array", new short[] { }, PgsqlDbType.Smallint | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetTextArray_EmptyTextArray()
     {
       GetTArray_EmptyTArray<string>("migration.get_text_array", new string[] { }, PgsqlDbType.Text | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<string>("migration.get_text_array", new string[] { }, PgsqlDbType.Text | PgsqlDbType.Array, HttpMethod.POST);
     }
 
     [Test]
     public void GetDateArray_EmptyDateArray()
     {
       GetTArray_EmptyTArray<DateTime>("migration.get_date_array", new DateTime[] { }, PgsqlDbType.Date | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<DateTime>("migration.get_date_array", new DateTime[] { }, PgsqlDbType.Date | PgsqlDbType.Array, HttpMethod.POST);
     }
 
-    public void GetTArray_EmptyTArray<T>(string postgreSQLFunctionName, object value, PgsqlDbType npgsqlDbType)
+    public void GetTArray_EmptyTArray<T>(string postgreSQLFunctionName, object value, PgsqlDbType npgsqlDbType, HttpMethod httpMethod = HttpMethod.GET)
     {
       var command = new Command(postgreSQLFunctionName);
       var parameter = new Parameter("p_parameter", npgsqlDbType);
       parameter.Value = value;
       command.Parameters.Add(parameter);
 
-      var response = Command.Execute(command, RoutineType.Scalar);
+      var response = Command.Execute(command, RoutineType.Scalar, httpMethod);
       var reader = new JsonTextReader(new StringReader(response));
       reader.FloatParseHandling = FloatParseHandling.Decimal;
       reader.DateParseHandling = DateParseHandling.None;
@@ -2596,7 +2357,6 @@ namespace SimpleWSA.WSALibrary
     #endregion special cases
 
     #region return set
-
     [Test]
     public void GetScalarDataTypes()
     {
