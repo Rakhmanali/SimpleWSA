@@ -134,8 +134,7 @@ namespace SimpleWSA.WSALibrary
                 }
                 else
                 {
-                  // 1.234568E+09 ("+") issues the error when the http method is HttpMethod.GET
-                  xmlWriter.WriteElementString(parameterName, HttpUtility.UrlEncode(Convert.ToString(v, CultureInfo.InvariantCulture)));
+                  xmlWriter.WriteElementString(parameterName, Convert.ToString(v, CultureInfo.InvariantCulture));
                 }
               }
             }
@@ -370,7 +369,7 @@ namespace SimpleWSA.WSALibrary
 
     protected virtual object Get(string requestString)
     {
-      string requestUri = string.Format(this.format, this.serviceAddress, this.route, this.token, requestString);
+      string requestUri = string.Format(this.format, this.serviceAddress, this.route, this.token, HttpUtility.UrlEncode(requestString));
       return this.httpService.Get(requestUri, this.webProxy, this.command.ReturnCompressionType);
     }
 
@@ -382,7 +381,7 @@ namespace SimpleWSA.WSALibrary
 
     protected virtual async Task<object> GetAsync(string requestString)
     {
-      string requestUri = string.Format(this.format, string.Empty, this.route, this.token, requestString);
+      string requestUri = string.Format(this.format, string.Empty, this.route, this.token, HttpUtility.UrlEncode(requestString));
       return await this.httpService.GetAsync(this.serviceAddress, requestUri, this.webProxy, this.command.ReturnCompressionType);
     }
 

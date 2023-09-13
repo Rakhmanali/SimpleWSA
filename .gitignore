@@ -353,3 +353,5 @@ ConsoleApp/
 *.zip
 
 Temp/
+
+FunctionalTests/appsettings.json

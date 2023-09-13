@@ -23,7 +23,7 @@ namespace SimpleWSA.WSALibrary.Services
         var webRequest = WebRequest.Create(requestUri);
         if (webRequest != null)
         {
-          webRequest.Method = HttpMethod.GET.ToString(); ;
+          webRequest.Method = HttpMethod.GET.ToString();
           webRequest.ContentLength = 0;
           webRequest.Timeout = 1 * 60 * 60 * 1000;
           webRequest.Proxy = webProxy;
