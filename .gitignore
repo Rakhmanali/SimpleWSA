@@ -355,3 +355,4 @@ ConsoleApp/
 Temp/
 
 FunctionalTests/appsettings.json
+/FunctionalTests/appsettings.json
