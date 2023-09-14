@@ -12,9 +12,9 @@
 // General -> Clear All NuGet Storage
 
 // run it from command line in the project folder, do not forget to change version
-// SWSALibrary.nuspec
+// WSALibrary.nuspec
 
-nuget pack SWSALibrary.csproj -IncludeReferencedProjects -Version 1.0.2 -Properties Configuration=Release
+nuget pack WSALibrary.csproj -IncludeReferencedProjects -Version 1.0.2 -Properties Configuration=Release
 
 // the same, when necessary to support multi target frameworks
 // dotnet pack wsalibrary\wsalibrary.csproj -c release -p:packageversion=1.0.5 -p:nuspecfile=wsalibrary.nuspec
