@@ -67,15 +67,15 @@ namespace SimpleWSA.WSALibrary
         return;
       }
 
-      // TO DO: this is a temporary decision providing the data access web service migration
-      bool isMigration = false;
-      var uri = new Uri(this.serviceAddress);
-      var host = uri.Host;
-      if (string.Compare(host, Temp.Constants.testDawaHost, true) == 0 ||
-          string.Compare(host, Temp.Constants.prodDawaHost, true) == 0)
-      {
-        isMigration = true;
-      }
+      //// TO DO: this is a temporary decision providing the data access web service migration
+      //bool isMigration = false;
+      //var uri = new Uri(this.serviceAddress);
+      //var host = uri.Host;
+      //if (string.Compare(host, Temp.Constants.testDawaHost, true) == 0 ||
+      //    string.Compare(host, Temp.Constants.prodDawaHost, true) == 0)
+      //{
+      //  isMigration = true;
+      //}
 
       xmlWriter.WriteStartElement(Constants.WS_XML_REQUEST_NODE_ARGUMENTS);
       object[] value;
@@ -85,7 +85,7 @@ namespace SimpleWSA.WSALibrary
         parameterName = parameter.Name.ToLower();
 
         value = convertingService.ConvertObjectToDb(parameter.PgsqlDbType,
-                                                    parameter.Value, command.OutgoingEncodingType, isMigration);
+                                                    parameter.Value, command.OutgoingEncodingType);
         if (value == null || value.Length == 0)
         {
           xmlWriter.WriteStartElement(parameterName);

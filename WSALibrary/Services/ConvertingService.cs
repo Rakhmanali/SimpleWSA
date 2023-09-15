@@ -1,14 +1,14 @@
-﻿using System;
+﻿using SimpleWSA.WSALibrary.Extensions;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using SimpleWSA.WSALibrary.Extensions;
 
 namespace SimpleWSA.WSALibrary.Services
 {
   public class ConvertingService : IConvertingService
   {
-    private object ConvertScalarObjectToDb(PgsqlDbType pgsqlDbType, object value, EncodingType outgoingEncodingType, bool isMigration)
+    private object ConvertScalarObjectToDb(PgsqlDbType pgsqlDbType, object value, EncodingType outgoingEncodingType)
     {
       object result = null;
 
@@ -20,141 +20,87 @@ namespace SimpleWSA.WSALibrary.Services
       switch (pgsqlDbType)
       {
         case PgsqlDbType.Time:
-          if (isMigration == false)
+          if (value is TimeSpan timeSpan)
           {
-            if (value is TimeSpan timeSpan)
+            /*
+             * PostgreSql time:
+             * description: time of day (no date)
+             * low value: 00:00:00
+             * high value: 24:00:00
+             * example 16:50:12.768915
+             * https://www.postgresql.org/docs/9.1/datatype-datetime.html
+             *
+             * .NET TimeSpan supports DAY too, but we can ignore it, because PostgreSql time
+             * is not support it
+             */
+            if (timeSpan.Milliseconds > 0)
             {
-              //result = timeSpan.ToString(@"hh\:mm\:ss");
-
-              /*
-               * PostgreSql time:
-               * description: time of day (no date)
-               * low value: 00:00:00
-               * high value: 24:00:00
-               * example 16:50:12.768915
-               * https://www.postgresql.org/docs/9.1/datatype-datetime.html
-               *
-               * .NET TimeSpan supports DAY too, but we can ignore it, because PostgreSql time
-               * is not support it
-               */
-              if (timeSpan.Milliseconds > 0)
-              {
-                result = timeSpan.ToString(@"hh\:mm\:ss\.ffff");
-              }
-              else
-              {
-                result = timeSpan.ToString(@"hh\:mm\:ss");
-              }
+              result = timeSpan.ToString(@"hh\:mm\:ss\.ffff");
             }
             else
             {
-              result = Convert.ToDateTime(value).ToString("HH:mm:ss");
+              result = timeSpan.ToString(@"hh\:mm\:ss");
+            }
+          }
+          /*
+             although npgsql 2.2.7 can accept .NET TimeSpan object as the source for a parameter 
+             having the type as NpgsqlDbType.Time, npgsql 2.2.7 converts and keeps it as the DataTime type.
+          */
+          else if (value is DateTime dateTime)
+          {
+            if (dateTime.Millisecond > 0)
+            {
+              result = dateTime.ToString("HH:mm:ss.ffff");
+            }
+            else
+            {
+              result = dateTime.ToString("HH:mm:ss");
             }
           }
           else
           {
-            if (value is TimeSpan timeSpan)
-            {
-              /*
-               * PostgreSql time:
-               * description: time of day (no date)
-               * low value: 00:00:00
-               * high value: 24:00:00
-               * example 16:50:12.768915
-               * https://www.postgresql.org/docs/9.1/datatype-datetime.html
-               *
-               * .NET TimeSpan supports DAY too, but we can ignore it, because PostgreSql time
-               * is not support it
-               */
-              if (timeSpan.Milliseconds > 0)
-              {
-                result = timeSpan.ToString(@"hh\:mm\:ss\.ffff");
-              }
-              else
-              {
-                result = timeSpan.ToString(@"hh\:mm\:ss");
-              }
-            }
-            /*
-               although npgsql 2.2.7 can accept .NET TimeSpan object as the source for a parameter 
-               having the type as NpgsqlDbType.Time, npgsql 2.2.7 converts and keeps it as the DataTime type.
-            */
-            else if (value is DateTime dateTime)
-            {
-              if (dateTime.Millisecond > 0)
-              {
-                result = dateTime.ToString("HH:mm:ss.ffff");
-              }
-              else
-              {
-                result = dateTime.ToString("HH:mm:ss");
-              }
-            }
-            else
-            {
-              throw new Exception("the TimeSpan is required");
-            }
+            throw new Exception("the TimeSpan is required");
           }
           break;
         case PgsqlDbType.TimeTZ:
-          if (isMigration == false)
+          /*
+             TO DO: The strange behavior of the npgsql6 discovered during work with PostgreSQL function:
+             
+                    migration.get_in_and_out_timetz(p_parameter1 time with time zone,	OUT p_parameter2 time with time zone)
+          
+                    . The SimpleWSA sends the time part as is and replaces the date part by "0001.01.01" of the source DateTimeOffset, and 
+                    npgsql returns the same time part, but date there is corrupted: "0001.01.02". Why? I don't know yet.
+
+          */
+          if (value is DateTimeOffset dateTimeOffset)
           {
-            if (value is DateTimeOffset dateTimeOffset)
+            if (dateTimeOffset.Millisecond > 0)
             {
-              if (dateTimeOffset.Millisecond > 0)
-              {
-                result = dateTimeOffset.ToString(@"HH:mm:ss.ffffzzzz");
-              }
-              else
-              {
-                result = dateTimeOffset.ToString(@"HH:mm:sszzzz");
-              }
+              result = dateTimeOffset.ToString(@"0001-01-01 HH:mm:ss.ffffzzzz");
             }
             else
             {
-              DateTime dateTime = (DateTime)value;
-              if (dateTime.Kind == DateTimeKind.Utc)
-              {
-                result = dateTime.ToString("HH:mm:ss+00:00");
-              }
-              else
-              {
-                result = dateTime.ToString("HH:mm:sszzz");
-              }
+              result = dateTimeOffset.ToString(@"0001-01-01 HH:mm:sszzzz");
+            }
+          }
+          /*
+             although npgsql 2.2.7 can accept .NET TimeSpan object as the source for a parameter 
+             having the type as NpgsqlDbType.TimeTZ, npgsql 2.2.7 converts and keeps it as the DataTime type.
+          */
+          else if (value is DateTime dateTime)
+          {
+            if (dateTime.Millisecond > 0)
+            {
+              result = dateTime.ToString(@"0001-01-01 HH:mm:ss.ffff+00:00");
+            }
+            else
+            {
+              result = dateTime.ToString(@"0001-01-01 HH:mm:ss+00:00");
             }
           }
           else
           {
-            if (value is DateTimeOffset dateTimeOffset)
-            {
-              if (dateTimeOffset.Millisecond > 0)
-              {
-                result = dateTimeOffset.ToString(@"0001-01-01 HH:mm:ss.ffffzzzz");
-              }
-              else
-              {
-                result = dateTimeOffset.ToString(@"0001-01-01 HH:mm:sszzzz");
-              }
-            }
-            /*
-               although npgsql 2.2.7 can accept .NET TimeSpan object as the source for a parameter 
-               having the type as NpgsqlDbType.TimeTZ, npgsql 2.2.7 converts and keeps it as the DataTime type.
-            */
-            else if (value is DateTime dateTime)
-            {
-              if (dateTime.Millisecond > 0)
-              {
-                result = dateTime.ToString(@"0001-01-01 HH:mm:ss.ffff+00:00");
-              }
-              else
-              {
-                result = dateTime.ToString(@"0001-01-01 HH:mm:ss+00:00");
-              }
-            }
-            else
-            {
-              throw new Exception("the DateTimeOffset is required");
-            }
+            throw new Exception("the DateTimeOffset is required");
           }
           break;
         case PgsqlDbType.Timestamp:
@@ -260,7 +206,7 @@ namespace SimpleWSA.WSALibrary.Services
       return result;
     }
 
-    public object[] ConvertObjectToDb(PgsqlDbType pgsqlDbType, object value, EncodingType outgoingEncodingType, bool isMigration = false)
+    public object[] ConvertObjectToDb(PgsqlDbType pgsqlDbType, object value, EncodingType outgoingEncodingType)
     {
       object[] result = null;
 
@@ -272,7 +218,7 @@ namespace SimpleWSA.WSALibrary.Services
       if ((pgsqlDbType & PgsqlDbType.Array) == 0)
       {
         result = new object[1];
-        result[0] = this.ConvertScalarObjectToDb(pgsqlDbType, value, outgoingEncodingType, isMigration);
+        result[0] = this.ConvertScalarObjectToDb(pgsqlDbType, value, outgoingEncodingType);
         return result;
       }
 
@@ -284,7 +230,7 @@ namespace SimpleWSA.WSALibrary.Services
         {
           if (result[i] != null)
           {
-            result[i] = this.ConvertScalarObjectToDb(itemPgsqlDbType, result[i], outgoingEncodingType, isMigration);
+            result[i] = this.ConvertScalarObjectToDb(itemPgsqlDbType, result[i], outgoingEncodingType);
           }
         }
       }
