@@ -355,3 +355,6 @@ ConsoleApp/
 /Temp/
 
 /FunctionalTests/appsettings.json
+/NuGetPackageTest/ConsoleAppNet06/appsettings.json
+/NuGetPackageTest/ConsoleAppNet07/appsettings.json
+/NuGetPackageTest/ConsoleAppNet48/appsettings.json
