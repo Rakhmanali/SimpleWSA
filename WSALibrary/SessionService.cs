@@ -122,7 +122,7 @@ namespace SimpleWSA.WSALibrary
 
     private string Get(string baseaddress, string requestUri, string queryString, WebProxy webProxy)
     {
-      string query = $"{baseaddress}/{requestUri}?{queryString}";
+      string query = $"{baseaddress}{requestUri}?{queryString}";
       string result = Convert.ToString(this.httpService.Get(query, webProxy, CompressionType.NONE));
       return this.ExtractToken(result);
     }

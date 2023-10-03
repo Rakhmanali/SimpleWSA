@@ -10,8 +10,8 @@
     <PackageId>SimpleWSA.WSALibrary</PackageId>
     <Authors>Kabekov R.S.</Authors>
     <Company>Navitas</Company>
-    <AssemblyVersion>1.0.6</AssemblyVersion>
-    <PackageVersion>1.0.6</PackageVersion>
+    <AssemblyVersion>1.0.7</AssemblyVersion>
+    <PackageVersion>1.0.7</PackageVersion>
     <AssemblyName>SimpleWSA.WSALibrary</AssemblyName>
     <RootNamespace>SimpleWSA.WSALibrary</RootNamespace>
     <Copyright>Copyright © 2023</Copyright>
