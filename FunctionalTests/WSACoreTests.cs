@@ -1135,14 +1135,21 @@ namespace SimpleWSA.WSALibrary
       foreach (var prop in props.OrderBy(p => p.Name))
       {
         jObj.Add(prop);
-        if (prop.Value is JObject)
-          Sort((JObject)prop.Value);
+        if (prop.Value is JObject jo)
+        {
+          Sort(jo);
+        }
+
         if (prop.Value is JArray)
         {
-          Int32 iCount = prop.Value.Count();
-          for (Int32 iIterator = 0; iIterator < iCount; iIterator++)
-            if (prop.Value[iIterator] is JObject)
-              Sort((JObject)prop.Value[iIterator]);
+          Int32 count = prop.Value.Count();
+          for (Int32 i = 0; i < count; i++)
+          {
+            if (prop.Value[i] is JObject jo1)
+            {
+              Sort(jo1);
+            }
+          }
         }
       }
     }
