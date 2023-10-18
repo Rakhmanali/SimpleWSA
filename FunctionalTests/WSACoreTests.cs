@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SimpleWSA.WSALibrary.Exceptions;
 using System.Data;
 
 namespace SimpleWSA.WSALibrary
@@ -2401,6 +2402,20 @@ namespace SimpleWSA.WSALibrary
       var expected = Command.Execute(command, RoutineType.DataSet);
       var actual = "{\"migration.get_empty_setof\":[]}";
       Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void ThrowRestServiceException()
+    {
+      var command = new Command("migration.get_out_bytea");
+      Assert.Throws<RestServiceException>(() => Command.Execute(command, RoutineType.DataSet));
+    }
+
+    [Test]
+    public void ThrowRestServiceException_Async()
+    {
+      var command = new Command("migration.get_out_bytea");
+      Assert.ThrowsAsync<RestServiceException>(async () => await Command.ExecuteAsync(command, RoutineType.DataSet));
     }
     #endregion special cases
     #endregion return set

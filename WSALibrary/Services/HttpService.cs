@@ -177,7 +177,13 @@ namespace SimpleWSA.WSALibrary.Services
     {
       if (!string.IsNullOrEmpty(source))
       {
-        ErrorReply errorReply = JsonConvert.DeserializeObject<ErrorReply>(source);
+        ErrorReply errorReply = null;
+        try
+        {
+          errorReply = JsonConvert.DeserializeObject<ErrorReply>(source);
+        }
+        catch { }
+
         if (errorReply != null)
         {
           string wsaMessage = null;
