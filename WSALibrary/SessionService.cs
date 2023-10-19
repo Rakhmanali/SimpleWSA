@@ -1,4 +1,6 @@
-﻿using System;
+﻿using SimpleWSA.WSALibrary.Internal;
+using SimpleWSA.WSALibrary.Services;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
@@ -6,8 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using SimpleWSA.WSALibrary.Internal;
-using SimpleWSA.WSALibrary.Services;
 
 namespace SimpleWSA.WSALibrary
 {
@@ -130,7 +130,7 @@ namespace SimpleWSA.WSALibrary
     private async Task<string> GetAsync(string baseaddress, string requestUri, string queryString, WebProxy webProxy)
     {
       string apiUrl = $"{requestUri}?{queryString}";
-      string result = Convert.ToString(await this.httpService.GetAsync(baseaddress, apiUrl, webProxy, CompressionType.NONE));
+      string result = Convert.ToString(await this.httpService.GetAsync(baseaddress, apiUrl, webProxy));
       return this.ExtractToken(result);
     }
 

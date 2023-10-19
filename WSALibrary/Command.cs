@@ -1,12 +1,12 @@
-﻿using System;
+﻿using SimpleWSA.WSALibrary.Exceptions;
+using SimpleWSA.WSALibrary.Internal;
+using SimpleWSA.WSALibrary.Services;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Text;
 using System.Threading.Tasks;
-using SimpleWSA.WSALibrary.Exceptions;
-using SimpleWSA.WSALibrary.Internal;
-using SimpleWSA.WSALibrary.Services;
 
 namespace SimpleWSA.WSALibrary
 {
@@ -193,12 +193,32 @@ namespace SimpleWSA.WSALibrary
       return null;
     }
 
+    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType)
+    {
+      return await ExecuteAsync(command, routineType, command.HttpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+    }
+
+    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType, HttpMethod httpMethod)
+    {
+      return await ExecuteAsync(command, routineType, httpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+    }
+
+    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat)
+    {
+      return await ExecuteAsync(command, routineType, httpMethod, responseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+    }
+
+    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat, CompressionType outgoingCompressionType)
+    {
+      return await ExecuteAsync(command, routineType, httpMethod, responseFormat, outgoingCompressionType, command.ReturnCompressionType);
+    }
+
     public static async Task<string> ExecuteAsync(Command command,
                                                   RoutineType routineType,
-                                                  HttpMethod httpMethod = HttpMethod.GET,
-                                                  ResponseFormat responseFormat = ResponseFormat.JSON,
-                                                  CompressionType outgoingCompressType = CompressionType.NONE,
-                                                  CompressionType returnCompressionType = CompressionType.NONE)
+                                                  HttpMethod httpMethod,
+                                                  ResponseFormat responseFormat,
+                                                  CompressionType outgoingCompressType,
+                                                  CompressionType returnCompressionType)
     {
       command.HttpMethod = httpMethod;
       command.ResponseFormat = responseFormat;

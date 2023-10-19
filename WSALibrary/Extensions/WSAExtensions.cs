@@ -86,7 +86,7 @@ namespace SimpleWSA.WSALibrary.Extensions
       return sb.ToString().Replace("&", "&amp;");
     }
 
-    private static string SetWebRequestContentType(this CompressionType compressionType)
+    public static string SetWebRequestContentType(this CompressionType compressionType)
     {
       return compressionType == CompressionType.NONE ? "text/xml" : "application/octet-stream";
     }

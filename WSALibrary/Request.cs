@@ -382,13 +382,13 @@ namespace SimpleWSA.WSALibrary
     protected virtual async Task<object> GetAsync(string requestString)
     {
       string requestUri = string.Format(this.format, string.Empty, this.route, this.token, HttpUtility.UrlEncode(requestString));
-      return await this.httpService.GetAsync(this.serviceAddress, requestUri, this.webProxy, this.command.ReturnCompressionType);
+      return await this.httpService.GetAsync(this.serviceAddress, requestUri, this.webProxy);
     }
 
     protected virtual async Task<object> PostAsync(string requestString)
     {
       string requestUri = string.Format(this.format, string.Empty, this.route, this.token, (int)this.command.OutgoingCompressionType);
-      return await this.httpService.PostAsync(this.serviceAddress, requestUri, requestString, this.webProxy, this.command.ReturnCompressionType);
+      return await this.httpService.PostAsync(this.serviceAddress, requestUri, requestString, this.webProxy, this.command.OutgoingCompressionType);
     }
 
     public virtual object Send()

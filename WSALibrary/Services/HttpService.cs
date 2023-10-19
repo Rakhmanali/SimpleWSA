@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,6 @@ namespace SimpleWSA.WSALibrary.Services
           webRequest.ContentLength = 0;
           webRequest.Timeout = 1 * 60 * 60 * 1000;
           webRequest.Proxy = webProxy;
-
           using (var httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
           {
             if (httpWebResponse.StatusCode == HttpStatusCode.OK)
@@ -67,6 +67,7 @@ namespace SimpleWSA.WSALibrary.Services
 
           byte[] postData = this.compressionService.Compress(requestString, outgoingCompressionType);
           webRequest.InitializeWebRequest(outgoingCompressionType, postData, webProxy);
+
           using (HttpWebResponse httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
           {
             if (httpWebResponse?.StatusCode == HttpStatusCode.OK)
@@ -94,31 +95,25 @@ namespace SimpleWSA.WSALibrary.Services
       return null;
     }
 
-    public virtual async Task<object> GetAsync(string baseAddress, string requestUri, WebProxy webProxy, CompressionType returnCompressionType)
+    public virtual async Task<object> GetAsync(string baseAddress, string requestUri, WebProxy webProxy)
     {
       HttpClientHandler httpClientHandler = new HttpClientHandler
       {
         Proxy = webProxy,
-        UseProxy = webProxy != null
+        UseProxy = webProxy != null,
+        AutomaticDecompression = DecompressionMethods.GZip
       };
 
-      using (HttpClient httpClient = new HttpClient(httpClientHandler))
+      using (var httpClient = new HttpClient(httpClientHandler))
       {
         httpClient.BaseAddress = new Uri(baseAddress);
         httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
 
-        using (HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(requestUri))
+        using (var httpResponseMessage = await httpClient.GetAsync(requestUri))
         {
           if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
           {
-            using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync())
-            {
-              byte[] result = this.compressionService.Decompress(stream, returnCompressionType);
-              if (result != null)
-              {
-                return Encoding.UTF8.GetString(result);
-              }
-            }
+            return await httpResponseMessage.Content.ReadAsStringAsync();
           }
           else
           {
@@ -130,32 +125,61 @@ namespace SimpleWSA.WSALibrary.Services
       return null;
     }
 
-    public virtual async Task<object> PostAsync(string baseAddress, string requestUri, string requestString, WebProxy webProxy, CompressionType returnCompressionType)
+    //public virtual async Task<object> PostAsync(string baseAddress, string requestUri, string requestString, WebProxy webProxy)
+    //{
+    //  HttpClientHandler httpClientHandler = new HttpClientHandler
+    //  {
+    //    Proxy = webProxy,
+    //    UseProxy = webProxy != null,
+    //    AutomaticDecompression = DecompressionMethods.GZip
+    //  };
+
+    //  using (HttpClient httpClient = new HttpClient(httpClientHandler))
+    //  {
+    //    httpClient.BaseAddress = new Uri(baseAddress);
+    //    httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
+    //    using (StringContent stringContent = new StringContent(requestString, Encoding.UTF8, "text/xml"))
+    //    {
+    //      using (HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(requestUri, stringContent))
+    //      {
+    //        if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
+    //        {
+    //          return await httpResponseMessage.Content.ReadAsStringAsync();
+    //        }
+    //        else
+    //        {
+    //          this.CreateAndThrowIfRestServiceException(httpResponseMessage.ReasonPhrase);
+    //          httpResponseMessage.EnsureSuccessStatusCode();
+    //        }
+    //      }
+    //    }
+    //  }
+    //  return null;
+    //}
+
+    public virtual async Task<object> PostAsync(string baseAddress, string requestUri, string requestString, WebProxy webProxy, CompressionType outgoingCompressionType)
     {
       HttpClientHandler httpClientHandler = new HttpClientHandler
       {
         Proxy = webProxy,
-        UseProxy = webProxy != null
+        UseProxy = webProxy != null,
+        AutomaticDecompression = DecompressionMethods.GZip
       };
 
       using (HttpClient httpClient = new HttpClient(httpClientHandler))
       {
         httpClient.BaseAddress = new Uri(baseAddress);
         httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
-        using (StringContent stringContent = new StringContent(requestString, Encoding.UTF8, "text/xml"))
+
+        byte[] postData = this.compressionService.Compress(requestString, outgoingCompressionType);
+        using (var byteArrayContent = new ByteArrayContent(postData))
         {
-          using (HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(requestUri, stringContent))
+          byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue(outgoingCompressionType.SetWebRequestContentType());
+          using (HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(requestUri, byteArrayContent))
           {
             if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
             {
-              using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync())
-              {
-                byte[] result = this.compressionService.Decompress(stream, returnCompressionType);
-                if (result != null)
-                {
-                  return Encoding.UTF8.GetString(result);
-                }
-              }
+              return await httpResponseMessage.Content.ReadAsStringAsync();
             }
             else
             {
