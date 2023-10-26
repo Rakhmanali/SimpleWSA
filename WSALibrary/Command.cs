@@ -252,7 +252,7 @@ namespace SimpleWSA.WSALibrary
             if (rex.Code == "MI008")
             {
               await SessionContext.RefreshAsync();
-              scalarRequest.SetToken(sessionContext.Token);
+              scalarRequest.SetToken(SessionContext.GetContext().Token);
               goto scalar_request_label;
             }
           }
@@ -281,7 +281,7 @@ namespace SimpleWSA.WSALibrary
             if (rex.Code == "MI008")
             {
               await SessionContext.RefreshAsync();
-              nonqueryRequest.SetToken(sessionContext.Token);
+              nonqueryRequest.SetToken(SessionContext.GetContext().Token);
               goto nonquery_request_label;
             }
           }
@@ -297,6 +297,7 @@ namespace SimpleWSA.WSALibrary
                                                            convertingService,
                                                            sessionContext.WebProxy);
       dataset_request_label:
+
         try
         {
           object result = await dataSetRequest.SendAsync();
@@ -310,7 +311,7 @@ namespace SimpleWSA.WSALibrary
             if (rex.Code == "MI008")
             {
               await SessionContext.RefreshAsync();
-              dataSetRequest.SetToken(sessionContext.Token);
+              dataSetRequest.SetToken(SessionContext.GetContext().Token);
               goto dataset_request_label;
             }
           }

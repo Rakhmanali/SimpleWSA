@@ -2714,6 +2714,23 @@ namespace SimpleWSA.WSALibrary
     }
     #endregion array
     #endregion with in and out parameters
+
+    #region special cases
+
+    [Test]
+    public void GetInOutJson_WhenSessionExpired()
+    {
+      this.KillSession();
+      this.GetInOutJson();
+    }
+
+    [Test]
+    public async Task GetInOutJsonAsync__WhenSessionExpired()
+    {
+      await KillSessionAsync();
+      await GetInOutJsonAsync();
+    }
+    #endregion special cases
     #endregion non query
 
     #region execute scalar
@@ -4123,6 +4140,22 @@ namespace SimpleWSA.WSALibrary
     }
 
     #endregion array
+
+    #region special cases
+    [Test]
+    public void GetJson_WhenSessionExpired()
+    {
+      this.KillSession();
+      this.GetJson();
+    }
+
+    [Test]
+    public async Task GetJsonAsync_WhenSessionExpired()
+    {
+      await this.KillSessionAsync();
+      await this.GetJsonAsync();
+    }
+    #endregion special cases
     #endregion execute scalar
 
     #region special cases
@@ -4404,8 +4437,50 @@ namespace SimpleWSA.WSALibrary
       var command = new Command("migration.get_out_bytea");
       Assert.ThrowsAsync<RestServiceException>(async () => await Command.ExecuteAsync(command, RoutineType.DataSet));
     }
+
+    [Test]
+    public void GetScalarDataTypes_WhenSessionExpired()
+    {
+      this.KillSession();
+      this.GetScalarDataTypes();
+    }
+
+    [Test]
+    public async Task GetScalarDataTypesAsync_WhenSessionExpired()
+    {
+      await this.KillSessionAsync();
+      await this.GetScalarDataTypesAsync();
+    }
     #endregion special cases
     #endregion return set
+
+    private void KillSession()
+    {
+      var sessionContext = SessionContext.GetContext();
+      var token = sessionContext.Token;
+      var baseAddress = sessionContext.BaseAddress;
+      this.KillSession(token, baseAddress);
+    }
+    
+    private void KillSession(string token, string baseAddress)
+    {
+      var httpService = new Services.HttpService();
+      httpService.Get($"{baseAddress}/session/kill?token={token}&returnType=json", null, CompressionType.NONE);
+    }
+
+    private async Task KillSessionAsync()
+    {
+      var sessionContext = SessionContext.GetContext();
+      var token = sessionContext.Token;
+      var baseAddress = sessionContext.BaseAddress;
+      await this.KillSessionAsync(token, baseAddress);
+    }
+
+    private async Task KillSessionAsync(string token, string baseAddress)
+    {
+      var httpService = new Services.HttpService();
+      await httpService.GetAsync(baseAddress, $"session/kill?token={token}&returnType=json", null);
+    }
 
     // https://www.sean-lloyd.com/post/hash-a-string/
     internal static string HashString(string text, string salt = "")
