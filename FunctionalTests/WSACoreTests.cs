@@ -335,6 +335,54 @@ namespace SimpleWSA.WSALibrary
     {
       var command = new Command("migration.get_out_xml");
       command.Parameters.Add("p_parameter", PgsqlDbType.Xml);
+    
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_xml"]!["arguments"]!["p_parameter"]!;
+
+      var actual = Convert.ToString(p)?.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+      var expected = @"<_routines>
+        <_routine>
+          <_name>formmanager_getfiltered</_name>
+          <_arguments>
+            <_formid>0</_formid>
+            <_form></_form>
+            <_businessids>1</_businessids>
+            <_businessids>941</_businessids>
+            <_businessids>942</_businessids>
+            <_businessids>943</_businessids>
+            <_businessids>944</_businessids>
+            <_businessids>2006</_businessids>
+            <_businessids>2129</_businessids>
+            <_businessids>2135</_businessids>
+            <_businessids>2137</_businessids>
+            <_formtype>1</_formtype>
+            <_formtype>2</_formtype>
+            <_formtype>3</_formtype>
+            <_formtype>4</_formtype>
+            <_formtype>5</_formtype>
+            <_formtype>6</_formtype>
+            <_formtype>7</_formtype>
+            <_formtype>8</_formtype>
+            <_inactive>False</_inactive>
+          </_arguments>
+          <_options>
+            <_writeSchema>1</_writeSchema>
+          </_options>
+        </_routine>
+        <_compression>0</_compression>
+        <_returnType>json</_returnType>
+      </_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void GetOutXmlWithReturnCompression()
+    {
+      var command = new Command("migration.get_out_xml");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Xml);
+      command.ReturnCompressionType = CompressionType.GZip;
 
       var response = Command.Execute(command, RoutineType.NonQuery);
       JObject jobject = JObject.Parse(response);
@@ -425,10 +473,106 @@ namespace SimpleWSA.WSALibrary
     }
 
     [Test]
+    public async Task GetOutXmlAsyncWithReturnCompression()
+    {
+      var command = new Command("migration.get_out_xml");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Xml);
+      command.ReturnCompressionType = CompressionType.GZip;
+
+      var response = await Command.ExecuteAsync(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_xml"]!["arguments"]!["p_parameter"]!;
+
+      var actual = Convert.ToString(p)?.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+      var expected = @"<_routines>
+        <_routine>
+          <_name>formmanager_getfiltered</_name>
+          <_arguments>
+            <_formid>0</_formid>
+            <_form></_form>
+            <_businessids>1</_businessids>
+            <_businessids>941</_businessids>
+            <_businessids>942</_businessids>
+            <_businessids>943</_businessids>
+            <_businessids>944</_businessids>
+            <_businessids>2006</_businessids>
+            <_businessids>2129</_businessids>
+            <_businessids>2135</_businessids>
+            <_businessids>2137</_businessids>
+            <_formtype>1</_formtype>
+            <_formtype>2</_formtype>
+            <_formtype>3</_formtype>
+            <_formtype>4</_formtype>
+            <_formtype>5</_formtype>
+            <_formtype>6</_formtype>
+            <_formtype>7</_formtype>
+            <_formtype>8</_formtype>
+            <_inactive>False</_inactive>
+          </_arguments>
+          <_options>
+            <_writeSchema>1</_writeSchema>
+          </_options>
+        </_routine>
+        <_compression>0</_compression>
+        <_returnType>json</_returnType>
+      </_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
     public async Task GetOutXmlPostAsync()
     {
       var command = new Command("migration.get_out_xml");
       command.Parameters.Add("p_parameter", PgsqlDbType.Xml);
+
+      var response = await Command.ExecuteAsync(command, RoutineType.NonQuery, HttpMethod.POST);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_xml"]!["arguments"]!["p_parameter"]!;
+
+      var actual = Convert.ToString(p)?.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+      var expected = @"<_routines>
+        <_routine>
+          <_name>formmanager_getfiltered</_name>
+          <_arguments>
+            <_formid>0</_formid>
+            <_form></_form>
+            <_businessids>1</_businessids>
+            <_businessids>941</_businessids>
+            <_businessids>942</_businessids>
+            <_businessids>943</_businessids>
+            <_businessids>944</_businessids>
+            <_businessids>2006</_businessids>
+            <_businessids>2129</_businessids>
+            <_businessids>2135</_businessids>
+            <_businessids>2137</_businessids>
+            <_formtype>1</_formtype>
+            <_formtype>2</_formtype>
+            <_formtype>3</_formtype>
+            <_formtype>4</_formtype>
+            <_formtype>5</_formtype>
+            <_formtype>6</_formtype>
+            <_formtype>7</_formtype>
+            <_formtype>8</_formtype>
+            <_inactive>False</_inactive>
+          </_arguments>
+          <_options>
+            <_writeSchema>1</_writeSchema>
+          </_options>
+        </_routine>
+        <_compression>0</_compression>
+        <_returnType>json</_returnType>
+      </_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public async Task GetOutXmlPostAsyncWithReturnCompression()
+    {
+      var command = new Command("migration.get_out_xml");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Xml);
+      command.ReturnCompressionType = CompressionType.GZip;
 
       var response = await Command.ExecuteAsync(command, RoutineType.NonQuery, HttpMethod.POST);
       JObject jobject = JObject.Parse(response);
@@ -3513,10 +3657,15 @@ namespace SimpleWSA.WSALibrary
     public void GetByteaArray()
     {
       var command = new Command("migration.get_bytea_array");
+
+      command.HttpMethod = HttpMethod.POST;
+
       var parameter = new Parameter("p_parameter", PgsqlDbType.Bytea | PgsqlDbType.Array,
                                     new byte[][] { System.Text.Encoding.UTF8.GetBytes("hello"),
                                                    System.Text.Encoding.UTF8.GetBytes("world"),
-                                                   System.Text.Encoding.UTF8.GetBytes("fropm test code!")});
+                                                   System.Text.Encoding.UTF8.GetBytes("from test code!")});
+
+
       command.Parameters.Add(parameter);
       var response = Command.Execute(command, RoutineType.Scalar);
       var reader = new JsonTextReader(new StringReader(response));
@@ -3801,7 +3950,7 @@ namespace SimpleWSA.WSALibrary
     }
 
     [Test]
-    public void GetXmlArrayPostWithOutgoingCompression()
+    public void GetXmlArrayPostWithOutgoingAndReturnCompression()
     {
       var command = new Command("migration.get_xml_array");
       var parameter = new Parameter("p_parameter", PgsqlDbType.Xml | PgsqlDbType.Array);
@@ -3858,6 +4007,7 @@ namespace SimpleWSA.WSALibrary
       parameter.Value = expected;
       command.Parameters.Add(parameter);
       command.OutgoingCompressionType = CompressionType.GZip;
+      command.ReturnCompressionType = CompressionType.GZip;
 
       var response = Command.Execute(command, RoutineType.Scalar, HttpMethod.POST);
       var reader = new JsonTextReader(new StringReader(response));
@@ -3955,7 +4105,7 @@ namespace SimpleWSA.WSALibrary
     }
 
     [Test]
-    public async Task GetXmlArrayPostAsyncWithOutgoingCompression()
+    public async Task GetXmlArrayPostAsyncWithOutgoingAndReturnCompression()
     {
       var command = new Command("migration.get_xml_array");
       var parameter = new Parameter("p_parameter", PgsqlDbType.Xml | PgsqlDbType.Array);
@@ -4012,6 +4162,7 @@ namespace SimpleWSA.WSALibrary
       parameter.Value = expected;
       command.Parameters.Add(parameter);
       command.OutgoingCompressionType = CompressionType.GZip;
+      command.ReturnCompressionType = CompressionType.GZip;
 
       var response = await Command.ExecuteAsync(command, RoutineType.Scalar, HttpMethod.POST);
 
@@ -4425,14 +4576,42 @@ namespace SimpleWSA.WSALibrary
     }
 
     [Test]
-    public void ThrowRestServiceException()
+    public void ThrowRestServiceException_NonQuery()
+    {
+      var command = new Command("migration.get_out_bigint_a");
+      Assert.Throws<RestServiceException>(() => Command.Execute(command, RoutineType.NonQuery));
+    }
+
+    [Test]
+    public void ThrowRestServiceExceptionAsync_NonQuery()
+    {
+      var command = new Command("migration.get_out_bigint_b");
+      Assert.ThrowsAsync<RestServiceException>(async () => await Command.ExecuteAsync(command, RoutineType.NonQuery));
+    }
+
+    [Test]
+    public void ThrowRestServiceException_Scalar()
+    {
+      var command = new Command("migration.get_boolean_a");
+      Assert.Throws<RestServiceException>(() => Command.Execute(command, RoutineType.Scalar));
+    }
+
+    [Test]
+    public void ThrowRestServiceExceptionAsync_Scalar()
+    {
+      var command = new Command("migration.get_boolean_b");
+      Assert.ThrowsAsync<RestServiceException>(async () => await Command.ExecuteAsync(command, RoutineType.Scalar));
+    }
+
+    [Test]
+    public void ThrowRestServiceException_DataSet()
     {
       var command = new Command("migration.get_out_bytea");
       Assert.Throws<RestServiceException>(() => Command.Execute(command, RoutineType.DataSet));
     }
 
     [Test]
-    public void ThrowRestServiceException_Async()
+    public void ThrowRestServiceExceptionAsync_DataSet()
     {
       var command = new Command("migration.get_out_bytea");
       Assert.ThrowsAsync<RestServiceException>(async () => await Command.ExecuteAsync(command, RoutineType.DataSet));

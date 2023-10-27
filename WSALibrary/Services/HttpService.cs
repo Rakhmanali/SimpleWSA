@@ -3,7 +3,9 @@ using SimpleWSA.WSALibrary.Exceptions;
 using SimpleWSA.WSALibrary.Extensions;
 using SimpleWSA.WSALibrary.Internal;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -30,6 +32,12 @@ namespace SimpleWSA.WSALibrary.Services
           webRequest.Proxy = webProxy;
           using (var httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
           {
+
+            if (httpWebResponse.Headers["Server"] == "Kestrel")
+            {
+              returnCompressionType = CompressionType.NONE;
+            }
+
             if (httpWebResponse.StatusCode == HttpStatusCode.OK)
             {
               using (Stream stream = httpWebResponse.GetResponseStream())
@@ -70,6 +78,12 @@ namespace SimpleWSA.WSALibrary.Services
 
           using (HttpWebResponse httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
           {
+            
+            if (httpWebResponse.Headers["Server"] == "Kestrel")
+            {
+              returnCompressionType = CompressionType.NONE;
+            }
+
             if (httpWebResponse?.StatusCode == HttpStatusCode.OK)
             {
               using (Stream stream = httpWebResponse.GetResponseStream())
@@ -92,6 +106,7 @@ namespace SimpleWSA.WSALibrary.Services
         }
         throw;
       }
+
       return null;
     }
 
@@ -117,45 +132,13 @@ namespace SimpleWSA.WSALibrary.Services
           }
           else
           {
-            this.CreateAndThrowIfRestServiceException(httpResponseMessage.ReasonPhrase);
+            CreateAndThrowIfRestServiceException(httpResponseMessage);
             httpResponseMessage.EnsureSuccessStatusCode();
           }
         }
       }
       return null;
     }
-
-    //public virtual async Task<object> PostAsync(string baseAddress, string requestUri, string requestString, WebProxy webProxy)
-    //{
-    //  HttpClientHandler httpClientHandler = new HttpClientHandler
-    //  {
-    //    Proxy = webProxy,
-    //    UseProxy = webProxy != null,
-    //    AutomaticDecompression = DecompressionMethods.GZip
-    //  };
-
-    //  using (HttpClient httpClient = new HttpClient(httpClientHandler))
-    //  {
-    //    httpClient.BaseAddress = new Uri(baseAddress);
-    //    httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
-    //    using (StringContent stringContent = new StringContent(requestString, Encoding.UTF8, "text/xml"))
-    //    {
-    //      using (HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(requestUri, stringContent))
-    //      {
-    //        if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
-    //        {
-    //          return await httpResponseMessage.Content.ReadAsStringAsync();
-    //        }
-    //        else
-    //        {
-    //          this.CreateAndThrowIfRestServiceException(httpResponseMessage.ReasonPhrase);
-    //          httpResponseMessage.EnsureSuccessStatusCode();
-    //        }
-    //      }
-    //    }
-    //  }
-    //  return null;
-    //}
 
     public virtual async Task<object> PostAsync(string baseAddress, string requestUri, string requestString, WebProxy webProxy, CompressionType outgoingCompressionType)
     {
@@ -183,7 +166,7 @@ namespace SimpleWSA.WSALibrary.Services
             }
             else
             {
-              this.CreateAndThrowIfRestServiceException(httpResponseMessage.ReasonPhrase);
+              this.CreateAndThrowIfRestServiceException(httpResponseMessage);
               httpResponseMessage.EnsureSuccessStatusCode();
             }
           }
@@ -195,6 +178,9 @@ namespace SimpleWSA.WSALibrary.Services
     protected void CreateAndThrowIfRestServiceException(HttpWebResponse httpWebResponse)
     {
       this.CreateAndThrowIfRestServiceException(httpWebResponse.StatusDescription);
+
+      var statusDescription = httpWebResponse.Headers.Get(Constants.HTTP_RESPONSE_STATUS_DESCRIPTION_KEY);
+      this.CreateAndThrowIfRestServiceException(statusDescription);
     }
 
     protected void CreateAndThrowIfRestServiceException(string source)
@@ -219,5 +205,16 @@ namespace SimpleWSA.WSALibrary.Services
         }
       }
     }
+
+    private void CreateAndThrowIfRestServiceException(HttpResponseMessage httpResponseMessage)
+    {
+      this.CreateAndThrowIfRestServiceException(httpResponseMessage.ReasonPhrase);
+
+      if (httpResponseMessage.Headers.TryGetValues(Constants.HTTP_RESPONSE_STATUS_DESCRIPTION_KEY, out IEnumerable<string> values))
+      {
+        this.CreateAndThrowIfRestServiceException(values.First());
+      }
+    }
+
   }
 }
