@@ -4309,110 +4309,6 @@ namespace SimpleWSA.WSALibrary
     #endregion special cases
     #endregion execute scalar
 
-    #region special cases
-    [Test]
-    public void GetBigintArray_EmptyBigintArray()
-    {
-      GetTArray_EmptyTArray<bool>("migration.get_bigint_array", new long[] { }, PgsqlDbType.Bigint | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<bool>("migration.get_bigint_array", new long[] { }, PgsqlDbType.Bigint | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    [Test]
-    public void GetBooleanArray_EmptyBooleanArray()
-    {
-      GetTArray_EmptyTArray<bool>("migration.get_boolean_array", new bool[] { }, PgsqlDbType.Boolean | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<bool>("migration.get_boolean_array", new bool[] { }, PgsqlDbType.Boolean | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    [Test]
-    public void GetByteaArray_EmptyByteaArray()
-    {
-      GetTArray_EmptyTArray<byte[]>("migration.get_bytea_array", new byte[][] { }, PgsqlDbType.Bytea | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<byte[]>("migration.get_bytea_array", new byte[][] { }, PgsqlDbType.Bytea | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    [Test]
-    public void GetDoublePrecisionArray_EmptyDoublePrecisionArray()
-    {
-      GetTArray_EmptyTArray<double>("migration.get_double_precision_array", new double[] { }, PgsqlDbType.Double | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<double>("migration.get_double_precision_array", new double[] { }, PgsqlDbType.Double | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    [Test]
-    public void GetIntArray_EmptyIntArray()
-    {
-      GetTArray_EmptyTArray<int>("migration.get_int_array", new int[] { }, PgsqlDbType.Integer | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<int>("migration.get_int_array", new int[] { }, PgsqlDbType.Integer | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    [Test]
-    public void GetNumericArray_EmptyNumericArray()
-    {
-      GetTArray_EmptyTArray<decimal>("migration.get_numeric_array", new decimal[] { }, PgsqlDbType.Numeric | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<decimal>("migration.get_numeric_array", new decimal[] { }, PgsqlDbType.Numeric | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    [Test]
-    public void GetMoneyArray_EmptyMoneyArray()
-    {
-      GetTArray_EmptyTArray<decimal>("migration.get_money_array", new decimal[] { }, PgsqlDbType.Money | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<decimal>("migration.get_money_array", new decimal[] { }, PgsqlDbType.Money | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    [Test]
-    public void GetRealArray_EmptyRealArray()
-    {
-      GetTArray_EmptyTArray<float>("migration.get_real_array", new float[] { }, PgsqlDbType.Real | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<float>("migration.get_real_array", new float[] { }, PgsqlDbType.Real | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    [Test]
-    public void GetSmallintArray_EmptySmallintArray()
-    {
-      GetTArray_EmptyTArray<short>("migration.get_smallint_array", new short[] { }, PgsqlDbType.Smallint | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<short>("migration.get_smallint_array", new short[] { }, PgsqlDbType.Smallint | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    [Test]
-    public void GetTextArray_EmptyTextArray()
-    {
-      GetTArray_EmptyTArray<string>("migration.get_text_array", new string[] { }, PgsqlDbType.Text | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<string>("migration.get_text_array", new string[] { }, PgsqlDbType.Text | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    [Test]
-    public void GetDateArray_EmptyDateArray()
-    {
-      GetTArray_EmptyTArray<DateTime>("migration.get_date_array", new DateTime[] { }, PgsqlDbType.Date | PgsqlDbType.Array);
-      GetTArray_EmptyTArray<DateTime>("migration.get_date_array", new DateTime[] { }, PgsqlDbType.Date | PgsqlDbType.Array, HttpMethod.POST);
-    }
-
-    public void GetTArray_EmptyTArray<T>(string postgreSQLFunctionName, object value, PgsqlDbType npgsqlDbType, HttpMethod httpMethod = HttpMethod.GET)
-    {
-      var command = new Command(postgreSQLFunctionName);
-      var parameter = new Parameter("p_parameter", npgsqlDbType);
-      parameter.Value = value;
-      command.Parameters.Add(parameter);
-
-      var response = Command.Execute(command, RoutineType.Scalar, httpMethod);
-      var reader = new JsonTextReader(new StringReader(response));
-      reader.FloatParseHandling = FloatParseHandling.Decimal;
-      reader.DateParseHandling = DateParseHandling.None;
-      var jobject = JObject.Load(reader);
-      var rv = jobject[command.Name]!["returnValue"];
-
-      // If an array is empty then SimpleWSA defines it as null, please, look at Request.cs, line 89.
-      // It is not correct, but it is a reality now
-      if (rv?.Type == JTokenType.Null)
-      {
-        Assert.Pass();
-        return;
-      }
-
-      Assert.Fail();
-    }
-    #endregion special cases
-
     #region return set
     [Test]
     public void GetScalarDataTypes()
@@ -4576,6 +4472,125 @@ namespace SimpleWSA.WSALibrary
     }
 
     [Test]
+    public void GetScalarDataTypes_WhenSessionExpired()
+    {
+      this.KillSession();
+      this.GetScalarDataTypes();
+    }
+
+    [Test]
+    public async Task GetScalarDataTypesAsync_WhenSessionExpired()
+    {
+      await this.KillSessionAsync();
+      await this.GetScalarDataTypesAsync();
+    }
+    #endregion special cases
+    #endregion return set
+
+    #region special cases
+    [Test]
+    public void GetBigintArray_EmptyBigintArray()
+    {
+      GetTArray_EmptyTArray<bool>("migration.get_bigint_array", new long[] { }, PgsqlDbType.Bigint | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<bool>("migration.get_bigint_array", new long[] { }, PgsqlDbType.Bigint | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetBooleanArray_EmptyBooleanArray()
+    {
+      GetTArray_EmptyTArray<bool>("migration.get_boolean_array", new bool[] { }, PgsqlDbType.Boolean | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<bool>("migration.get_boolean_array", new bool[] { }, PgsqlDbType.Boolean | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetByteaArray_EmptyByteaArray()
+    {
+      GetTArray_EmptyTArray<byte[]>("migration.get_bytea_array", new byte[][] { }, PgsqlDbType.Bytea | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<byte[]>("migration.get_bytea_array", new byte[][] { }, PgsqlDbType.Bytea | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetDoublePrecisionArray_EmptyDoublePrecisionArray()
+    {
+      GetTArray_EmptyTArray<double>("migration.get_double_precision_array", new double[] { }, PgsqlDbType.Double | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<double>("migration.get_double_precision_array", new double[] { }, PgsqlDbType.Double | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetIntArray_EmptyIntArray()
+    {
+      GetTArray_EmptyTArray<int>("migration.get_int_array", new int[] { }, PgsqlDbType.Integer | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<int>("migration.get_int_array", new int[] { }, PgsqlDbType.Integer | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetNumericArray_EmptyNumericArray()
+    {
+      GetTArray_EmptyTArray<decimal>("migration.get_numeric_array", new decimal[] { }, PgsqlDbType.Numeric | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<decimal>("migration.get_numeric_array", new decimal[] { }, PgsqlDbType.Numeric | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetMoneyArray_EmptyMoneyArray()
+    {
+      GetTArray_EmptyTArray<decimal>("migration.get_money_array", new decimal[] { }, PgsqlDbType.Money | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<decimal>("migration.get_money_array", new decimal[] { }, PgsqlDbType.Money | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetRealArray_EmptyRealArray()
+    {
+      GetTArray_EmptyTArray<float>("migration.get_real_array", new float[] { }, PgsqlDbType.Real | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<float>("migration.get_real_array", new float[] { }, PgsqlDbType.Real | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetSmallintArray_EmptySmallintArray()
+    {
+      GetTArray_EmptyTArray<short>("migration.get_smallint_array", new short[] { }, PgsqlDbType.Smallint | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<short>("migration.get_smallint_array", new short[] { }, PgsqlDbType.Smallint | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetTextArray_EmptyTextArray()
+    {
+      GetTArray_EmptyTArray<string>("migration.get_text_array", new string[] { }, PgsqlDbType.Text | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<string>("migration.get_text_array", new string[] { }, PgsqlDbType.Text | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetDateArray_EmptyDateArray()
+    {
+      GetTArray_EmptyTArray<DateTime>("migration.get_date_array", new DateTime[] { }, PgsqlDbType.Date | PgsqlDbType.Array);
+      GetTArray_EmptyTArray<DateTime>("migration.get_date_array", new DateTime[] { }, PgsqlDbType.Date | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    public void GetTArray_EmptyTArray<T>(string postgreSQLFunctionName, object value, PgsqlDbType npgsqlDbType, HttpMethod httpMethod = HttpMethod.GET)
+    {
+      var command = new Command(postgreSQLFunctionName);
+      var parameter = new Parameter("p_parameter", npgsqlDbType);
+      parameter.Value = value;
+      command.Parameters.Add(parameter);
+
+      var response = Command.Execute(command, RoutineType.Scalar, httpMethod);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      var jobject = JObject.Load(reader);
+      var rv = jobject[command.Name]!["returnValue"];
+
+      // If an array is empty then SimpleWSA defines it as null, please, look at Request.cs, line 89.
+      // It is not correct, but it is a reality now
+      if (rv?.Type == JTokenType.Null)
+      {
+        Assert.Pass();
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
     public void ThrowRestServiceException_NonQuery()
     {
       var command = new Command("migration.get_out_bigint_a");
@@ -4616,22 +4631,7 @@ namespace SimpleWSA.WSALibrary
       var command = new Command("migration.get_out_bytea");
       Assert.ThrowsAsync<RestServiceException>(async () => await Command.ExecuteAsync(command, RoutineType.DataSet));
     }
-
-    [Test]
-    public void GetScalarDataTypes_WhenSessionExpired()
-    {
-      this.KillSession();
-      this.GetScalarDataTypes();
-    }
-
-    [Test]
-    public async Task GetScalarDataTypesAsync_WhenSessionExpired()
-    {
-      await this.KillSessionAsync();
-      await this.GetScalarDataTypesAsync();
-    }
     #endregion special cases
-    #endregion return set
 
     private void KillSession()
     {
