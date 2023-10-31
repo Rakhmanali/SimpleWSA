@@ -4,7 +4,6 @@ using SimpleWSA.WSALibrary.Extensions;
 using SimpleWSA.WSALibrary.Internal;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -32,16 +31,15 @@ namespace SimpleWSA.WSALibrary.Services
           webRequest.Proxy = webProxy;
           using (var httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
           {
-
-            if (httpWebResponse.Headers["Server"] == "Kestrel")
-            {
-              returnCompressionType = CompressionType.NONE;
-            }
-
             if (httpWebResponse.StatusCode == HttpStatusCode.OK)
             {
-              using (Stream stream = httpWebResponse.GetResponseStream())
+              using (var stream = httpWebResponse.GetResponseStream())
               {
+                if (httpWebResponse.Headers["Server"] == "Kestrel")
+                {
+                  returnCompressionType = CompressionType.NONE;
+                }
+
                 byte[] result = this.compressionService.Decompress(stream, returnCompressionType);
                 if (result != null)
                 {
@@ -67,7 +65,7 @@ namespace SimpleWSA.WSALibrary.Services
     {
       try
       {
-        WebRequest webRequest = WebRequest.Create(requestUri);
+        var webRequest = WebRequest.Create(requestUri);
         if (webRequest != null)
         {
           webRequest.Timeout = 1 * 60 * 60 * 1000;
@@ -78,16 +76,15 @@ namespace SimpleWSA.WSALibrary.Services
 
           using (HttpWebResponse httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
           {
-            
-            if (httpWebResponse.Headers["Server"] == "Kestrel")
-            {
-              returnCompressionType = CompressionType.NONE;
-            }
-
             if (httpWebResponse?.StatusCode == HttpStatusCode.OK)
             {
-              using (Stream stream = httpWebResponse.GetResponseStream())
+              using (var stream = httpWebResponse.GetResponseStream())
               {
+                if (httpWebResponse.Headers["Server"] == "Kestrel")
+                {
+                  returnCompressionType = CompressionType.NONE;
+                }
+
                 byte[] result = this.compressionService.Decompress(stream, returnCompressionType);
                 if (result != null)
                 {

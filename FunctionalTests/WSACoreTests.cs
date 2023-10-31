@@ -2869,7 +2869,7 @@ namespace SimpleWSA.WSALibrary
     }
 
     [Test]
-    public async Task GetInOutJsonAsync__WhenSessionExpired()
+    public async Task GetInOutJsonAsync_WhenSessionExpired()
     {
       await KillSessionAsync();
       await GetInOutJsonAsync();
@@ -3806,7 +3806,7 @@ namespace SimpleWSA.WSALibrary
     }
 
     [Test]
-    public void GetTimetstampArray()
+    public void GetTimestampArray()
     {
       TestScalarArrayObject<DateTime>("migration.get_timestamp_array", new DateTime[] { DateTime.Parse("2019.12.15 09:39:41.1231"),
                                                                                    DateTime.Parse("2017.08.13 07:37:41.1229"),
@@ -3820,7 +3820,7 @@ namespace SimpleWSA.WSALibrary
     }
 
     [Test]
-    public void GetTimetstamptzArray()
+    public void GetTimestamptzArray()
     {
       TestScalarArrayObject<DateTime>("migration.get_timestamptz_array", new DateTime[] { DateTime.Parse("2018.01.15 11:40:44.1231+03"),
                                                                                      DateTime.Parse("2015.08.11 08:37:41.1228+02"),
@@ -4564,6 +4564,8 @@ namespace SimpleWSA.WSALibrary
       GetTArray_EmptyTArray<DateTime>("migration.get_date_array", new DateTime[] { }, PgsqlDbType.Date | PgsqlDbType.Array);
       GetTArray_EmptyTArray<DateTime>("migration.get_date_array", new DateTime[] { }, PgsqlDbType.Date | PgsqlDbType.Array, HttpMethod.POST);
     }
+
+    // TO DO: don't forget to add from time to jsonb, please compare with DAWebAPI tests
 
     public void GetTArray_EmptyTArray<T>(string postgreSQLFunctionName, object value, PgsqlDbType npgsqlDbType, HttpMethod httpMethod = HttpMethod.GET)
     {
