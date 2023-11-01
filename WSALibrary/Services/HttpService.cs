@@ -4,6 +4,7 @@ using SimpleWSA.WSALibrary.Extensions;
 using SimpleWSA.WSALibrary.Internal;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -22,28 +23,25 @@ namespace SimpleWSA.WSALibrary.Services
     {
       try
       {
-        var webRequest = WebRequest.Create(requestUri);
-        if (webRequest != null)
+        var httpWebRequest = (HttpWebRequest)WebRequest.Create(requestUri);
+        if (httpWebRequest != null)
         {
-          webRequest.Method = HttpMethod.GET.ToString();
-          webRequest.ContentLength = 0;
-          webRequest.Timeout = 1 * 60 * 60 * 1000;
-          webRequest.Proxy = webProxy;
-          using (var httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
+          httpWebRequest.Method = HttpMethod.GET.ToString();
+          httpWebRequest.ContentLength = 0;
+          httpWebRequest.Timeout = 1 * 60 * 60 * 1000;
+          httpWebRequest.Proxy = webProxy;
+          httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
+
+          using (var httpWebResponse = httpWebRequest.GetResponse() as HttpWebResponse)
           {
             if (httpWebResponse.StatusCode == HttpStatusCode.OK)
             {
               using (var stream = httpWebResponse.GetResponseStream())
               {
-                if (httpWebResponse.Headers["Server"] == "Kestrel")
+                using (var memoryStream = new MemoryStream())
                 {
-                  returnCompressionType = CompressionType.NONE;
-                }
-
-                byte[] result = this.compressionService.Decompress(stream, returnCompressionType);
-                if (result != null)
-                {
-                  return Encoding.UTF8.GetString(result);
+                  stream.CopyTo(memoryStream);
+                  return Encoding.UTF8.GetString(memoryStream.ToArray());
                 }
               }
             }
@@ -65,30 +63,26 @@ namespace SimpleWSA.WSALibrary.Services
     {
       try
       {
-        var webRequest = WebRequest.Create(requestUri);
-        if (webRequest != null)
+        var httpWebRequest = (HttpWebRequest)WebRequest.Create(requestUri);
+        if (httpWebRequest != null)
         {
-          webRequest.Timeout = 1 * 60 * 60 * 1000;
-          webRequest.Proxy = webProxy;
+          httpWebRequest.Timeout = 1 * 60 * 60 * 1000;
+          httpWebRequest.Proxy = webProxy;
+          httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
 
           byte[] postData = this.compressionService.Compress(requestString, outgoingCompressionType);
-          webRequest.InitializeWebRequest(outgoingCompressionType, postData, webProxy);
+          httpWebRequest.InitializeWebRequest(outgoingCompressionType, postData, webProxy);
 
-          using (HttpWebResponse httpWebResponse = webRequest.GetResponse() as HttpWebResponse)
+          using (HttpWebResponse httpWebResponse = httpWebRequest.GetResponse() as HttpWebResponse)
           {
             if (httpWebResponse?.StatusCode == HttpStatusCode.OK)
             {
               using (var stream = httpWebResponse.GetResponseStream())
               {
-                if (httpWebResponse.Headers["Server"] == "Kestrel")
+                using (var memoryStream = new MemoryStream())
                 {
-                  returnCompressionType = CompressionType.NONE;
-                }
-
-                byte[] result = this.compressionService.Decompress(stream, returnCompressionType);
-                if (result != null)
-                {
-                  return Encoding.UTF8.GetString(result);
+                  stream.CopyTo(memoryStream);
+                  return Encoding.UTF8.GetString(memoryStream.ToArray());
                 }
               }
             }
