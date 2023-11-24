@@ -15,7 +15,11 @@ namespace SimpleWSA.WSALibrary.Extensions
       webRequest.ContentType = outgoingCompressionType.SetWebRequestContentType();
       webRequest.Method = HttpMethod.POST.ToString();
       webRequest.ContentLength = postData.Length;
-      webRequest.Proxy = webProxy;
+
+      if(webProxy != null)
+      {
+        webRequest.Proxy = webProxy;
+      }
 
       using (Stream postStream = webRequest.GetRequestStream())
       {

@@ -29,7 +29,12 @@ namespace SimpleWSA.WSALibrary.Services
           httpWebRequest.Method = HttpMethod.GET.ToString();
           httpWebRequest.ContentLength = 0;
           httpWebRequest.Timeout = 1 * 60 * 60 * 1000;
-          httpWebRequest.Proxy = webProxy;
+
+          if (webProxy != null)
+          {
+            httpWebRequest.Proxy = webProxy;
+          }
+
           httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
 
           using (var httpWebResponse = httpWebRequest.GetResponse() as HttpWebResponse)
@@ -67,7 +72,12 @@ namespace SimpleWSA.WSALibrary.Services
         if (httpWebRequest != null)
         {
           httpWebRequest.Timeout = 1 * 60 * 60 * 1000;
-          httpWebRequest.Proxy = webProxy;
+
+          if (webProxy != null)
+          {
+            httpWebRequest.Proxy = webProxy;
+          }
+
           httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
 
           byte[] postData = this.compressionService.Compress(requestString, outgoingCompressionType);
@@ -103,12 +113,13 @@ namespace SimpleWSA.WSALibrary.Services
 
     public virtual async Task<object> GetAsync(string baseAddress, string requestUri, WebProxy webProxy)
     {
-      HttpClientHandler httpClientHandler = new HttpClientHandler
+      var httpClientHandler = new HttpClientHandler();
+      httpClientHandler.AutomaticDecompression = DecompressionMethods.GZip;
+      if (webProxy != null)
       {
-        Proxy = webProxy,
-        UseProxy = webProxy != null,
-        AutomaticDecompression = DecompressionMethods.GZip
-      };
+        httpClientHandler.Proxy = webProxy;
+        httpClientHandler.UseProxy = true;
+      }
 
       using (var httpClient = new HttpClient(httpClientHandler))
       {
@@ -133,12 +144,13 @@ namespace SimpleWSA.WSALibrary.Services
 
     public virtual async Task<object> PostAsync(string baseAddress, string requestUri, string requestString, WebProxy webProxy, CompressionType outgoingCompressionType)
     {
-      HttpClientHandler httpClientHandler = new HttpClientHandler
+      var httpClientHandler = new HttpClientHandler();
+      httpClientHandler.AutomaticDecompression = DecompressionMethods.GZip;
+      if (webProxy != null)
       {
-        Proxy = webProxy,
-        UseProxy = webProxy != null,
-        AutomaticDecompression = DecompressionMethods.GZip
-      };
+        httpClientHandler.Proxy = webProxy;
+        httpClientHandler.UseProxy = true;
+      }
 
       using (HttpClient httpClient = new HttpClient(httpClientHandler))
       {

@@ -58,15 +58,21 @@ namespace SimpleWSA.WSALibrary
         throw new ArgumentException($"{nameof(connectionProviderAddress)} is invalid");
       }
 
-      HttpClientHandler httpClientHandler = new HttpClientHandler
+      HttpClientHandler httpClientHandler = null;
+      if (webProxy != null)
       {
-        Proxy = webProxy,
-        UseProxy = webProxy != null
-      };
+        httpClientHandler = new HttpClientHandler
+        {
+          Proxy = webProxy,
+          UseProxy = webProxy != null
+        };
+      }
 
       string apiUrl = $"/dataaccess/{domain}/restservice/address";
-      using (HttpClient httpClient = new HttpClient(httpClientHandler) { BaseAddress = new Uri(connectionProviderAddress) })
+      using (HttpClient httpClient = httpClientHandler == null ? new HttpClient() : new HttpClient(httpClientHandler))
       {
+        httpClient.BaseAddress = new Uri(connectionProviderAddress);
+
         using (HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(apiUrl))
         {
           if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
