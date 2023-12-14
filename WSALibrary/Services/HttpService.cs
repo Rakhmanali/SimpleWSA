@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -115,6 +116,11 @@ namespace SimpleWSA.WSALibrary.Services
     {
       var httpClientHandler = new HttpClientHandler();
       httpClientHandler.AutomaticDecompression = DecompressionMethods.GZip;
+
+      // TO DO: it is necessary to implement it for HttpWebRequest too
+      httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
+      httpClientHandler.ServerCertificateCustomValidationCallback = (httpRequestMessage, certificate, chain, sslPolicyErrors) => true;
+
       if (webProxy != null)
       {
         httpClientHandler.Proxy = webProxy;
@@ -146,6 +152,10 @@ namespace SimpleWSA.WSALibrary.Services
     {
       var httpClientHandler = new HttpClientHandler();
       httpClientHandler.AutomaticDecompression = DecompressionMethods.GZip;
+
+      httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
+      httpClientHandler.ServerCertificateCustomValidationCallback = (httpRequestMessage, certificate, chain, sslPolicyErrors) => true;
+
       if (webProxy != null)
       {
         httpClientHandler.Proxy = webProxy;
