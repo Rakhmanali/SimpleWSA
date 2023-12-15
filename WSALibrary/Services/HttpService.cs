@@ -9,7 +9,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,6 +34,9 @@ namespace SimpleWSA.WSALibrary.Services
           {
             httpWebRequest.Proxy = webProxy;
           }
+
+          // skip the certificate validation ...
+          httpWebRequest.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
           httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
 
@@ -78,6 +80,9 @@ namespace SimpleWSA.WSALibrary.Services
           {
             httpWebRequest.Proxy = webProxy;
           }
+
+          // skip the certificate validation ...
+          httpWebRequest.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
           httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
 
