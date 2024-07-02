@@ -167,14 +167,18 @@ namespace SimpleWSA.WSALibrary.Services
         httpClientHandler.UseProxy = true;
       }
 
-      using (HttpClient httpClient = new HttpClient(httpClientHandler))
+      byte[] postData = this.compressionService.Compress(requestString, outgoingCompressionType);
+      using (var byteArrayContent = new ByteArrayContent(postData))
       {
-        httpClient.BaseAddress = new Uri(baseAddress);
-        httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
 
-        byte[] postData = this.compressionService.Compress(requestString, outgoingCompressionType);
-        using (var byteArrayContent = new ByteArrayContent(postData))
+        using (HttpClient httpClient = new HttpClient(httpClientHandler))
         {
+          httpClient.BaseAddress = new Uri(baseAddress);
+          httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
+
+          //byte[] postData = this.compressionService.Compress(requestString, outgoingCompressionType);
+          //using (var byteArrayContent = new ByteArrayContent(postData))
+          //{
           byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue(outgoingCompressionType.SetWebRequestContentType());
           using (HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(requestUri, byteArrayContent))
           {
@@ -188,7 +192,9 @@ namespace SimpleWSA.WSALibrary.Services
               httpResponseMessage.EnsureSuccessStatusCode();
             }
           }
+          //}
         }
+
       }
       return null;
     }

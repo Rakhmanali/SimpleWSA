@@ -171,15 +171,15 @@ namespace SimpleWSA.WSALibrary
     [Test]
     public void GetOutNumeric()
     {
-      TestNonQueryOutObject<decimal>("migration.get_out_numeric", 123456789012345678.1234567890m, PgsqlDbType.Numeric);
-      TestNonQueryOutObject<decimal>("migration.get_out_numeric", 123456789012345678.1234567890m, PgsqlDbType.Numeric, HttpMethod.POST);
+      TestNonQueryOutObject<decimal>("migration.get_out_numeric", 123456789012345678.12345679m, PgsqlDbType.Numeric);
+      TestNonQueryOutObject<decimal>("migration.get_out_numeric", 123456789012345678.12345679m, PgsqlDbType.Numeric, HttpMethod.POST);
     }
 
     [Test]
     public async Task GetOutNumericAsync()
     {
-      await TestNonQueryOutObjectAsync<decimal>("migration.get_out_numeric", 123456789012345678.1234567890m, PgsqlDbType.Numeric);
-      await TestNonQueryOutObjectAsync<decimal>("migration.get_out_numeric", 123456789012345678.1234567890m, PgsqlDbType.Numeric, HttpMethod.POST);
+      await TestNonQueryOutObjectAsync<decimal>("migration.get_out_numeric", 123456789012345678.12345679m, PgsqlDbType.Numeric);
+      await TestNonQueryOutObjectAsync<decimal>("migration.get_out_numeric", 123456789012345678.12345679m, PgsqlDbType.Numeric, HttpMethod.POST);
     }
 
     [Test]
@@ -768,9 +768,9 @@ namespace SimpleWSA.WSALibrary
     [Test]
     public void GetOutNumericArray()
     {
-      TestNonQueryOutArrayObject<decimal>("migration.get_out_numeric_array", new decimal[3] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m },
+      TestNonQueryOutArrayObject<decimal>("migration.get_out_numeric_array", new decimal[3] { 123456789012345678.12345679m, 123456789012345677.12345679m, 123456789012345676.12345679m },
         PgsqlDbType.Numeric | PgsqlDbType.Array);
-      TestNonQueryOutArrayObject<decimal>("migration.get_out_numeric_array", new decimal[3] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m },
+      TestNonQueryOutArrayObject<decimal>("migration.get_out_numeric_array", new decimal[3] { 123456789012345678.12345679m, 123456789012345677.12345679m, 123456789012345676.12345679m },
         PgsqlDbType.Numeric | PgsqlDbType.Array,
         HttpMethod.POST);
     }
@@ -1088,7 +1088,7 @@ namespace SimpleWSA.WSALibrary
 
       object pp7v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter7"]!;
       var actual7 = Convert.ToDecimal(pp7v);
-      decimal expected7 = 123456789012345678.1234567890m;
+      decimal expected7 = 123456789012345678.12345679m;
       Assert.That(actual7, Is.EqualTo(expected7));
 
       object pp8v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter8"]!;
@@ -1260,7 +1260,7 @@ namespace SimpleWSA.WSALibrary
 
       object pp7v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter7"]!;
       var actual7 = Convert.ToDecimal(pp7v);
-      decimal expected7 = 123456789012345678.1234567890m;
+      decimal expected7 = 123456789012345678.12345679m;
       Assert.That(actual7, Is.EqualTo(expected7));
 
       object pp8v = jobject["migration.get_out_all"]!["arguments"]!["p_parameter8"]!;
@@ -1423,7 +1423,7 @@ namespace SimpleWSA.WSALibrary
                       new decimal[] { 92233720368547758.07m, 92233720368547757.05m, 92233720368547756.06m });
 
       TestIt<decimal>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter7"]!,
-                      new decimal[] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m });
+                      new decimal[] { 123456789012345678.12345679m, 123456789012345677.12345679m, 123456789012345676.12345679m });
 
       TestIt<float>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter8"]!,
                       new float[] { 1.234568E+09f, 1.234568E+09f, 1.234568E+09f });
@@ -1557,7 +1557,7 @@ namespace SimpleWSA.WSALibrary
                       new decimal[] { 92233720368547758.07m, 92233720368547757.05m, 92233720368547756.06m });
 
       TestIt<decimal>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter7"]!,
-                      new decimal[] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m });
+                      new decimal[] { 123456789012345678.12345679m, 123456789012345677.12345679m, 123456789012345676.12345679m });
 
       TestIt<float>(jobject["migration.get_out_all_array"]!["arguments"]!["p_parameter8"]!,
                       new float[] { 1.234568E+09f, 1.234568E+09f, 1.234568E+09f });
@@ -4315,7 +4315,7 @@ namespace SimpleWSA.WSALibrary
     {
       var command = new Command("migration.get_scalar_data_types");
       var expected = Command.Execute(command, RoutineType.DataSet);
-      Assert.That(HashString(expected), Is.EqualTo("D3453D495766DBDCC9BB7B0BBEBA56373FEF7FDF3C9C172B0BF6DF411EB5E8BC"));
+      Assert.That(HashString(expected), Is.EqualTo("7278FE7B1A5988BCECD210B400164500F7EE59202522B9F0081F09A4BA1F3D34"));
     }
 
     [Test]
@@ -4323,7 +4323,7 @@ namespace SimpleWSA.WSALibrary
     {
       var command = new Command("migration.get_scalar_data_types");
       var expected = Command.Execute(command, RoutineType.DataSet, HttpMethod.POST);
-      Assert.That(HashString(expected), Is.EqualTo("D3453D495766DBDCC9BB7B0BBEBA56373FEF7FDF3C9C172B0BF6DF411EB5E8BC"));
+      Assert.That(HashString(expected), Is.EqualTo("7278FE7B1A5988BCECD210B400164500F7EE59202522B9F0081F09A4BA1F3D34"));
     }
 
     [Test]
@@ -4333,7 +4333,7 @@ namespace SimpleWSA.WSALibrary
       command.ReturnCompressionType = CompressionType.GZip;
       var expected = Command.Execute(command: command,
                                      routineType: RoutineType.DataSet);
-      Assert.That(HashString(expected), Is.EqualTo("D3453D495766DBDCC9BB7B0BBEBA56373FEF7FDF3C9C172B0BF6DF411EB5E8BC"));
+      Assert.That(HashString(expected), Is.EqualTo("7278FE7B1A5988BCECD210B400164500F7EE59202522B9F0081F09A4BA1F3D34"));
     }
 
     [Test]
@@ -4343,7 +4343,7 @@ namespace SimpleWSA.WSALibrary
       command.ReturnCompressionType = CompressionType.GZip;
       var expected = Command.Execute(command: command,
                                      routineType: RoutineType.DataSet, httpMethod: HttpMethod.POST);
-      Assert.That(HashString(expected), Is.EqualTo("D3453D495766DBDCC9BB7B0BBEBA56373FEF7FDF3C9C172B0BF6DF411EB5E8BC"));
+      Assert.That(HashString(expected), Is.EqualTo("7278FE7B1A5988BCECD210B400164500F7EE59202522B9F0081F09A4BA1F3D34"));
     }
 
     [Test]
@@ -4351,7 +4351,7 @@ namespace SimpleWSA.WSALibrary
     {
       var command = new Command("migration.get_scalar_data_types");
       var expected = await Command.ExecuteAsync(command, RoutineType.DataSet);
-      Assert.That(HashString(expected), Is.EqualTo("D3453D495766DBDCC9BB7B0BBEBA56373FEF7FDF3C9C172B0BF6DF411EB5E8BC"));
+      Assert.That(HashString(expected), Is.EqualTo("7278FE7B1A5988BCECD210B400164500F7EE59202522B9F0081F09A4BA1F3D34"));
     }
 
     [Test]
@@ -4359,7 +4359,7 @@ namespace SimpleWSA.WSALibrary
     {
       var command = new Command("migration.get_scalar_data_types");
       var expected = await Command.ExecuteAsync(command, RoutineType.DataSet, HttpMethod.POST);
-      Assert.That(HashString(expected), Is.EqualTo("D3453D495766DBDCC9BB7B0BBEBA56373FEF7FDF3C9C172B0BF6DF411EB5E8BC"));
+      Assert.That(HashString(expected), Is.EqualTo("7278FE7B1A5988BCECD210B400164500F7EE59202522B9F0081F09A4BA1F3D34"));
     }
 
     [Test]
@@ -4368,7 +4368,7 @@ namespace SimpleWSA.WSALibrary
       var command = new Command("migration.get_scalar_data_types");
       command.ReturnCompressionType = CompressionType.GZip;
       var expected = await Command.ExecuteAsync(command, RoutineType.DataSet);
-      Assert.That(HashString(expected), Is.EqualTo("D3453D495766DBDCC9BB7B0BBEBA56373FEF7FDF3C9C172B0BF6DF411EB5E8BC"));
+      Assert.That(HashString(expected), Is.EqualTo("7278FE7B1A5988BCECD210B400164500F7EE59202522B9F0081F09A4BA1F3D34"));
     }
 
     [Test]
@@ -4377,7 +4377,7 @@ namespace SimpleWSA.WSALibrary
       var command = new Command("migration.get_scalar_data_types");
       command.ReturnCompressionType = CompressionType.GZip;
       var expected = await Command.ExecuteAsync(command, RoutineType.DataSet, HttpMethod.POST);
-      Assert.That(HashString(expected), Is.EqualTo("D3453D495766DBDCC9BB7B0BBEBA56373FEF7FDF3C9C172B0BF6DF411EB5E8BC"));
+      Assert.That(HashString(expected), Is.EqualTo("7278FE7B1A5988BCECD210B400164500F7EE59202522B9F0081F09A4BA1F3D34"));
     }
 
     [Test]
@@ -4385,7 +4385,7 @@ namespace SimpleWSA.WSALibrary
     {
       var command = new Command("migration.get_array_data_types");
       var expected = Command.Execute(command, RoutineType.DataSet);
-      Assert.That(HashString(expected), Is.EqualTo("336FFFB92E5D2C97C764F8B366115E4B8810C07111C9DFE2C7BE20796E09E3F2"));
+      Assert.That(HashString(expected), Is.EqualTo("41967AA7007C04AD47808A8F15FF8B51015790E8FEB31D34802878445E72EB7A"));
     }
 
     [Test]
@@ -4393,7 +4393,7 @@ namespace SimpleWSA.WSALibrary
     {
       var command = new Command("migration.get_array_data_types");
       var expected = Command.Execute(command, RoutineType.DataSet, HttpMethod.POST);
-      Assert.That(HashString(expected), Is.EqualTo("336FFFB92E5D2C97C764F8B366115E4B8810C07111C9DFE2C7BE20796E09E3F2"));
+      Assert.That(HashString(expected), Is.EqualTo("41967AA7007C04AD47808A8F15FF8B51015790E8FEB31D34802878445E72EB7A"));
     }
 
     [Test]
@@ -4402,7 +4402,7 @@ namespace SimpleWSA.WSALibrary
       var command = new Command("migration.get_array_data_types");
       command.ReturnCompressionType = CompressionType.GZip;
       var expected = Command.Execute(command, RoutineType.DataSet);
-      Assert.That(HashString(expected), Is.EqualTo("336FFFB92E5D2C97C764F8B366115E4B8810C07111C9DFE2C7BE20796E09E3F2"));
+      Assert.That(HashString(expected), Is.EqualTo("41967AA7007C04AD47808A8F15FF8B51015790E8FEB31D34802878445E72EB7A"));
     }
 
     [Test]
@@ -4411,7 +4411,7 @@ namespace SimpleWSA.WSALibrary
       var command = new Command("migration.get_array_data_types");
       command.ReturnCompressionType = CompressionType.GZip;
       var expected = Command.Execute(command, RoutineType.DataSet, HttpMethod.POST);
-      Assert.That(HashString(expected), Is.EqualTo("336FFFB92E5D2C97C764F8B366115E4B8810C07111C9DFE2C7BE20796E09E3F2"));
+      Assert.That(HashString(expected), Is.EqualTo("41967AA7007C04AD47808A8F15FF8B51015790E8FEB31D34802878445E72EB7A"));
     }
 
     [Test]
@@ -4419,7 +4419,7 @@ namespace SimpleWSA.WSALibrary
     {
       var command = new Command("migration.get_array_data_types");
       var expected = await Command.ExecuteAsync(command, RoutineType.DataSet);
-      Assert.That(HashString(expected), Is.EqualTo("336FFFB92E5D2C97C764F8B366115E4B8810C07111C9DFE2C7BE20796E09E3F2"));
+      Assert.That(HashString(expected), Is.EqualTo("41967AA7007C04AD47808A8F15FF8B51015790E8FEB31D34802878445E72EB7A"));
     }
 
     [Test]
@@ -4427,7 +4427,7 @@ namespace SimpleWSA.WSALibrary
     {
       var command = new Command("migration.get_array_data_types");
       var expected = await Command.ExecuteAsync(command, RoutineType.DataSet, HttpMethod.POST);
-      Assert.That(HashString(expected), Is.EqualTo("336FFFB92E5D2C97C764F8B366115E4B8810C07111C9DFE2C7BE20796E09E3F2"));
+      Assert.That(HashString(expected), Is.EqualTo("41967AA7007C04AD47808A8F15FF8B51015790E8FEB31D34802878445E72EB7A"));
     }
 
     [Test]
@@ -4436,7 +4436,7 @@ namespace SimpleWSA.WSALibrary
       var command = new Command("migration.get_array_data_types");
       command.ReturnCompressionType = CompressionType.GZip;
       var expected = await Command.ExecuteAsync(command, RoutineType.DataSet);
-      Assert.That(HashString(expected), Is.EqualTo("336FFFB92E5D2C97C764F8B366115E4B8810C07111C9DFE2C7BE20796E09E3F2"));
+      Assert.That(HashString(expected), Is.EqualTo("41967AA7007C04AD47808A8F15FF8B51015790E8FEB31D34802878445E72EB7A"));
     }
 
     [Test]
@@ -4445,7 +4445,7 @@ namespace SimpleWSA.WSALibrary
       var command = new Command("migration.get_array_data_types");
       command.ReturnCompressionType = CompressionType.GZip;
       var expected = await Command.ExecuteAsync(command, RoutineType.DataSet, HttpMethod.POST);
-      Assert.That(HashString(expected), Is.EqualTo("336FFFB92E5D2C97C764F8B366115E4B8810C07111C9DFE2C7BE20796E09E3F2"));
+      Assert.That(HashString(expected), Is.EqualTo("41967AA7007C04AD47808A8F15FF8B51015790E8FEB31D34802878445E72EB7A"));
     }
 
     #region special cases
