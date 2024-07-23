@@ -23,6 +23,7 @@ namespace SimpleWSA.WSALibrary
                                     configuration["Domain"],
                                     null);
       await session.CreateByConnectionProviderAddressAsync("https://connectionprovider.naiton.com");
+      //await session.CreateByRestServiceAddressAsync("http://localhost:35178");
     }
 
     #region non query
@@ -335,7 +336,7 @@ namespace SimpleWSA.WSALibrary
     {
       var command = new Command("migration.get_out_xml");
       command.Parameters.Add("p_parameter", PgsqlDbType.Xml);
-    
+
       var response = Command.Execute(command, RoutineType.NonQuery);
       JObject jobject = JObject.Parse(response);
       object p = jobject["migration.get_out_xml"]!["arguments"]!["p_parameter"]!;
@@ -4635,6 +4636,597 @@ namespace SimpleWSA.WSALibrary
     }
     #endregion special cases
 
+
+    #region stored procedure
+
+    [Test]
+    public void GetOutBoolean_SP()
+    {
+      TestNonQueryOutObject<bool>("migration.get_out_boolean_sp", true, PgsqlDbType.Boolean);
+      TestNonQueryOutObject<bool>("migration.get_out_boolean_sp", true, PgsqlDbType.Boolean, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetInOutBigint_SP()
+    {
+      TestNonQueryInOutObject<long>("migration.get_in_and_out_bigint_sp", 9223372036854775807, PgsqlDbType.Bigint);
+      TestNonQueryInOutObject<long>("migration.get_in_and_out_bigint_sp", 9223372036854775807, PgsqlDbType.Bigint, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutBigint_SP()
+    {
+      TestNonQueryOutObject<long>("migration.get_out_bigint_sp", 9223372036854775807, PgsqlDbType.Bigint);
+      TestNonQueryOutObject<long>("migration.get_out_bigint_sp", 9223372036854775807, PgsqlDbType.Bigint, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutBytea_SP()
+    {
+      var command = new Command("migration.get_out_bytea_sp");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Bytea);
+      var response = Command.Execute(command, RoutineType.NonQuery);
+
+      // {\"migration.get_out_bytea\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"aGVsbG8gd29ybGQh\"}}}
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_bytea_sp"]!["arguments"]!["p_parameter"]!;
+      string? actual = Convert.ToString(p);
+      if (actual != null)
+      {
+        var expected = "aGVsbG8gd29ybGQh";
+        Assert.That(actual, Is.EqualTo(expected));
+      }
+      else
+      {
+        Assert.Fail();
+      }
+    }
+
+    [Test]
+    public void GetOutDate_SP()
+    {
+      TestNonQueryOutObject<DateTime>("migration.get_out_date_sp", DateTime.Parse("2021-05-18T00:00:00"), PgsqlDbType.Date);
+      TestNonQueryOutObject<DateTime>("migration.get_out_date_sp", DateTime.Parse("2021-05-18T00:00:00"), PgsqlDbType.Date, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutDoublePrecision_SP()
+    {
+      TestNonQueryOutObject<double>("migration.get_out_double_precision_sp", 1234567890.12345, PgsqlDbType.Double);
+      TestNonQueryOutObject<double>("migration.get_out_double_precision_sp", 1234567890.12345, PgsqlDbType.Double, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutInt_SP()
+    {
+      TestNonQueryOutObject<int>("migration.get_out_int_sp", 2147483647, PgsqlDbType.Integer);
+      TestNonQueryOutObject<int>("migration.get_out_int_sp", 2147483647, PgsqlDbType.Integer, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutJson_SP()
+    {
+      var command = new Command("migration.get_out_json_sp");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Json);
+
+      // {\"migration.get_out_json\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"{\\n    \\\"formmanager_getfiltered\\\": []\\n}\"}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_json_sp"]!["arguments"]!["p_parameter"]!;
+      var actual = Convert.ToString(p)?.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+      var expected = @"{ ""formmanager_getfiltered"": [] }".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty); ;
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void GetOutJsonb_SP()
+    {
+      var command = new Command("migration.get_out_jsonb_sp");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Jsonb);
+
+      // {\"migration.get_out_jsonb\":{\"returnValue\":-1,\"arguments\":{\"p_parameter\":\"{\\\"formmanager_getfiltered\\\": []}\"}}}
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_jsonb_sp"]!["arguments"]!["p_parameter"]!;
+      var actual = Convert.ToString(p)?.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+      var expected = @"{ ""formmanager_getfiltered"": [] }".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty); ;
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void GetOutMoney_SP()
+    {
+      TestNonQueryOutObject<decimal>("migration.get_out_money_sp", 92233720368547758.07m, PgsqlDbType.Money);
+      TestNonQueryOutObject<decimal>("migration.get_out_money_sp", 92233720368547758.07m, PgsqlDbType.Money, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutNumeric_SP()
+    {
+      TestNonQueryOutObject<decimal>("migration.get_out_numeric_sp", 123456789012345678.12345679m, PgsqlDbType.Numeric);
+      TestNonQueryOutObject<decimal>("migration.get_out_numeric_sp", 123456789012345678.12345679m, PgsqlDbType.Numeric, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutReal_SP()
+    {
+      TestNonQueryOutObject<float>("migration.get_out_real_sp", 1.234568E+09f, PgsqlDbType.Real);
+      TestNonQueryOutObject<float>("migration.get_out_real_sp", 1.234568E+09f, PgsqlDbType.Real, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutSmallint_SP()
+    {
+      TestNonQueryOutObject<short>("migration.get_out_smallint_sp", (short)32767, PgsqlDbType.Smallint);
+      TestNonQueryOutObject<short>("migration.get_out_smallint_sp", (short)32767, PgsqlDbType.Smallint, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutText_SP()
+    {
+      TestNonQueryOutObject<string>("migration.get_out_text_sp",
+                                    "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                                    PgsqlDbType.Text);
+      TestNonQueryOutObject<string>("migration.get_out_text_sp",
+                                    "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                                    PgsqlDbType.Text, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutTime_SP()
+    {
+      TestNonQueryOutObject<TimeSpan>("migration.get_out_time_sp", TimeSpan.Parse("13:44:46.9876000"), PgsqlDbType.Time);
+      TestNonQueryOutObject<TimeSpan>("migration.get_out_time_sp", TimeSpan.Parse("13:44:46.9876000"), PgsqlDbType.Time, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutTimestamp_SP()
+    {
+      TestNonQueryOutObject<DateTime>("migration.get_out_timestamp_sp", DateTime.Parse("2022-03-18T12:42:46.1234"), PgsqlDbType.Timestamp);
+      TestNonQueryOutObject<DateTime>("migration.get_out_timestamp_sp", DateTime.Parse("2022-03-18T12:42:46.1234"), PgsqlDbType.Timestamp, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutTimestamptz_SP()
+    {
+      TestNonQueryOutObject<DateTime>("migration.get_out_timestamptz_sp", DateTime.Parse("2021-04-18T12:43:47.1234Z"), PgsqlDbType.TimestampTZ);
+      TestNonQueryOutObject<DateTime>("migration.get_out_timestamptz_sp", DateTime.Parse("2021-04-18T12:43:47.1234Z"), PgsqlDbType.TimestampTZ, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutTimetz_SP()
+    {
+      TestNonQueryOutObject<DateTimeOffset>("migration.get_out_timetz_sp", DateTimeOffset.Parse("0001-01-02T16:41:45.1234+05:00"), PgsqlDbType.TimeTZ);
+      TestNonQueryOutObject<DateTimeOffset>("migration.get_out_timetz_sp", DateTimeOffset.Parse("0001-01-02T16:41:45.1234+05:00"), PgsqlDbType.TimeTZ, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutUuid_SP()
+    {
+      TestNonQueryOutObject<Guid>("migration.get_out_uuid_sp", Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394"), PgsqlDbType.Uuid);
+      TestNonQueryOutObject<Guid>("migration.get_out_uuid_sp", Guid.Parse("79130b53-3113-41d1-99ec-26e41b238394"), PgsqlDbType.Uuid, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutVarchar_SP()
+    {
+      TestNonQueryOutObject<string>("migration.get_out_varchar_sp", "PostgreSQL change column type examples", PgsqlDbType.Varchar);
+      TestNonQueryOutObject<string>("migration.get_out_varchar_sp", "PostgreSQL change column type examples", PgsqlDbType.Varchar, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetOutXml_SP()
+    {
+      var command = new Command("migration.get_out_xml_sp");
+      command.Parameters.Add("p_parameter", PgsqlDbType.Xml);
+
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      JObject jobject = JObject.Parse(response);
+      object p = jobject["migration.get_out_xml_sp"]!["arguments"]!["p_parameter"]!;
+
+      var actual = Convert.ToString(p)?.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+      var expected = @"<_routines>
+        <_routine>
+          <_name>formmanager_getfiltered</_name>
+          <_arguments>
+            <_formid>0</_formid>
+            <_form></_form>
+            <_businessids>1</_businessids>
+            <_businessids>941</_businessids>
+            <_businessids>942</_businessids>
+            <_businessids>943</_businessids>
+            <_businessids>944</_businessids>
+            <_businessids>2006</_businessids>
+            <_businessids>2129</_businessids>
+            <_businessids>2135</_businessids>
+            <_businessids>2137</_businessids>
+            <_formtype>1</_formtype>
+            <_formtype>2</_formtype>
+            <_formtype>3</_formtype>
+            <_formtype>4</_formtype>
+            <_formtype>5</_formtype>
+            <_formtype>6</_formtype>
+            <_formtype>7</_formtype>
+            <_formtype>8</_formtype>
+            <_inactive>False</_inactive>
+          </_arguments>
+          <_options>
+            <_writeSchema>1</_writeSchema>
+          </_options>
+        </_routine>
+        <_compression>0</_compression>
+        <_returnType>json</_returnType>
+      </_routines>".Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("\t", string.Empty).Replace(" ", string.Empty);
+
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    #region array
+    [Test]
+    public void GetOutTextArray_SP()
+    {
+      TestNonQueryOutArrayObject<string>("migration.get_out_text_array_sp",
+        new string[3] { "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                        "DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.",
+                        "DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date."
+        }, PgsqlDbType.Text | PgsqlDbType.Array);
+      TestNonQueryOutArrayObject<string>("migration.get_out_text_array_sp",
+        new string[3] { "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                        "DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.",
+                        "DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date."
+        }, PgsqlDbType.Text | PgsqlDbType.Array, HttpMethod.POST);
+    }
+
+    [Test]
+    public void GetInOutBigintArray_SP()
+    {
+      GetInOutArrayTest<long>("migration.get_in_and_out_bigint_array_sp", new long[] { 9223372036854775701, 9223372036854775704, 9223372036854775703 }, PgsqlDbType.Bigint | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutBooleanArray_SP()
+    {
+      GetInOutArrayTest<bool>("migration.get_in_and_out_boolean_array_sp", new bool[] { true, false, true }, PgsqlDbType.Boolean | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutByteaArray_SP()
+    {
+      var command = new Command("migration.get_in_and_out_bytea_array_sp");
+      byte[][] expected = new byte[][] { System.Text.Encoding.UTF8.GetBytes("hello world!"),
+                                         System.Text.Encoding.UTF8.GetBytes("There are three methods used to adjust a DateOnly structure: AddDays, AddMonths, and AddYears. Each method takes an integer parameter, and increases the date by that measurement."),
+                                         System.Text.Encoding.UTF8.GetBytes("If a negative number is provided, the date is decreased by that measurement. The methods return a new instance of DateOnly, as the structure is immutable.")
+          };
+      command.Parameters.Add("p_parameter1", PgsqlDbType.Bytea | PgsqlDbType.Array, expected);
+      command.Parameters.Add("p_parameter2", PgsqlDbType.Bytea | PgsqlDbType.Array);
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      var jobject = JObject.Load(reader);
+      var pp2v = jobject[command.Name]!["arguments"]!["p_parameter2"];
+      if (pp2v is JArray ja)
+      {
+        var actual = ja.ToObject<string[]>()!.Select(x => Convert.FromBase64String(x)).ToArray();
+        Assert.That(actual, Is.EqualTo(expected));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetInOutDoublePrecisionArray_SP()
+    {
+      GetInOutArrayTest<double>("migration.get_in_and_out_double_precision_array_sp", new double[] { 1234567890.12345, 1234567889.67891, 1234567888.01478 }, PgsqlDbType.Double | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutIntegerArray_SP()
+    {
+      GetInOutArrayTest<int>("migration.get_in_and_out_integer_array_sp", new int[] { 2147483647, 2147483646, 2147483645 }, PgsqlDbType.Integer | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutMoneyArray_SP()
+    {
+      GetInOutArrayTest<decimal>("migration.get_in_and_out_money_array_sp", new decimal[] { 92233720368547758.07m, 92233720368547757.05m, 92233720368547756.06m }, PgsqlDbType.Money | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutNumericArray_SP()
+    {
+      GetInOutArrayTest<decimal>("migration.get_in_and_out_numeric_array_sp", new decimal[] { 123456789012345678.1234567890m, 123456789012345677.1234567889m, 123456789012345676.1234567888m }, PgsqlDbType.Numeric | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutRealArray_SP()
+    {
+      GetInOutArrayTest<float>("migration.get_in_and_out_real_array_sp", new float[] { 123456789012345678.1234567890f, 123456789012345677.1234567889f, 123456789012345676.1234567888f }, PgsqlDbType.Real | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutSmallintArray_SP()
+    {
+      GetInOutArrayTest<short>("migration.get_in_and_out_smallint_array_sp", new short[] { 32767, 32766, 32765 }, PgsqlDbType.Smallint | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutTextArray_SP()
+    {
+      GetInOutArrayTest<string>("migration.get_in_and_out_text_array_sp", new string[] { "PostgreSQL is like a Swiss Army Knife for data storage – it’s a popular open-source relational database management system (RDBMS) that can handle just about anything you throw at it. But with great power comes great responsibility, and in this case, that responsibility is choosing the right data type.",
+                                                                                      "DateOnly can be parsed from a string, just like the DateTime structure. All of the standard .NET date-based parsing tokens work with DateOnly.",
+                                                                                      "DateOnly can be compared with other instances. For example, you can check if a date is before or after another, or if a date today matches a specific date." },
+                                PgsqlDbType.Text | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutDateArray_SP()
+    {
+      GetInOutArrayTest<DateTime>("migration.get_in_and_out_date_array_sp", new DateTime[] { DateTime.Parse("2021.05.18"),
+                                                                                          DateTime.Parse("2020.04.17"),
+                                                                                          DateTime.Parse("2020.04.17") },
+                                PgsqlDbType.Date | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutTimeArray_SP()
+    {
+      GetInOutArrayTest<TimeSpan>("migration.get_in_and_out_time_array_sp", new TimeSpan[] { TimeSpan.Parse("13:44:46.9876"),
+                                                                                          TimeSpan.Parse("11:43:45.9875"),
+                                                                                          TimeSpan.Parse("11:42:44.9874") },
+                                PgsqlDbType.Time | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutTimetzArray_SP()
+    {
+      GetInOutArrayTest<DateTimeOffset>("migration.get_in_and_out_timetz_array_sp", new DateTimeOffset[] { DateTimeOffset.Parse("001-01-02T14:41:45.1234+03"),
+                                                                                                        DateTimeOffset.Parse("001-01-02T13:39:44.1233+02"),
+                                                                                                        DateTimeOffset.Parse("001-01-02T11:38:42.1232+01")},
+                                PgsqlDbType.TimeTZ | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutTimestampArray_SP()
+    {
+      GetInOutArrayTest<DateTime>("migration.get_in_and_out_timestamp_array_sp", new DateTime[] { DateTime.Parse("2022.03.18 12:42:46.1234"),
+                                                                                               DateTime.Parse("2020.01.16 10:40:44.1232"),
+                                                                                               DateTime.Parse("2019.09.15 09:39:43.1231") },
+                                  PgsqlDbType.Timestamp | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutTimestamptzArray_SP()
+    {
+      var command = new Command("migration.get_in_and_out_timestamptz_array_sp");
+      var source = new DateTime[] { DateTime.Parse("2021.04.18 14:43:47.1234+02"),
+                                    DateTime.Parse("2018.01.15 11:40:44.1231+01"),
+                                    DateTime.Parse("2017.01.14 10:39:44.1230+03")
+      };
+      command.Parameters.Add("p_parameter1", PgsqlDbType.TimestampTZ | PgsqlDbType.Array, source);
+      command.Parameters.Add("p_parameter2", PgsqlDbType.TimestampTZ | PgsqlDbType.Array);
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      JObject jobject = JObject.Load(reader);
+      var pp2v = jobject[command.Name]!["arguments"]!["p_parameter2"];
+      if (pp2v is JArray ja)
+      {
+        var actual = ja.ToObject<DateTime[]>()!.Select(x => x.ToUniversalTime()).ToArray();
+        var expected = (source as DateTime[]).Select(x => x.ToUniversalTime()).ToArray();
+        Assert.That(actual, Is.EqualTo(expected));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetInOutVarcharArray_SP()
+    {
+      GetInOutArrayTest<string>("migration.get_in_and_out_varchar_array_sp", new string[] { "PostgreSQL change column type examples",
+                                                                                         "What is the PostgreSQL Function?",
+                                                                                         "PostgreSQL change column type examples" },
+                                PgsqlDbType.Varchar | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutUuidArray_SP()
+    {
+      GetInOutArrayTest<string>("migration.get_in_and_out_uuid_array_sp", new string[] { "79130b53-3113-41d1-99ec-26e41b238394",
+                                                                                      "f0c180ba-e291-4089-91b4-3d8d122b5c77",
+                                                                                      "670c4c79-521c-40e2-8442-0248a93f8737" },
+                                PgsqlDbType.Uuid | PgsqlDbType.Array);
+    }
+
+    [Test]
+    public void GetInOutXmlArrayPost_SP()
+    {
+      var command = new Command("migration.get_in_and_out_xml_array_sp");
+      var source = new string[] { @"<CATALOG>
+      <PLANT>
+        <COMMON>Bloodroot</COMMON>
+        <BOTANICAL>Sanguinaria canadensis</BOTANICAL>
+        <ZONE>4</ZONE>
+        <LIGHT>Mostly Shady</LIGHT>
+        <PRICE>$2.44</PRICE>
+        <AVAILABILITY>031599</AVAILABILITY>
+      </PLANT>
+      <PLANT>
+        <COMMON>Columbine</COMMON>
+        <BOTANICAL>Aquilegia canadensis</BOTANICAL>
+        <ZONE>3</ZONE>
+        <LIGHT>Mostly Shady</LIGHT>
+        <PRICE>$9.37</PRICE>
+        <AVAILABILITY>030699</AVAILABILITY>
+      </PLANT>
+    </CATALOG>",
+                                                  @"<CATALOG>
+    <CD>
+    <TITLE>Empire Burlesque</TITLE>
+    <ARTIST>Bob Dylan</ARTIST>
+    <COUNTRY>USA</COUNTRY>
+    <COMPANY>Columbia</COMPANY>
+    <PRICE>10.90</PRICE>
+    <YEAR>1985</YEAR>
+    </CD>
+    <CD>
+    <TITLE>Hide your heart</TITLE>
+    <ARTIST>Bonnie Tyler</ARTIST>
+    <COUNTRY>UK</COUNTRY>
+    <COMPANY>CBS Records</COMPANY>
+    <PRICE>9.90</PRICE>
+    <YEAR>1988</YEAR>
+    </CD></CATALOG>",
+                                                  @"<breakfast_menu>
+      <food>
+        <name>Belgian Waffles</name>
+        <price>$5.95</price>
+        <description>Two of our famous Belgian Waffles with plenty of real maple syrup</description>
+        <calories>650</calories>
+      </food>
+      <food>
+        <name>Strawberry Belgian Waffles</name>
+        <price>$7.95</price>
+        <description>Light Belgian waffles covered with strawberries and whipped cream</description>
+        <calories>900</calories>
+      </food>
+    </breakfast_menu>"};
+      command.Parameters.Add("p_parameter1", PgsqlDbType.Xml | PgsqlDbType.Array, source);
+      command.Parameters.Add("p_parameter2", PgsqlDbType.Xml | PgsqlDbType.Array);
+      var response = Command.Execute(command, RoutineType.NonQuery, HttpMethod.POST);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      var jobject = JObject.Load(reader);
+      var pp2v = jobject[command.Name]!["arguments"]!["p_parameter2"];
+      if (pp2v is JArray ja)
+      {
+        var actual = ja.ToObject<string[]>()!.Select(x => x.Replace("\r", string.Empty)
+                                                           .Replace("\n", string.Empty)
+                                                           .Replace("\t", string.Empty)
+                                                           .Replace(" ", string.Empty));
+        var expected = source.Select(x => x.Replace("\r", string.Empty)
+                                           .Replace("\n", string.Empty)
+                                           .Replace("\t", string.Empty)
+                                           .Replace(" ", string.Empty));
+        Assert.That(actual, Is.EqualTo(expected));
+        return;
+      }
+
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetInOutJsonArray_SP()
+    {
+      var command = new Command("migration.get_in_and_out_json_array_sp");
+      var parameter1 = command.Parameters.Add("p_parameter1", PgsqlDbType.Json | PgsqlDbType.Array);
+      var source = new string[] { @"{
+      ""fruit"": ""Apple"",
+      ""size"":  ""Large"",
+      ""color"": ""Red""
+    }",
+                                                  @"{""name"":""mkyong.com"",""messages"":[""msg 1"",""msg 2"",""msg 3""],""age"":100}",
+                                                  @"{
+        ""name"": ""Morpheush"",
+        ""job"": ""Leader"",
+        ""id"": ""199"",
+        ""createdAt"": ""2020-02-20T11:00:28.107Z""
+    }"};
+      parameter1.Value = source;
+      command.Parameters.Add("p_parameter2", PgsqlDbType.Json | PgsqlDbType.Array);
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      var jobject = JObject.Load(reader);
+      var pp2v = jobject[command.Name]!["arguments"]!["p_parameter2"];
+      if (pp2v is JArray ja)
+      {
+        var actual = ja.ToObject<string[]>()!.Select(x => x.Replace("\r", string.Empty)
+                                                           .Replace("\n", string.Empty)
+                                                           .Replace("\t", string.Empty)
+                                                           .Replace(" ", string.Empty));
+        var expected = source.Select(x => x.Replace("\r", string.Empty)
+                                           .Replace("\n", string.Empty)
+                                           .Replace("\t", string.Empty)
+                                           .Replace(" ", string.Empty));
+        Assert.That(actual, Is.EqualTo(expected));
+        return;
+      }
+      Assert.Fail();
+    }
+
+    [Test]
+    public void GetInOutJsonbArray_SP()
+    {
+      var command = new Command("migration.get_in_and_out_jsonb_array_sp");
+      var parameter1 = new Parameter("p_parameter1", PgsqlDbType.Jsonb | PgsqlDbType.Array);
+      var source = new string[] { @"{
+      ""fruit"": ""Apple"",
+      ""size"":  ""Large"",
+      ""color"": ""Red""
+    }",
+                                                  @"{""name"":""mkyong.com"",""messages"":[""msg 1"",""msg 2"",""msg 3""],""age"":100}",
+                                                  @"{
+        ""name"": ""Morpheush"",
+        ""job"": ""Leader"",
+        ""id"": ""199"",
+        ""createdAt"": ""2020-02-20T11:00:28.107Z""
+    }"};
+      parameter1.Value = source;
+      command.Parameters.Add(parameter1);
+
+      command.Parameters.Add("p_parameter2", PgsqlDbType.Jsonb | PgsqlDbType.Array);
+      var response = Command.Execute(command, RoutineType.NonQuery);
+      var reader = new JsonTextReader(new StringReader(response));
+      reader.FloatParseHandling = FloatParseHandling.Decimal;
+      reader.DateParseHandling = DateParseHandling.None;
+      var jobject = JObject.Load(reader);
+      var pp2v = jobject[command.Name]!["arguments"]!["p_parameter2"];
+      if (pp2v is JArray ja)
+      {
+        var actual = ja.ToObject<string[]>()!.Select(x => x.Replace("\r", string.Empty)
+                                                           .Replace("\n", string.Empty)
+                                                           .Replace("\t", string.Empty)
+                                                           .Replace(" ", string.Empty));
+
+        // we need to convert both json strings to JObject, and after that to order JObject by values,
+        // because PostgreSQL keeps jsonb objects by their inner optimization, which violates the order of key - values of the json object
+
+        var jola = new List<JObject>();
+        foreach (var x in actual)
+        {
+          var jo = JObject.Parse(x);
+          Sort(jo);
+          jola.Add(jo);
+        }
+
+
+        var expected = source.Select(x => x.Replace("\r", string.Empty)
+                                           .Replace("\n", string.Empty)
+                                           .Replace("\t", string.Empty)
+                                           .Replace(" ", string.Empty));
+
+        var jole = new List<JObject>();
+        foreach (var x in expected)
+        {
+          var jo = JObject.Parse(x);
+          Sort(jo);
+          jole.Add(jo);
+        }
+
+        Assert.That(jola, Is.EqualTo(jole));
+        return;
+      }
+      Assert.Fail();
+    }
+    #endregion array
+    #endregion stored procedure
+
     private void KillSession()
     {
       var sessionContext = SessionContext.GetContext();
@@ -4642,7 +5234,7 @@ namespace SimpleWSA.WSALibrary
       var baseAddress = sessionContext.BaseAddress;
       this.KillSession(token, baseAddress);
     }
-    
+
     private void KillSession(string token, string baseAddress)
     {
       var httpService = new Services.HttpService();

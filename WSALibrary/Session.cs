@@ -1,9 +1,9 @@
-﻿using System;
+﻿using SimpleWSA.WSALibrary.Exceptions;
+using SimpleWSA.WSALibrary.Internal;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using SimpleWSA.WSALibrary.Exceptions;
-using SimpleWSA.WSALibrary.Internal;
 
 namespace SimpleWSA.WSALibrary
 {
@@ -93,6 +93,7 @@ namespace SimpleWSA.WSALibrary
 
       string restServiceAddress = await this.GetRestServiceAddressAsync(this.domain, connectionProviderAddress, this.webProxy);
       restServiceAddress = new Uri(restServiceAddress).GetLeftPart(UriPartial.Authority);
+
       return await this.CreateByRestServiceAddressAsync(restServiceAddress);
     }
   }
