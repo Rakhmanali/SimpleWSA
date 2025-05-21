@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using SimpleWSA.WSALibrary.Exceptions;
+﻿using SimpleWSA.WSALibrary.Exceptions;
 using SimpleWSA.WSALibrary.Internal;
 using SimpleWSA.WSALibrary.Services;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace SimpleWSA.WSALibrary
 {
@@ -19,7 +19,8 @@ namespace SimpleWSA.WSALibrary
                                     ResponseFormat responseFormat,
                                     CompressionType outgoingCompressionType,
                                     CompressionType returnCompressionType,
-                                    ParallelExecution parallelExecution)
+                                    ParallelExecution parallelExecution,
+                                    int httpTimeout = 100000)
     {
       if (commandExs == null || commandExs.Count == 0)
       {
@@ -45,19 +46,15 @@ namespace SimpleWSA.WSALibrary
 
       SessionContext sessionContext = SessionContext.GetContext();
 
-      executeall_post_label:
+    executeall_post_label:
       try
       {
-        string requestUri = string.Format(postFormat, sessionContext.BaseAddress, SessionContext.route, sessionContext.Token, (int)outgoingCompressionType);
-        return (string)httpService.Post(requestUri,
-                                        requestString,
-                                        sessionContext.WebProxy,
-                                        outgoingCompressionType,
-                                        returnCompressionType);
+        var requestUri = string.Format(postFormat, sessionContext.BaseAddress, SessionContext.route, sessionContext.Token, (int)outgoingCompressionType);
+        return (string)httpService.Post(requestUri, requestString, sessionContext.WebProxy, outgoingCompressionType, httpTimeout);
       }
       catch (Exception ex)
       {
-        if (ex is RestServiceException rex)
+        if (ex is DawaException rex)
         {
           // keep session alive
           if (rex.Code == "MI008")

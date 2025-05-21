@@ -3,6 +3,7 @@ using SimpleWSA.WSALibrary.Internal;
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleWSA.WSALibrary
@@ -31,9 +32,9 @@ namespace SimpleWSA.WSALibrary
       this.webProxy = webProxy;
     }
 
-    public async Task<string> CreateByRestServiceAddressAsync(string baseAddress)
+    public async Task<string> CreateByRestServiceAddressAsync(string baseAddress, int httpTimeout, CancellationToken cancellationToken)
     {
-      string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
+      var requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
       SessionService sessionService = new SessionService(baseAddress,
                                                          requestUri,
                                                          this.login,
@@ -43,7 +44,7 @@ namespace SimpleWSA.WSALibrary
                                                          this.domain,
                                                          ErrorCodes.Collection,
                                                          this.webProxy);
-      return await sessionService.SendAsync(HttpMethod.GET);
+      return await sessionService.SendAsync(HttpMethod.GET, httpTimeout, cancellationToken);
     }
 
     private async Task<string> GetRestServiceAddressAsync(string domain, string connectionProviderAddress, WebProxy webProxy)
@@ -84,7 +85,7 @@ namespace SimpleWSA.WSALibrary
       }
     }
 
-    public async Task<string> CreateByConnectionProviderAddressAsync(string connectionProviderAddress)
+    public async Task<string> CreateByConnectionProviderAddressAsync(string connectionProviderAddress, int httpTimeout, CancellationToken cancellationToken)
     {
       if (connectionProviderAddress == null || connectionProviderAddress.Trim().Length == 0)
       {
@@ -94,7 +95,7 @@ namespace SimpleWSA.WSALibrary
       string restServiceAddress = await this.GetRestServiceAddressAsync(this.domain, connectionProviderAddress, this.webProxy);
       restServiceAddress = new Uri(restServiceAddress).GetLeftPart(UriPartial.Authority);
 
-      return await this.CreateByRestServiceAddressAsync(restServiceAddress);
+      return await this.CreateByRestServiceAddressAsync(restServiceAddress, httpTimeout, cancellationToken);
     }
   }
 }

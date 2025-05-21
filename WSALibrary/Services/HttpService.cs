@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,16 +18,16 @@ namespace SimpleWSA.WSALibrary.Services
   {
     protected readonly ICompressionService compressionService = new CompressionService();
 
-    public virtual object Get(string requestUri, WebProxy webProxy, CompressionType returnCompressionType)
+    public virtual object Get(string requestUri, WebProxy webProxy, int httpTimeout)
     {
       try
       {
         var httpWebRequest = (HttpWebRequest)WebRequest.Create(requestUri);
         if (httpWebRequest != null)
         {
-          httpWebRequest.Method = HttpMethod.GET.ToString();
+          httpWebRequest.Method = nameof(HttpMethod.GET);
           httpWebRequest.ContentLength = 0;
-          httpWebRequest.Timeout = 1 * 60 * 60 * 1000;
+          httpWebRequest.Timeout = httpTimeout;
 
           if (webProxy != null)
           {
@@ -41,55 +40,6 @@ namespace SimpleWSA.WSALibrary.Services
           httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
 
           using (var httpWebResponse = httpWebRequest.GetResponse() as HttpWebResponse)
-          {
-            if (httpWebResponse.StatusCode == HttpStatusCode.OK)
-            {
-              using (var stream = httpWebResponse.GetResponseStream())
-              {
-                using (var memoryStream = new MemoryStream())
-                {
-                  stream.CopyTo(memoryStream);
-                  return Encoding.UTF8.GetString(memoryStream.ToArray());
-                }
-              }
-            }
-          }
-        }
-      }
-      catch (WebException ex)
-      {
-        if (ex.Response is HttpWebResponse)
-        {
-          this.CreateAndThrowIfRestServiceException((HttpWebResponse)ex.Response);
-        }
-        throw;
-      }
-      return null;
-    }
-
-    public virtual object Post(string requestUri, string requestString, WebProxy webProxy, CompressionType outgoingCompressionType, CompressionType returnCompressionType)
-    {
-      try
-      {
-        var httpWebRequest = (HttpWebRequest)WebRequest.Create(requestUri);
-        if (httpWebRequest != null)
-        {
-          httpWebRequest.Timeout = 1 * 60 * 60 * 1000;
-
-          if (webProxy != null)
-          {
-            httpWebRequest.Proxy = webProxy;
-          }
-
-          // skip the certificate validation ...
-          httpWebRequest.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-
-          httpWebRequest.AutomaticDecompression = DecompressionMethods.GZip;
-
-          byte[] postData = this.compressionService.Compress(requestString, outgoingCompressionType);
-          httpWebRequest.InitializeWebRequest(outgoingCompressionType, postData, webProxy);
-
-          using (HttpWebResponse httpWebResponse = httpWebRequest.GetResponse() as HttpWebResponse)
           {
             if (httpWebResponse?.StatusCode == HttpStatusCode.OK)
             {
@@ -111,33 +61,84 @@ namespace SimpleWSA.WSALibrary.Services
         {
           this.CreateAndThrowIfRestServiceException((HttpWebResponse)ex.Response);
         }
+
+        throw;
+      }
+      return null;
+    }
+
+    public virtual object Post(string requestUri, string requestString, WebProxy webProxy, CompressionType outgoingCompressionType, int httpTimeout)
+    {
+      try
+      {
+        var httpWebRequest = (HttpWebRequest)WebRequest.Create(requestUri);
+        if (httpWebRequest != null)
+        {
+          httpWebRequest.Timeout = httpTimeout;
+
+          // skip the certificate validation ...
+          httpWebRequest.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+
+          byte[] postData;
+          if (outgoingCompressionType != CompressionType.NONE)
+          {
+            postData = this.compressionService.Compress(requestString, outgoingCompressionType);
+          }
+          else
+          {
+            postData = Encoding.UTF8.GetBytes(requestString);
+          }
+
+          httpWebRequest.InitializeWebRequest(outgoingCompressionType, postData, webProxy);
+
+          using (var httpWebResponse = httpWebRequest.GetResponse() as HttpWebResponse)
+          {
+            if (httpWebResponse?.StatusCode == HttpStatusCode.OK)
+            {
+              using (var stream = httpWebResponse.GetResponseStream())
+              {
+                using (var memoryStream = new MemoryStream())
+                {
+                  stream.CopyTo(memoryStream);
+                  return Encoding.UTF8.GetString(memoryStream.ToArray());
+                }
+              }
+            }
+          }
+        }
+      }
+      catch (WebException ex)
+      {
+        if (ex.Response is HttpWebResponse)
+        {
+          this.CreateAndThrowIfRestServiceException((HttpWebResponse)ex.Response);
+        }
+
         throw;
       }
 
       return null;
     }
 
-    public virtual async Task<object> GetAsync(string baseAddress, string requestUri, WebProxy webProxy)
+    public virtual async Task<object> GetAsync(string baseAddress, string requestUri, WebProxy webProxy, int httpTimeout, CancellationToken cancellationToken)
     {
-      var httpClientHandler = new HttpClientHandler();
-      httpClientHandler.AutomaticDecompression = DecompressionMethods.GZip;
-
-      // TO DO: it is necessary to implement it for HttpWebRequest too
-      httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
-      httpClientHandler.ServerCertificateCustomValidationCallback = (httpRequestMessage, certificate, chain, sslPolicyErrors) => true;
-
-      if (webProxy != null)
+      var httpClientHandler = new HttpClientHandler
       {
-        httpClientHandler.Proxy = webProxy;
-        httpClientHandler.UseProxy = true;
-      }
+        AutomaticDecompression = DecompressionMethods.GZip,
+
+        ClientCertificateOptions = ClientCertificateOption.Manual,
+        ServerCertificateCustomValidationCallback = (httpRequestMessage, certificate, chain, sslPolicyErrors) => true,
+
+        Proxy = webProxy,
+        UseProxy = webProxy != null
+      };
 
       using (var httpClient = new HttpClient(httpClientHandler))
       {
         httpClient.BaseAddress = new Uri(baseAddress);
-        httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
+        httpClient.Timeout = TimeSpan.FromMilliseconds(httpTimeout);
 
-        using (var httpResponseMessage = await httpClient.GetAsync(requestUri))
+        using (var httpResponseMessage = await httpClient.GetAsync(requestUri, cancellationToken))
         {
           if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
           {
@@ -153,34 +154,42 @@ namespace SimpleWSA.WSALibrary.Services
       return null;
     }
 
-    public virtual async Task<object> PostAsync(string baseAddress, string requestUri, string requestString, WebProxy webProxy, CompressionType outgoingCompressionType)
+    public virtual async Task<object> PostAsync(string baseAddress, string requestUri, string requestString, WebProxy webProxy, CompressionType outgoingCompressionType, int httpTimeout, CancellationToken cancellationToken)
     {
-      var httpClientHandler = new HttpClientHandler();
-      httpClientHandler.AutomaticDecompression = DecompressionMethods.GZip;
-
-      httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
-      httpClientHandler.ServerCertificateCustomValidationCallback = (httpRequestMessage, certificate, chain, sslPolicyErrors) => true;
-
-      if (webProxy != null)
+      var httpClientHandler = new HttpClientHandler
       {
-        httpClientHandler.Proxy = webProxy;
-        httpClientHandler.UseProxy = true;
+        AutomaticDecompression = DecompressionMethods.GZip,
+
+        ClientCertificateOptions = ClientCertificateOption.Manual,
+        ServerCertificateCustomValidationCallback = (httpRequestMessage, certificate, chain, sslPolicyErrors) => true,
+
+        Proxy = webProxy,
+        UseProxy = webProxy != null
+      };
+
+      byte[] postData;
+      if (outgoingCompressionType != CompressionType.NONE)
+      {
+        postData = this.compressionService.Compress(requestString, outgoingCompressionType);
+      }
+      else
+      {
+        postData = Encoding.UTF8.GetBytes(requestString);
       }
 
-      byte[] postData = this.compressionService.Compress(requestString, outgoingCompressionType);
-      using (var byteArrayContent = new ByteArrayContent(postData))
+      using (var content = new ByteArrayContent(postData))
       {
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/xml");
+        if (outgoingCompressionType != CompressionType.NONE)
+        {
+          content.Headers.ContentEncoding.Add("gzip");
+        }
 
-        using (HttpClient httpClient = new HttpClient(httpClientHandler))
+        using (var httpClient = new HttpClient(httpClientHandler))
         {
           httpClient.BaseAddress = new Uri(baseAddress);
-          httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
-
-          //byte[] postData = this.compressionService.Compress(requestString, outgoingCompressionType);
-          //using (var byteArrayContent = new ByteArrayContent(postData))
-          //{
-          byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue(outgoingCompressionType.SetWebRequestContentType());
-          using (HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(requestUri, byteArrayContent))
+          httpClient.Timeout = TimeSpan.FromMilliseconds(httpTimeout);
+          using (var httpResponseMessage = await httpClient.PostAsync(requestUri, content, cancellationToken))
           {
             if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
             {
@@ -192,10 +201,9 @@ namespace SimpleWSA.WSALibrary.Services
               httpResponseMessage.EnsureSuccessStatusCode();
             }
           }
-          //}
         }
-
       }
+
       return null;
     }
 
@@ -225,7 +233,7 @@ namespace SimpleWSA.WSALibrary.Services
           {
             wsaMessage = errorReply.Error.Message;
           }
-          throw new RestServiceException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
+          throw new DawaException(wsaMessage, errorReply.Error.ErrorCode, errorReply.Error.Message);
         }
       }
     }

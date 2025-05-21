@@ -5,6 +5,7 @@ using System.Data;
 using System.Globalization;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
@@ -367,48 +368,48 @@ namespace SimpleWSA.WSALibrary
       return result;
     }
 
-    protected virtual object Get(string requestString)
+    protected virtual object Get(string requestString, int httpTimeout)
     {
       string requestUri = string.Format(this.format, this.serviceAddress, this.route, this.token, HttpUtility.UrlEncode(requestString));
-      return this.httpService.Get(requestUri, this.webProxy, this.command.ReturnCompressionType);
+      return this.httpService.Get(requestUri, this.webProxy, httpTimeout);
     }
 
-    protected virtual object Post(string requestString)
+    protected virtual object Post(string requestString, int httpTimeout)
     {
       string requestUri = string.Format(this.format, this.serviceAddress, this.route, this.token, (int)this.command.OutgoingCompressionType);
-      return this.httpService.Post(requestUri, requestString, this.webProxy, this.command.OutgoingCompressionType, this.command.ReturnCompressionType);
+      return this.httpService.Post(requestUri, requestString, this.webProxy, this.command.OutgoingCompressionType, httpTimeout);
     }
 
-    protected virtual async Task<object> GetAsync(string requestString)
+    protected virtual async Task<object> GetAsync(string requestString, int httpTimeout, CancellationToken cancellationToken)
     {
       string requestUri = string.Format(this.format, string.Empty, this.route, this.token, HttpUtility.UrlEncode(requestString));
-      return await this.httpService.GetAsync(this.serviceAddress, requestUri, this.webProxy);
+      return await this.httpService.GetAsync(this.serviceAddress, requestUri, this.webProxy, httpTimeout, cancellationToken);
     }
 
-    protected virtual async Task<object> PostAsync(string requestString)
+    protected virtual async Task<object> PostAsync(string requestString, int httpTimeout, CancellationToken cancellationToken)
     {
       string requestUri = string.Format(this.format, string.Empty, this.route, this.token, (int)this.command.OutgoingCompressionType);
-      return await this.httpService.PostAsync(this.serviceAddress, requestUri, requestString, this.webProxy, this.command.OutgoingCompressionType);
+      return await this.httpService.PostAsync(this.serviceAddress, requestUri, requestString, this.webProxy, this.command.OutgoingCompressionType, httpTimeout, cancellationToken);
     }
 
-    public virtual object Send()
+    public virtual object Send(int httpTimeout)
     {
       string xmlRequest = this.CreateXmlRequest();
       if (this.command.HttpMethod == HttpMethod.POST)
       {
-        return this.Post(xmlRequest);
+        return this.Post(xmlRequest, httpTimeout);
       }
-      return this.Get(xmlRequest);
+      return this.Get(xmlRequest, httpTimeout);
     }
 
-    public virtual async Task<object> SendAsync()
+    public virtual async Task<object> SendAsync(int httpTimeout, CancellationToken cancellationToken)
     {
       string xmlRequest = this.CreateXmlRequest();
       if (this.command.HttpMethod == HttpMethod.POST)
       {
-        return await this.PostAsync(xmlRequest);
+        return await this.PostAsync(xmlRequest, httpTimeout, cancellationToken);
       }
-      return await this.GetAsync(xmlRequest);
+      return await this.GetAsync(xmlRequest, httpTimeout, cancellationToken);
     }
   }
 }

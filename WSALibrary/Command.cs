@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleWSA.WSALibrary
@@ -66,24 +67,24 @@ namespace SimpleWSA.WSALibrary
       this.Name = name;
     }
 
-    public static string Execute(Command command, RoutineType routineType)
+    public static string Execute(Command command, RoutineType routineType, int httpTimeout = 100000)
     {
-      return Execute(command, routineType, command.HttpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+      return Execute(command, routineType, command.HttpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType, httpTimeout);
     }
 
-    public static string Execute(Command command, RoutineType routineType, HttpMethod httpMethod)
+    public static string Execute(Command command, RoutineType routineType, HttpMethod httpMethod, int httpTimeout = 100000)
     {
-      return Execute(command, routineType, httpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+      return Execute(command, routineType, httpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType, httpTimeout);
     }
 
-    public static string Execute(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat)
+    public static string Execute(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat, int httpTimeout = 100000)
     {
-      return Execute(command, routineType, httpMethod, responseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+      return Execute(command, routineType, httpMethod, responseFormat, command.OutgoingCompressionType, command.ReturnCompressionType, httpTimeout);
     }
 
-    public static string Execute(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat, CompressionType outgoingCompressionType)
+    public static string Execute(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat, CompressionType outgoingCompressionType, int httpTimeout = 100000)
     {
-      return Execute(command, routineType, httpMethod, responseFormat, outgoingCompressionType, command.ReturnCompressionType);
+      return Execute(command, routineType, httpMethod, responseFormat, outgoingCompressionType, command.ReturnCompressionType, httpTimeout);
     }
 
     public static string Execute(Command command,
@@ -91,7 +92,8 @@ namespace SimpleWSA.WSALibrary
                                  HttpMethod httpMethod,
                                  ResponseFormat responseFormat,
                                  CompressionType outgoingCompressionType,
-                                 CompressionType returnCompressionType)
+                                 CompressionType returnCompressionType,
+                                 int httpTimeout = 100000)
     {
       command.HttpMethod = httpMethod;
       command.ResponseFormat = responseFormat;
@@ -100,29 +102,30 @@ namespace SimpleWSA.WSALibrary
 
       IConvertingService convertingService = new ConvertingService();
 
-      SessionContext sessionContext = SessionContext.GetContext();
+      var attempt = 0;
+      var sessionContext = SessionContext.GetContext();
 
       if (routineType == RoutineType.Scalar)
       {
-        ScalarRequest scalarRequest = new ScalarRequest(sessionContext.BaseAddress,
-                                                        SessionContext.route,
-                                                        sessionContext.Token,
-                                                        command,
-                                                        convertingService,
-                                                        sessionContext.WebProxy);
+        var scalarRequest = new ScalarRequest(sessionContext.BaseAddress,
+                                              SessionContext.route,
+                                              sessionContext.Token,
+                                              command,
+                                              convertingService,
+                                              sessionContext.WebProxy);
       scalar_request_label:
         try
         {
-          object result = scalarRequest.Send();
+          var result = scalarRequest.Send(httpTimeout);
           return Convert.ToString(result);
         }
         catch (Exception ex)
         {
-          if (ex is RestServiceException rex)
+          if (attempt == 0)
           {
-            // keep session alive
-            if (rex.Code == "MI008")
+            if (DawaException.IsSessionEmptyOrExpired(ex) == true)
             {
+              attempt++;
               SessionContext.Refresh();
               scalarRequest.SetToken(SessionContext.GetContext().Token);
               goto scalar_request_label;
@@ -133,25 +136,25 @@ namespace SimpleWSA.WSALibrary
       }
       else if (routineType == RoutineType.NonQuery)
       {
-        NonQueryRequest nonqueryRequest = new NonQueryRequest(sessionContext.BaseAddress,
-                                                              SessionContext.route,
-                                                              sessionContext.Token,
-                                                              command,
-                                                              convertingService,
-                                                              sessionContext.WebProxy);
+        var nonqueryRequest = new NonQueryRequest(sessionContext.BaseAddress,
+                                                  SessionContext.route,
+                                                  sessionContext.Token,
+                                                  command,
+                                                  convertingService,
+                                                  sessionContext.WebProxy);
       nonquery_request_label:
         try
         {
-          object result = nonqueryRequest.Send();
+          var result = nonqueryRequest.Send(httpTimeout);
           return Convert.ToString(result);
         }
         catch (Exception ex)
         {
-          if (ex is RestServiceException rex)
+          if (attempt == 0)
           {
-            // keep session alive
-            if (rex.Code == "MI008")
+            if (DawaException.IsSessionEmptyOrExpired(ex) == true)
             {
+              attempt++;
               SessionContext.Refresh();
               nonqueryRequest.SetToken(SessionContext.GetContext().Token);
               goto nonquery_request_label;
@@ -162,25 +165,25 @@ namespace SimpleWSA.WSALibrary
       }
       else if (routineType == RoutineType.DataSet)
       {
-        DataSetRequest dataSetRequest = new DataSetRequest(sessionContext.BaseAddress,
-                                                           SessionContext.route,
-                                                           sessionContext.Token,
-                                                           command,
-                                                           convertingService,
-                                                           sessionContext.WebProxy);
+        var dataSetRequest = new DataSetRequest(sessionContext.BaseAddress,
+                                                SessionContext.route,
+                                                sessionContext.Token,
+                                                command,
+                                                convertingService,
+                                                sessionContext.WebProxy);
       dataset_request_label:
         try
         {
-          object result = dataSetRequest.Send();
+          var result = dataSetRequest.Send(httpTimeout);
           return Convert.ToString(result);
         }
         catch (Exception ex)
         {
-          if (ex is RestServiceException rex)
+          if (attempt == 0)
           {
-            // keep session alive
-            if (rex.Code == "MI008")
+            if (DawaException.IsSessionEmptyOrExpired(ex) == true)
             {
+              attempt++;
               SessionContext.Refresh();
               dataSetRequest.SetToken(SessionContext.GetContext().Token);
               goto dataset_request_label;
@@ -193,24 +196,24 @@ namespace SimpleWSA.WSALibrary
       return null;
     }
 
-    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType)
+    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType, int httpTimeout = 100000, CancellationToken cancellationToken = default)
     {
-      return await ExecuteAsync(command, routineType, command.HttpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+      return await ExecuteAsync(command, routineType, command.HttpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType, httpTimeout, cancellationToken);
     }
 
-    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType, HttpMethod httpMethod)
+    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType, HttpMethod httpMethod, int httpTimeout = 100000, CancellationToken cancellationToken = default)
     {
-      return await ExecuteAsync(command, routineType, httpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+      return await ExecuteAsync(command, routineType, httpMethod, command.ResponseFormat, command.OutgoingCompressionType, command.ReturnCompressionType, httpTimeout, cancellationToken);
     }
 
-    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat)
+    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat, int httpTimeout = 100000, CancellationToken cancellationToken = default)
     {
-      return await ExecuteAsync(command, routineType, httpMethod, responseFormat, command.OutgoingCompressionType, command.ReturnCompressionType);
+      return await ExecuteAsync(command, routineType, httpMethod, responseFormat, command.OutgoingCompressionType, command.ReturnCompressionType, httpTimeout, cancellationToken);
     }
 
-    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat, CompressionType outgoingCompressionType)
+    public static async Task<string> ExecuteAsync(Command command, RoutineType routineType, HttpMethod httpMethod, ResponseFormat responseFormat, CompressionType outgoingCompressionType, int httpTimeout = 100000, CancellationToken cancellationToken = default)
     {
-      return await ExecuteAsync(command, routineType, httpMethod, responseFormat, outgoingCompressionType, command.ReturnCompressionType);
+      return await ExecuteAsync(command, routineType, httpMethod, responseFormat, outgoingCompressionType, command.ReturnCompressionType, httpTimeout, cancellationToken);
     }
 
     public static async Task<string> ExecuteAsync(Command command,
@@ -218,7 +221,9 @@ namespace SimpleWSA.WSALibrary
                                                   HttpMethod httpMethod,
                                                   ResponseFormat responseFormat,
                                                   CompressionType outgoingCompressType,
-                                                  CompressionType returnCompressionType)
+                                                  CompressionType returnCompressionType,
+                                                  int httpTimeout = 100000,
+                                                  CancellationToken cancellationToken = default)
     {
       command.HttpMethod = httpMethod;
       command.ResponseFormat = responseFormat;
@@ -228,29 +233,30 @@ namespace SimpleWSA.WSALibrary
       ICompressionService compressionService = new CompressionService();
       IConvertingService convertingService = new ConvertingService();
 
-      SessionContext sessionContext = SessionContext.GetContext();
+      var attempt = 0;
+      var sessionContext = SessionContext.GetContext();
 
       if (routineType == RoutineType.Scalar)
       {
-        ScalarRequest scalarRequest = new ScalarRequest(sessionContext.BaseAddress,
-                                                        SessionContext.route,
-                                                        sessionContext.Token,
-                                                        command,
-                                                        convertingService,
-                                                        sessionContext.WebProxy);
+        var scalarRequest = new ScalarRequest(sessionContext.BaseAddress,
+                                              SessionContext.route,
+                                              sessionContext.Token,
+                                              command,
+                                              convertingService,
+                                              sessionContext.WebProxy);
       scalar_request_label:
         try
         {
-          object result = await scalarRequest.SendAsync();
+          var result = await scalarRequest.SendAsync(httpTimeout, cancellationToken);
           return Convert.ToString(result);
         }
         catch (Exception ex)
         {
-          if (ex is RestServiceException rex)
+          if (attempt == 0)
           {
-            // keep session alive
-            if (rex.Code == "MI008")
+            if (DawaException.IsSessionEmptyOrExpired(ex) == true)
             {
+              attempt++;
               await SessionContext.RefreshAsync();
               scalarRequest.SetToken(SessionContext.GetContext().Token);
               goto scalar_request_label;
@@ -261,25 +267,25 @@ namespace SimpleWSA.WSALibrary
       }
       else if (routineType == RoutineType.NonQuery)
       {
-        NonQueryRequest nonqueryRequest = new NonQueryRequest(sessionContext.BaseAddress,
-                                                              SessionContext.route,
-                                                              sessionContext.Token,
-                                                              command,
-                                                              convertingService,
-                                                              sessionContext.WebProxy);
+        var nonqueryRequest = new NonQueryRequest(sessionContext.BaseAddress,
+                                                  SessionContext.route,
+                                                  sessionContext.Token,
+                                                  command,
+                                                  convertingService,
+                                                  sessionContext.WebProxy);
       nonquery_request_label:
         try
         {
-          object result = await nonqueryRequest.SendAsync();
+          var result = await nonqueryRequest.SendAsync(httpTimeout, cancellationToken);
           return Convert.ToString(result);
         }
         catch (Exception ex)
         {
-          if (ex is RestServiceException rex)
+          if (attempt == 0)
           {
-            // keep session alive
-            if (rex.Code == "MI008")
+            if (DawaException.IsSessionEmptyOrExpired(ex) == true)
             {
+              attempt++;
               await SessionContext.RefreshAsync();
               nonqueryRequest.SetToken(SessionContext.GetContext().Token);
               goto nonquery_request_label;
@@ -290,29 +296,30 @@ namespace SimpleWSA.WSALibrary
       }
       else if (routineType == RoutineType.DataSet)
       {
-        DataSetRequest dataSetRequest = new DataSetRequest(sessionContext.BaseAddress,
-                                                           SessionContext.route,
-                                                           sessionContext.Token,
-                                                           command,
-                                                           convertingService,
-                                                           sessionContext.WebProxy);
+        var dataSetRequest = new DataSetRequest(sessionContext.BaseAddress,
+                                                SessionContext.route,
+                                                sessionContext.Token,
+                                                command,
+                                                convertingService,
+                                                sessionContext.WebProxy);
       dataset_request_label:
 
         try
         {
-          object result = await dataSetRequest.SendAsync();
+          var result = await dataSetRequest.SendAsync(httpTimeout, cancellationToken);
           return Convert.ToString(result);
         }
         catch (Exception ex)
         {
-          if (ex is RestServiceException rex)
+          if (attempt == 0)
           {
-            // keep session alive
-            if (rex.Code == "MI008")
+            if (DawaException.IsSessionEmptyOrExpired(ex) == true)
             {
+              attempt++;
               await SessionContext.RefreshAsync();
               dataSetRequest.SetToken(SessionContext.GetContext().Token);
               goto dataset_request_label;
+
             }
           }
           throw;
@@ -327,14 +334,15 @@ namespace SimpleWSA.WSALibrary
                                     ResponseFormat responseFormat,
                                     CompressionType outgoingCompressionType,
                                     CompressionType returnCompressionType,
-                                    ParallelExecution parallelExecution)
+                                    ParallelExecution parallelExecution,
+                                    int httpTimeout = 100000)
     {
       if (commands == null || commands.Count == 0)
       {
         throw new ArgumentException("commands are required...");
       }
 
-      string postFormat = DataSetRequest.PostFormat;
+      var postFormat = DataSetRequest.PostFormat;
       if (routineType == RoutineType.Scalar)
       {
         postFormat = ScalarRequest.PostFormat;
@@ -346,74 +354,70 @@ namespace SimpleWSA.WSALibrary
 
       IConvertingService convertingService = new ConvertingService();
 
-      StringBuilder sb = new StringBuilder();
-      sb.Append($"<{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
-      foreach (Command command in commands)
+      var stringBuilder = new StringBuilder();
+      stringBuilder.Append($"<{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
+      foreach (var command in commands)
       {
-        Request request = new Request(command, convertingService);
-        sb.Append(request.CreateXmlRoutine());
+        var request = new Request(command, convertingService);
+        stringBuilder.Append(request.CreateXmlRoutine());
       }
 
-      CreateRoutinesLevelXmlNodes(sb, returnCompressionType, parallelExecution, responseFormat);
+      CreateRoutinesLevelXmlNodes(stringBuilder, returnCompressionType, parallelExecution, responseFormat);
 
-      sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
-      string requestString = sb.ToString();
-
-      Console.WriteLine(requestString);
+      stringBuilder.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
+      var requestString = stringBuilder.ToString();
 
       IHttpService httpService = new HttpService();
 
-      SessionContext sessionContext = SessionContext.GetContext();
+      var attempt = 0;
+      var sessionContext = SessionContext.GetContext();
 
     executeall_post_label:
       try
       {
-        string requestUri = string.Format(postFormat, sessionContext.BaseAddress, SessionContext.route, sessionContext.Token, (int)outgoingCompressionType);
-        return (string)httpService.Post(requestUri,
-                                        requestString,
-                                        sessionContext.WebProxy,
-                                        outgoingCompressionType,
-                                        returnCompressionType);
+        var requestUri = string.Format(postFormat, sessionContext.BaseAddress, SessionContext.route, sessionContext.Token, (int)outgoingCompressionType);
+        return (string)httpService.Post(requestUri, requestString, sessionContext.WebProxy, outgoingCompressionType, httpTimeout);
       }
       catch (Exception ex)
       {
-        if (ex is RestServiceException rex)
+        if (attempt == 0)
         {
-          // keep session alive
-          if (rex.Code == "MI008")
+          if (DawaException.IsSessionEmptyOrExpired(ex) == true)
           {
+            attempt++;
             SessionContext.Refresh();
             goto executeall_post_label;
+
           }
         }
         throw;
       }
     }
 
-    protected static void CreateRoutinesLevelXmlNodes(StringBuilder sb,
-                                                    CompressionType returnCompressionType,
-                                                    ParallelExecution parallelExecution,
-                                                    ResponseFormat responseFormat)
+    protected static void CreateRoutinesLevelXmlNodes(StringBuilder stringBuilder,
+                                                      CompressionType returnCompressionType,
+                                                      ParallelExecution parallelExecution,
+                                                      ResponseFormat responseFormat)
     {
       if (returnCompressionType != CompressionType.NONE)
       {
-        sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_COMPRESSION, $"{(int)returnCompressionType}"));
+        stringBuilder.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_COMPRESSION, $"{(int)returnCompressionType}"));
       }
 
-      sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_RETURN_TYPE, $"{responseFormat}"));
+      stringBuilder.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_RETURN_TYPE, $"{responseFormat}"));
 
       if (parallelExecution == ParallelExecution.TRUE)
       {
-        sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION, "1"));
+        stringBuilder.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION, "1"));
       }
       else
       {
-        sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION, "0"));
+        stringBuilder.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_PARALLEL_EXECUTION, "0"));
       }
 
       if (responseFormat == ResponseFormat.JSON)
       {
-        sb.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_JSON_DATE_FORMAT, "2"));
+        stringBuilder.Append(CreateXmlNode(Constants.WS_XML_REQUEST_NODE_JSON_DATE_FORMAT, "2"));
       }
     }
 

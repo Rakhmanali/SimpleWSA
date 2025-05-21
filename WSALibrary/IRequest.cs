@@ -1,7 +1,7 @@
 ﻿namespace SimpleWSA.WSALibrary
 {
-    public interface IRequest
-    {
-        object Send();
-    }
+  public interface IRequest
+  {
+    object Send(int httpTimeout);
+  }
 }

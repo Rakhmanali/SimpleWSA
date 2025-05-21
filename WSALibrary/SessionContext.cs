@@ -1,5 +1,6 @@
 ﻿using SimpleWSA.WSALibrary.Internal;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleWSA.WSALibrary
@@ -48,36 +49,36 @@ namespace SimpleWSA.WSALibrary
       return sessionContext;
     }
 
-    public static void Refresh()
+    public static void Refresh(int httpTimeout = 100000)
     {
-      string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
-      SessionContext sessionContext = SessionContext.GetContext();
-      SessionService sessionService = new SessionService(sessionContext.BaseAddress,
-                                                         requestUri,
-                                                         sessionContext.Login,
-                                                         sessionContext.Password,
-                                                         sessionContext.AppId,
-                                                         sessionContext.AppVersion,
-                                                         sessionContext.Domain,
-                                                         ErrorCodes.Collection,
-                                                         sessionContext.WebProxy);
-      sessionService.Send(HttpMethod.GET);
+      var requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
+      var sessionContext = SessionContext.GetContext();
+      var sessionService = new SessionService(sessionContext.BaseAddress,
+                                              requestUri,
+                                              sessionContext.Login,
+                                              sessionContext.Password,
+                                              sessionContext.AppId,
+                                              sessionContext.AppVersion,
+                                              sessionContext.Domain,
+                                              ErrorCodes.Collection,
+                                              sessionContext.WebProxy);
+      sessionService.Send(HttpMethod.GET, httpTimeout);
     }
 
-    public static async Task RefreshAsync()
+    public static async Task RefreshAsync(int httpTimeout = 100000, CancellationToken cancellationToken = default)
     {
-      string requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
-      SessionContext sessionContext = SessionContext.GetContext();
-      SessionService sessionService = new SessionService(sessionContext.BaseAddress,
-                                                         requestUri,
-                                                         sessionContext.Login,
-                                                         sessionContext.Password,
-                                                         sessionContext.AppId,
-                                                         sessionContext.AppVersion,
-                                                         sessionContext.Domain,
-                                                         ErrorCodes.Collection,
-                                                         sessionContext.WebProxy);
-      await sessionService.SendAsync(HttpMethod.GET);
+      var requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
+      var sessionContext = SessionContext.GetContext();
+      var sessionService = new SessionService(sessionContext.BaseAddress,
+                                              requestUri,
+                                              sessionContext.Login,
+                                              sessionContext.Password,
+                                              sessionContext.AppId,
+                                              sessionContext.AppVersion,
+                                              sessionContext.Domain,
+                                              ErrorCodes.Collection,
+                                              sessionContext.WebProxy);
+      await sessionService.SendAsync(HttpMethod.GET, httpTimeout, cancellationToken);
     }
   }
 }

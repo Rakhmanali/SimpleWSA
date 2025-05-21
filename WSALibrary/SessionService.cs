@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -120,24 +121,24 @@ namespace SimpleWSA.WSALibrary
 
     private readonly IHttpService httpService = new HttpService();
 
-    private string Get(string baseaddress, string requestUri, string queryString, WebProxy webProxy)
+    private string Get(string baseaddress, string requestUri, string queryString, WebProxy webProxy, int httpTimeout)
     {
-      string query = $"{baseaddress}{requestUri}?{queryString}";
-      string result = Convert.ToString(this.httpService.Get(query, webProxy, CompressionType.NONE));
+      var query = $"{baseaddress}{requestUri}?{queryString}";
+      var result = Convert.ToString(this.httpService.Get(query, webProxy, httpTimeout));
       return this.ExtractToken(result);
     }
 
-    private async Task<string> GetAsync(string baseaddress, string requestUri, string queryString, WebProxy webProxy)
+    private async Task<string> GetAsync(string baseaddress, string requestUri, string queryString, WebProxy webProxy, int httpTimeout, CancellationToken cancellationToken)
     {
-      string apiUrl = $"{requestUri}?{queryString}";
-      string result = Convert.ToString(await this.httpService.GetAsync(baseaddress, apiUrl, webProxy));
+      var apiUrl = $"{requestUri}?{queryString}";
+      var result = Convert.ToString(await this.httpService.GetAsync(baseaddress, apiUrl, webProxy, httpTimeout, cancellationToken));
       return this.ExtractToken(result);
     }
 
 
-    private async Task<string> PostAsync(string baseAddress, string requestUri, string postData, WebProxy webProxy)
+    private async Task<string> PostAsync(string baseAddress, string requestUri, string postData, WebProxy webProxy, int httpTimeout, CancellationToken cancellationToken)
     {
-      string result = Convert.ToString(await this.httpService.PostAsync(baseAddress, requestUri, postData, webProxy, CompressionType.NONE));
+      var result = Convert.ToString(await this.httpService.PostAsync(baseAddress, requestUri, postData, webProxy, CompressionType.NONE, httpTimeout, cancellationToken));
       return XElement.Parse(result).Element(Constants.WS_TOKEN).Value;
     }
 
@@ -151,13 +152,13 @@ namespace SimpleWSA.WSALibrary
       return source.Substring(startIndex, length);
     }
 
-    public string Send(HttpMethod httpMethod)
+    public string Send(HttpMethod httpMethod, int httpTimeout)
     {
       string result = null;
       //if (httpMethod == HttpMethod.GET)
       //{
-      string queryString = this.CreateQueryString();
-      result = this.Get(this.baseAddress, this.requestUri, queryString, this.webProxy);
+      var queryString = this.CreateQueryString();
+      result = this.Get(this.baseAddress, this.requestUri, queryString, this.webProxy, httpTimeout);
 
       //}
       //else
@@ -168,32 +169,30 @@ namespace SimpleWSA.WSALibrary
 
       if (result != null && result.Trim().Length > 0)
       {
-        SessionContext sessionContext = new SessionContext(this.baseAddress, this.login, this.password, this.appId,
-                    this.appVersion, this.domain, this.webProxy, result);
+        var sessionContext = new SessionContext(this.baseAddress, this.login, this.password, this.appId, this.appVersion, this.domain, this.webProxy, result);
         sessionContext.Create();
       }
 
       return result;
     }
 
-    public async Task<string> SendAsync(HttpMethod httpMethod)
+    public async Task<string> SendAsync(HttpMethod httpMethod, int httpTimeout, CancellationToken cancellationToken)
     {
       string result = null;
       if (httpMethod == HttpMethod.GET)
       {
-        string queryString = this.CreateQueryString();
-        result = await this.GetAsync(this.baseAddress, this.requestUri, queryString, this.webProxy);
+        var queryString = this.CreateQueryString();
+        result = await this.GetAsync(this.baseAddress, this.requestUri, queryString, this.webProxy, httpTimeout, cancellationToken);
       }
       else
       {
-        string xmlRequest = this.CreateXmlRequest();
-        result = await this.PostAsync(this.baseAddress, this.requestUri, xmlRequest, this.webProxy);
+        var xmlRequest = this.CreateXmlRequest();
+        result = await this.PostAsync(this.baseAddress, this.requestUri, xmlRequest, this.webProxy, httpTimeout, cancellationToken);
       }
 
       if (result != null && result.Trim().Length > 0)
       {
-        SessionContext sessionContext = new SessionContext(this.baseAddress, this.login, this.password, this.appId,
-                    this.appVersion, this.domain, this.webProxy, result);
+        var sessionContext = new SessionContext(this.baseAddress, this.login, this.password, this.appId, this.appVersion, this.domain, this.webProxy, result);
         sessionContext.Create();
       }
 

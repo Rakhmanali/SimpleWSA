@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SimpleWSA.WSALibrary.Exceptions;
 using System.Data;
+using System.Net;
 
 namespace SimpleWSA.WSALibrary
 {
@@ -22,7 +23,9 @@ namespace SimpleWSA.WSALibrary
                                     "244",
                                     configuration["Domain"],
                                     null);
-      await session.CreateByConnectionProviderAddressAsync("https://connectionprovider.naiton.com");
+      var httpTimeout = 100000;
+      CancellationToken cancellationToken = default;
+      await session.CreateByConnectionProviderAddressAsync("https://connectionprovider.naiton.com", httpTimeout, cancellationToken);
       //await session.CreateByRestServiceAddressAsync("http://localhost:35178");
     }
 
@@ -4597,45 +4600,44 @@ namespace SimpleWSA.WSALibrary
     public void ThrowRestServiceException_NonQuery()
     {
       var command = new Command("migration.get_out_bigint_a");
-      Assert.Throws<RestServiceException>(() => Command.Execute(command, RoutineType.NonQuery));
+      Assert.Throws<DawaException>(() => Command.Execute(command, RoutineType.NonQuery));
     }
 
     [Test]
     public void ThrowRestServiceExceptionAsync_NonQuery()
     {
       var command = new Command("migration.get_out_bigint_b");
-      Assert.ThrowsAsync<RestServiceException>(async () => await Command.ExecuteAsync(command, RoutineType.NonQuery));
+      Assert.ThrowsAsync<DawaException>(async () => await Command.ExecuteAsync(command, RoutineType.NonQuery));
     }
 
     [Test]
     public void ThrowRestServiceException_Scalar()
     {
       var command = new Command("migration.get_boolean_a");
-      Assert.Throws<RestServiceException>(() => Command.Execute(command, RoutineType.Scalar));
+      Assert.Throws<DawaException>(() => Command.Execute(command, RoutineType.Scalar));
     }
 
     [Test]
     public void ThrowRestServiceExceptionAsync_Scalar()
     {
       var command = new Command("migration.get_boolean_b");
-      Assert.ThrowsAsync<RestServiceException>(async () => await Command.ExecuteAsync(command, RoutineType.Scalar));
+      Assert.ThrowsAsync<DawaException>(async () => await Command.ExecuteAsync(command, RoutineType.Scalar));
     }
 
     [Test]
     public void ThrowRestServiceException_DataSet()
     {
       var command = new Command("migration.get_out_bytea");
-      Assert.Throws<RestServiceException>(() => Command.Execute(command, RoutineType.DataSet));
+      Assert.Throws<DawaException>(() => Command.Execute(command, RoutineType.DataSet));
     }
 
     [Test]
     public void ThrowRestServiceExceptionAsync_DataSet()
     {
       var command = new Command("migration.get_out_bytea");
-      Assert.ThrowsAsync<RestServiceException>(async () => await Command.ExecuteAsync(command, RoutineType.DataSet));
+      Assert.ThrowsAsync<DawaException>(async () => await Command.ExecuteAsync(command, RoutineType.DataSet));
     }
     #endregion special cases
-
 
     #region stored procedure
 
@@ -5227,32 +5229,121 @@ namespace SimpleWSA.WSALibrary
     #endregion array
     #endregion stored procedure
 
-    private void KillSession()
+    #region the httptimeout and cancellationtoken
+    [Test]
+    public async Task CancellationTokenTest_Async()
+    {
+      var command = new Command("migration.long_running_func");
+      var parameter = new Parameter("p_seconds", PgsqlDbType.Bigint);
+      parameter.Value = 100; // seconds
+      command.Parameters.Add(parameter);
+
+      var cancellationTokenSource = new CancellationTokenSource();
+      cancellationTokenSource.CancelAfter(5 * 1000);
+      var cancellationToken = cancellationTokenSource.Token;
+
+      try
+      {
+        await Command.ExecuteAsync(command, RoutineType.Scalar, 100000, cancellationToken);
+        Assert.Fail();
+      }
+      catch (Exception ex)
+      {
+        if (ex is TaskCanceledException)
+        {
+          Assert.Pass();
+        }
+        else
+        {
+          Assert.Fail();
+        }
+      }
+    }
+
+    [Test]
+    public async Task HttpTimeoutTest_Async()
+    {
+      var command = new Command("migration.long_running_func");
+      var parameter = new Parameter("p_seconds", PgsqlDbType.Bigint);
+      parameter.Value = 100; // seconds
+      command.Parameters.Add(parameter);
+
+      // milliseconds
+      int httpTimeout = 5 * 1000;
+
+      try
+      {
+        // default httpTimeout is 100 seconds
+        await Command.ExecuteAsync(command: command, routineType: RoutineType.Scalar, httpTimeout: httpTimeout);
+        Assert.Fail();
+      }
+      catch (Exception ex)
+      {
+        if (ex is TaskCanceledException)
+        {
+          Assert.Pass();
+        }
+        else
+        {
+          Assert.Fail();
+        }
+      }
+    }
+
+    [Test]
+    public void HttpTimeoutTest()
+    {
+      var command = new Command("migration.long_running_func");
+      var parameter = new Parameter("p_seconds", PgsqlDbType.Bigint);
+      parameter.Value = 100; // seconds
+      command.Parameters.Add(parameter);
+
+      // milliseconds
+      int httpTimeout = 5 * 1000;
+
+      try
+      {
+        // default httpTimeout is 100 seconds
+        Command.Execute(command: command, routineType: RoutineType.Scalar, httpTimeout: httpTimeout);
+        Assert.Fail();
+      }
+      catch (Exception ex)
+      {
+        if (ex is WebException webException)
+        {
+          if (webException.Status == WebExceptionStatus.Timeout)
+          {
+            Assert.Pass();
+          }
+          else
+          {
+            Assert.Fail();
+          }
+        }
+        else
+        {
+          Assert.Fail();
+        }
+      }
+    }
+    #endregion the httptimeout and cancellationtoken
+
+    private void KillSession(int httpTimeout = 100000)
     {
       var sessionContext = SessionContext.GetContext();
       var token = sessionContext.Token;
       var baseAddress = sessionContext.BaseAddress;
-      this.KillSession(token, baseAddress);
-    }
-
-    private void KillSession(string token, string baseAddress)
-    {
       var httpService = new Services.HttpService();
-      httpService.Get($"{baseAddress}/session/kill?token={token}&returnType=json", null, CompressionType.NONE);
+      httpService.Get($"{baseAddress}/session/kill?token={token}&returnType=json", null, httpTimeout);
     }
 
-    private async Task KillSessionAsync()
+    private async Task KillSessionAsync(int httpTimeout = 100000, CancellationToken cancellationToken = default)
     {
       var sessionContext = SessionContext.GetContext();
       var token = sessionContext.Token;
       var baseAddress = sessionContext.BaseAddress;
-      await this.KillSessionAsync(token, baseAddress);
-    }
-
-    private async Task KillSessionAsync(string token, string baseAddress)
-    {
       var httpService = new Services.HttpService();
-      await httpService.GetAsync(baseAddress, $"session/kill?token={token}&returnType=json", null);
+      await httpService.GetAsync(baseAddress, $"session/kill?token={token}&returnType=json", null, httpTimeout, cancellationToken);
     }
 
     // https://www.sean-lloyd.com/post/hash-a-string/
