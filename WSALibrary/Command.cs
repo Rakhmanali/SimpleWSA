@@ -108,7 +108,6 @@ namespace SimpleWSA.WSALibrary
       if (routineType == RoutineType.Scalar)
       {
         var scalarRequest = new ScalarRequest(sessionContext.BaseAddress,
-                                              SessionContext.route,
                                               sessionContext.Token,
                                               command,
                                               convertingService,
@@ -137,7 +136,6 @@ namespace SimpleWSA.WSALibrary
       else if (routineType == RoutineType.NonQuery)
       {
         var nonqueryRequest = new NonQueryRequest(sessionContext.BaseAddress,
-                                                  SessionContext.route,
                                                   sessionContext.Token,
                                                   command,
                                                   convertingService,
@@ -166,7 +164,6 @@ namespace SimpleWSA.WSALibrary
       else if (routineType == RoutineType.DataSet)
       {
         var dataSetRequest = new DataSetRequest(sessionContext.BaseAddress,
-                                                SessionContext.route,
                                                 sessionContext.Token,
                                                 command,
                                                 convertingService,
@@ -239,7 +236,6 @@ namespace SimpleWSA.WSALibrary
       if (routineType == RoutineType.Scalar)
       {
         var scalarRequest = new ScalarRequest(sessionContext.BaseAddress,
-                                              SessionContext.route,
                                               sessionContext.Token,
                                               command,
                                               convertingService,
@@ -268,7 +264,6 @@ namespace SimpleWSA.WSALibrary
       else if (routineType == RoutineType.NonQuery)
       {
         var nonqueryRequest = new NonQueryRequest(sessionContext.BaseAddress,
-                                                  SessionContext.route,
                                                   sessionContext.Token,
                                                   command,
                                                   convertingService,
@@ -297,7 +292,6 @@ namespace SimpleWSA.WSALibrary
       else if (routineType == RoutineType.DataSet)
       {
         var dataSetRequest = new DataSetRequest(sessionContext.BaseAddress,
-                                                SessionContext.route,
                                                 sessionContext.Token,
                                                 command,
                                                 convertingService,
@@ -375,7 +369,7 @@ namespace SimpleWSA.WSALibrary
     executeall_post_label:
       try
       {
-        var requestUri = string.Format(postFormat, sessionContext.BaseAddress, SessionContext.route, sessionContext.Token, (int)outgoingCompressionType);
+        var requestUri = string.Format(postFormat, sessionContext.BaseAddress, sessionContext.Token, (int)outgoingCompressionType);
         return (string)httpService.Post(requestUri, requestString, sessionContext.WebProxy, outgoingCompressionType, httpTimeout);
       }
       catch (Exception ex)
@@ -387,7 +381,71 @@ namespace SimpleWSA.WSALibrary
             attempt++;
             SessionContext.Refresh();
             goto executeall_post_label;
+          }
+        }
+        throw;
+      }
+    }
 
+    public static async Task<string> ExecuteAllAsync(List<Command> commands,
+                                                     RoutineType routineType,
+                                                     ResponseFormat responseFormat,
+                                                     CompressionType outgoingCompressionType,
+                                                     CompressionType returnCompressionType,
+                                                     ParallelExecution parallelExecution,
+                                                     int httpTimeout = 100000,
+                                                     CancellationToken cancellationToken = default)
+    {
+      if (commands == null || commands.Count == 0)
+      {
+        throw new ArgumentException("commands are required...");
+      }
+
+      var postFormat = DataSetRequest.PostFormat;
+      if (routineType == RoutineType.Scalar)
+      {
+        postFormat = ScalarRequest.PostFormat;
+      }
+      else if (routineType == RoutineType.NonQuery)
+      {
+        postFormat = NonQueryRequest.PostFormat;
+      }
+
+      IConvertingService convertingService = new ConvertingService();
+
+      var stringBuilder = new StringBuilder();
+      stringBuilder.Append($"<{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
+      foreach (var command in commands)
+      {
+        var request = new Request(command, convertingService);
+        stringBuilder.Append(request.CreateXmlRoutine());
+      }
+
+      CreateRoutinesLevelXmlNodes(stringBuilder, returnCompressionType, parallelExecution, responseFormat);
+
+      stringBuilder.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
+      var requestString = stringBuilder.ToString();
+
+      IHttpService httpService = new HttpService();
+
+      var attempt = 0;
+      var sessionContext = SessionContext.GetContext();
+
+    executeall_post_label:
+      try
+      {
+        var requestUri = string.Format(postFormat, sessionContext.BaseAddress, sessionContext.Token, (int)outgoingCompressionType);
+        return Convert.ToString(await httpService.PostAsync(sessionContext.BaseAddress, new Uri(requestUri).PathAndQuery, requestString, sessionContext.WebProxy, outgoingCompressionType, httpTimeout, cancellationToken));
+      }
+      catch (Exception ex)
+      {
+        if (attempt == 0)
+        {
+          if (DawaException.IsSessionEmptyOrExpired(ex) == true)
+          {
+            attempt++;
+            SessionContext.Refresh();
+            goto executeall_post_label;
           }
         }
         throw;

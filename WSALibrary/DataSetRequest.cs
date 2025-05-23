@@ -1,20 +1,18 @@
-﻿using System.Net;
-using SimpleWSA.WSALibrary.Services;
+﻿using SimpleWSA.WSALibrary.Services;
+using System.Net;
 
 namespace SimpleWSA.WSALibrary
 {
   public sealed class DataSetRequest : Request
   {
-    private const string getFormat = "{0}{1}executereturnset?token={2}&value={3}";
-    private const string postFormat = "{0}{1}executereturnsetpost?token={2}&compression={3}";
+    private const string getFormat = "{0}/data/execute?token={1}&value={2}&routineType=1";
+    private const string postFormat = "{0}/data/execute?token={1}&compression={2}&routineType=1";
 
     public DataSetRequest(string serviceAddress,
-                          string route,
                           string token,
                           Command command,
                           IConvertingService convertingService,
                           WebProxy webProxy) : base(serviceAddress,
-                                                    route,
                                                     token,
                                                     command,
                                                     convertingService,

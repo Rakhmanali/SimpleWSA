@@ -15,7 +15,6 @@ namespace SimpleWSA.WSALibrary
   public class Request : IRequest
   {
     protected readonly string serviceAddress;
-    protected readonly string route;
     protected string token;
     protected readonly Command command;
     protected readonly IConvertingService convertingService;
@@ -30,7 +29,6 @@ namespace SimpleWSA.WSALibrary
     }
 
     public Request(string serviceAddress,
-                   string route,
                    string token,
                    Command command,
                    IConvertingService convertingService,
@@ -38,7 +36,6 @@ namespace SimpleWSA.WSALibrary
                    string format)
     {
       this.serviceAddress = serviceAddress;
-      this.route = route;
       this.token = token;
       this.command = command;
       this.convertingService = convertingService;
@@ -370,25 +367,25 @@ namespace SimpleWSA.WSALibrary
 
     protected virtual object Get(string requestString, int httpTimeout)
     {
-      string requestUri = string.Format(this.format, this.serviceAddress, this.route, this.token, HttpUtility.UrlEncode(requestString));
+      var requestUri = string.Format(this.format, this.serviceAddress, this.token, HttpUtility.UrlEncode(requestString));
       return this.httpService.Get(requestUri, this.webProxy, httpTimeout);
     }
 
     protected virtual object Post(string requestString, int httpTimeout)
     {
-      string requestUri = string.Format(this.format, this.serviceAddress, this.route, this.token, (int)this.command.OutgoingCompressionType);
+      string requestUri = string.Format(this.format, this.serviceAddress, this.token, (int)this.command.OutgoingCompressionType);
       return this.httpService.Post(requestUri, requestString, this.webProxy, this.command.OutgoingCompressionType, httpTimeout);
     }
 
     protected virtual async Task<object> GetAsync(string requestString, int httpTimeout, CancellationToken cancellationToken)
     {
-      string requestUri = string.Format(this.format, string.Empty, this.route, this.token, HttpUtility.UrlEncode(requestString));
+      var requestUri = string.Format(this.format, string.Empty, this.token, HttpUtility.UrlEncode(requestString));
       return await this.httpService.GetAsync(this.serviceAddress, requestUri, this.webProxy, httpTimeout, cancellationToken);
     }
 
     protected virtual async Task<object> PostAsync(string requestString, int httpTimeout, CancellationToken cancellationToken)
     {
-      string requestUri = string.Format(this.format, string.Empty, this.route, this.token, (int)this.command.OutgoingCompressionType);
+      string requestUri = string.Format(this.format, string.Empty, this.token, (int)this.command.OutgoingCompressionType);
       return await this.httpService.PostAsync(this.serviceAddress, requestUri, requestString, this.webProxy, this.command.OutgoingCompressionType, httpTimeout, cancellationToken);
     }
 

@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using SimpleWSA.WSALibrary.Exceptions;
 using System.Data;
 using System.Net;
+using System.Text;
 
 namespace SimpleWSA.WSALibrary
 {
@@ -2879,6 +2880,60 @@ namespace SimpleWSA.WSALibrary
       await GetInOutJsonAsync();
     }
     #endregion special cases
+
+
+    #region execute all
+    [Test]
+    public void NonQueryExecuteAll()
+    {
+      var bigintCommand = new Command("migration.get_out_bigint");
+      bigintCommand.Parameters.Add("p_parameter", PgsqlDbType.Bigint);
+
+      var booleanCommand = new Command("migration.get_out_boolean");
+      booleanCommand.Parameters.Add("p_parameter", PgsqlDbType.Boolean);
+
+      var byteaCommand = new Command("migration.get_out_bytea");
+      byteaCommand.Parameters.Add("p_parameter", PgsqlDbType.Bytea);
+
+      var response = Command.ExecuteAll(new List<Command> { bigintCommand, booleanCommand, byteaCommand }, RoutineType.NonQuery, ResponseFormat.JSON, CompressionType.NONE, CompressionType.NONE, ParallelExecution.TRUE);
+      var jsonTextReader = new JsonTextReader(new StringReader(response));
+      JObject jobject = JObject.Load(jsonTextReader);
+
+      var actualLong = Convert.ChangeType(jobject["resultSet"]!["migration.get_out_bigint"]!["arguments"]!["p_parameter"]!, typeof(long));
+      var actualBool = Convert.ChangeType(jobject["resultSet"]!["migration.get_out_boolean"]!["arguments"]!["p_parameter"]!, typeof(bool));
+      var actualBase64Bytes = Convert.ChangeType(jobject["resultSet"]!["migration.get_out_bytea"]!["arguments"]!["p_parameter"]!, typeof(byte[]));
+
+      Assert.That((long)actualLong, Is.EqualTo(9223372036854775807));
+      Assert.That((bool)actualBool, Is.EqualTo(true));
+      Assert.That(Convert.ToBase64String((byte[])actualBase64Bytes), Is.EqualTo("aGVsbG8gd29ybGQh"));
+    }
+
+    [Test]
+    public async Task NonQueryExecuteAllAsync()
+    {
+      var bigintCommand = new Command("migration.get_out_bigint");
+      bigintCommand.Parameters.Add("p_parameter", PgsqlDbType.Bigint);
+
+      var booleanCommand = new Command("migration.get_out_boolean");
+      booleanCommand.Parameters.Add("p_parameter", PgsqlDbType.Boolean);
+
+      var byteaCommand = new Command("migration.get_out_bytea");
+      byteaCommand.Parameters.Add("p_parameter", PgsqlDbType.Bytea);
+
+      var response = await Command.ExecuteAllAsync(new List<Command> { bigintCommand, booleanCommand, byteaCommand }, RoutineType.NonQuery, ResponseFormat.JSON, CompressionType.NONE, CompressionType.NONE, ParallelExecution.TRUE);
+      var jsonTextReader = new JsonTextReader(new StringReader(response));
+      JObject jobject = JObject.Load(jsonTextReader);
+
+      var actualLong = Convert.ChangeType(jobject["resultSet"]!["migration.get_out_bigint"]!["arguments"]!["p_parameter"]!, typeof(long));
+      var actualBool = Convert.ChangeType(jobject["resultSet"]!["migration.get_out_boolean"]!["arguments"]!["p_parameter"]!, typeof(bool));
+      var actualBase64Bytes = Convert.ChangeType(jobject["resultSet"]!["migration.get_out_bytea"]!["arguments"]!["p_parameter"]!, typeof(byte[]));
+
+      Assert.That((long)actualLong, Is.EqualTo(9223372036854775807));
+      Assert.That((bool)actualBool, Is.EqualTo(true));
+      Assert.That(Convert.ToBase64String((byte[])actualBase64Bytes), Is.EqualTo("aGVsbG8gd29ybGQh"));
+    }
+    #endregion execute all
+
     #endregion non query
 
     #region execute scalar
@@ -4311,6 +4366,61 @@ namespace SimpleWSA.WSALibrary
       await this.GetJsonAsync();
     }
     #endregion special cases
+
+    #region execute all
+    [Test]
+    public void ScalarExecuteAll()
+    {
+      var bigintCommand = new Command("migration.get_bigint");
+      bigintCommand.Parameters.Add("p_parameter", PgsqlDbType.Bigint, 9223372036854775807);
+
+      var booleanCommand = new Command("migration.get_boolean");
+      booleanCommand.Parameters.Add("p_parameter", PgsqlDbType.Boolean, false);
+
+      var byteaCommand = new Command("migration.get_bytea");
+      var source = "hello world!";
+      byteaCommand.Parameters.Add("p_parameter", PgsqlDbType.Bytea, Encoding.UTF8.GetBytes(source));
+
+      var response = Command.ExecuteAll(new List<Command> { bigintCommand, booleanCommand, byteaCommand }, RoutineType.Scalar, ResponseFormat.JSON, CompressionType.NONE, CompressionType.NONE, ParallelExecution.TRUE);
+      var jsonTextReader = new JsonTextReader(new StringReader(response));
+      JObject jobject = JObject.Load(jsonTextReader);
+
+      var actualLong = Convert.ChangeType(jobject["resultSet"]!["migration.get_bigint"]!["returnValue"]!, typeof(long));
+      var actualBool = Convert.ChangeType(jobject["resultSet"]!["migration.get_boolean"]!["returnValue"]!, typeof(bool));
+      var actualBase64Bytes = Convert.ChangeType(jobject["resultSet"]!["migration.get_bytea"]!["returnValue"]!, typeof(byte[]));
+
+      Assert.That((long)actualLong, Is.EqualTo(9223372036854775807));
+      Assert.That((bool)actualBool, Is.EqualTo(false));
+      Assert.That(Encoding.UTF8.GetString((byte[])actualBase64Bytes), Is.EqualTo(source));
+    }
+
+    [Test]
+    public async Task ScalarExecuteAllAsync()
+    {
+      var bigintCommand = new Command("migration.get_bigint");
+      bigintCommand.Parameters.Add("p_parameter", PgsqlDbType.Bigint, 9223372036854775807);
+
+      var booleanCommand = new Command("migration.get_boolean");
+      booleanCommand.Parameters.Add("p_parameter", PgsqlDbType.Boolean, false);
+
+      var byteaCommand = new Command("migration.get_bytea");
+      var source = "hello world!";
+      byteaCommand.Parameters.Add("p_parameter", PgsqlDbType.Bytea, Encoding.UTF8.GetBytes(source));
+
+      var response = await Command.ExecuteAllAsync(new List<Command> { bigintCommand, booleanCommand, byteaCommand }, RoutineType.Scalar, ResponseFormat.JSON, CompressionType.NONE, CompressionType.NONE, ParallelExecution.TRUE);
+      var jsonTextReader = new JsonTextReader(new StringReader(response));
+      JObject jobject = JObject.Load(jsonTextReader);
+
+      var actualLong = Convert.ChangeType(jobject["resultSet"]!["migration.get_bigint"]!["returnValue"]!, typeof(long));
+      var actualBool = Convert.ChangeType(jobject["resultSet"]!["migration.get_boolean"]!["returnValue"]!, typeof(bool));
+      var actualBase64Bytes = Convert.ChangeType(jobject["resultSet"]!["migration.get_bytea"]!["returnValue"]!, typeof(byte[]));
+
+      Assert.That((long)actualLong, Is.EqualTo(9223372036854775807));
+      Assert.That((bool)actualBool, Is.EqualTo(false));
+      Assert.That(Encoding.UTF8.GetString((byte[])actualBase64Bytes), Is.EqualTo(source));
+    }
+    #endregion execute all
+
     #endregion execute scalar
 
     #region return set
@@ -4489,6 +4599,44 @@ namespace SimpleWSA.WSALibrary
       await this.GetScalarDataTypesAsync();
     }
     #endregion special cases
+
+
+    #region execute all
+    [Test]
+    public void DataSetExecuteAll()
+    {
+      var command1 = new Command("migration.get_scalar_data_types");
+      var command2 = new Command("migration.get_array_data_types");
+
+      var response = Command.ExecuteAll(new List<Command> { command1, command2 }, RoutineType.DataSet, ResponseFormat.JSON, CompressionType.NONE, CompressionType.NONE, ParallelExecution.TRUE);
+      var jsonTextReader = new JsonTextReader(new StringReader(response));
+      JObject jobject = JObject.Load(jsonTextReader);
+
+      var actual1 = jobject["resultSet"]!["migration.get_scalar_data_types"]!.ToString();
+      var actual2 = jobject["resultSet"]!["migration.get_array_data_types"]!.ToString();
+
+      Assert.That(HashString(actual1), Is.EqualTo("BE8646C3A4F863EA0AB5DA8A822B2C1B035EAB6B1B1A79C91371D4E67565C641"));
+      Assert.That(HashString(actual2), Is.EqualTo("72117F0752F7CFCB1772DD298CFBFAE70D32AFEE6CBEB2305EA5AB4BE33A3AF9"));
+    }
+
+    [Test]
+    public async Task DataSetExecuteAllAsync()
+    {
+      var command1 = new Command("migration.get_scalar_data_types");
+      var command2 = new Command("migration.get_array_data_types");
+
+      var response = await Command.ExecuteAllAsync(new List<Command> { command1, command2 }, RoutineType.DataSet, ResponseFormat.JSON, CompressionType.NONE, CompressionType.NONE, ParallelExecution.TRUE);
+      var jsonTextReader = new JsonTextReader(new StringReader(response));
+      JObject jobject = JObject.Load(jsonTextReader);
+
+      var actual1 = jobject["resultSet"]!["migration.get_scalar_data_types"]!.ToString();
+      var actual2 = jobject["resultSet"]!["migration.get_array_data_types"]!.ToString();
+
+      Assert.That(HashString(actual1), Is.EqualTo("BE8646C3A4F863EA0AB5DA8A822B2C1B035EAB6B1B1A79C91371D4E67565C641"));
+      Assert.That(HashString(actual2), Is.EqualTo("72117F0752F7CFCB1772DD298CFBFAE70D32AFEE6CBEB2305EA5AB4BE33A3AF9"));
+    }
+    #endregion execute all
+
     #endregion return set
 
     #region special cases
@@ -5327,6 +5475,35 @@ namespace SimpleWSA.WSALibrary
       }
     }
     #endregion the httptimeout and cancellationtoken
+
+    #region execute all types
+    [Test]
+    public void ExecuteAllRoutineTypes()
+    {
+      var dataSetCommandEx = new CommandEx("migration.get_scalar_data_types");
+      dataSetCommandEx.RoutineType = RoutineType.DataSet;
+
+      var nonQueryCommandEx = new CommandEx("migration.get_out_bigint");
+      nonQueryCommandEx.RoutineType = RoutineType.NonQuery;
+
+      var scalarCommandEx = new CommandEx("migration.get_bigint");
+      scalarCommandEx.Parameters.Add("p_parameter", PgsqlDbType.Bigint, 9223372036854775807);
+      scalarCommandEx.RoutineType = RoutineType.Scalar;
+
+      var response = CommandEx.ExecuteAll(new List<CommandEx> { dataSetCommandEx, nonQueryCommandEx, scalarCommandEx }, ResponseFormat.JSON, CompressionType.NONE, CompressionType.NONE, ParallelExecution.TRUE);
+      var jsonTextReader = new JsonTextReader(new StringReader(response));
+      JObject jobject = JObject.Load(jsonTextReader);
+
+      var actualDataSet = jobject["resultSet"]!["migration.get_scalar_data_types"]!.ToString();
+      var actualNonQuery = Convert.ChangeType(jobject["resultSet"]!["migration.get_out_bigint"]!["arguments"]!["p_parameter"], typeof(long));
+      var actualScalar = Convert.ChangeType(jobject["resultSet"]!["migration.get_bigint"]!["returnValue"]!, typeof(long));
+
+
+      Assert.That(HashString(actualDataSet), Is.EqualTo("BE8646C3A4F863EA0AB5DA8A822B2C1B035EAB6B1B1A79C91371D4E67565C641"));
+      Assert.That(actualNonQuery, Is.EqualTo(9223372036854775807));
+      Assert.That(actualScalar, Is.EqualTo(9223372036854775807));
+    }
+    #endregion execute all types
 
     private void KillSession(int httpTimeout = 100000)
     {

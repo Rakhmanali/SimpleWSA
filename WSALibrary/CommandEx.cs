@@ -13,8 +13,9 @@ namespace SimpleWSA.WSALibrary
 
     public RoutineType RoutineType { get; set; } = RoutineType.DataSet;
 
-    private const string postFormat = "{0}{1}executemixpost?token={2}&compression={3}";
+    private const string postFormat = "{0}/data/execute/all?token={1}&compression={2}";
 
+    // TO DO: create async kind of this function
     public static string ExecuteAll(List<CommandEx> commandExs,
                                     ResponseFormat responseFormat,
                                     CompressionType outgoingCompressionType,
@@ -29,38 +30,40 @@ namespace SimpleWSA.WSALibrary
 
       IConvertingService convertingService = new ConvertingService();
 
-      StringBuilder sb = new StringBuilder();
-      sb.Append($"<{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
+      var stringBuilder = new StringBuilder();
+      stringBuilder.Append($"<{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
       foreach (CommandEx commandEx in commandExs)
       {
-        Request request = new Request(commandEx, convertingService);
-        sb.Append(request.CreateXmlRoutine(commandEx.RoutineType));
+        var request = new Request(commandEx, convertingService);
+        stringBuilder.Append(request.CreateXmlRoutine(commandEx.RoutineType));
       }
 
-      CreateRoutinesLevelXmlNodes(sb, returnCompressionType, parallelExecution, responseFormat);
+      CreateRoutinesLevelXmlNodes(stringBuilder, returnCompressionType, parallelExecution, responseFormat);
 
-      sb.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
-      string requestString = sb.ToString();
+      stringBuilder.Append($"</{Constants.WS_XML_REQUEST_NODE_ROUTINES}>");
+      var requestString = stringBuilder.ToString();
 
       IHttpService httpService = new HttpService();
 
-      SessionContext sessionContext = SessionContext.GetContext();
+      var attempt = 0;
+      var sessionContext = SessionContext.GetContext();
 
     executeall_post_label:
       try
       {
-        var requestUri = string.Format(postFormat, sessionContext.BaseAddress, SessionContext.route, sessionContext.Token, (int)outgoingCompressionType);
+        var requestUri = string.Format(postFormat, sessionContext.BaseAddress, sessionContext.Token, (int)outgoingCompressionType);
         return (string)httpService.Post(requestUri, requestString, sessionContext.WebProxy, outgoingCompressionType, httpTimeout);
       }
       catch (Exception ex)
       {
-        if (ex is DawaException rex)
+        if (attempt == 0)
         {
-          // keep session alive
-          if (rex.Code == "MI008")
+          if (DawaException.IsSessionEmptyOrExpired(ex) == true)
           {
+            attempt++;
             SessionContext.Refresh();
             goto executeall_post_label;
+
           }
         }
         throw;

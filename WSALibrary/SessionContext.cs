@@ -1,5 +1,4 @@
-﻿using SimpleWSA.WSALibrary.Internal;
-using System.Net;
+﻿using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,8 +6,6 @@ namespace SimpleWSA.WSALibrary
 {
   public class SessionContext
   {
-    public const string route = "/BufferedMode/Service/";
-
     public string BaseAddress { get; }
     public string Login { get; }
     public string Password { get; }
@@ -49,9 +46,10 @@ namespace SimpleWSA.WSALibrary
       return sessionContext;
     }
 
+    private const string requestUri = "/session/create";
+
     public static void Refresh(int httpTimeout = 100000)
     {
-      var requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
       var sessionContext = SessionContext.GetContext();
       var sessionService = new SessionService(sessionContext.BaseAddress,
                                               requestUri,
@@ -67,7 +65,6 @@ namespace SimpleWSA.WSALibrary
 
     public static async Task RefreshAsync(int httpTimeout = 100000, CancellationToken cancellationToken = default)
     {
-      var requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
       var sessionContext = SessionContext.GetContext();
       var sessionService = new SessionService(sessionContext.BaseAddress,
                                               requestUri,

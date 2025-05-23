@@ -34,7 +34,8 @@ namespace SimpleWSA.WSALibrary
 
     public async Task<string> CreateByRestServiceAddressAsync(string baseAddress, int httpTimeout, CancellationToken cancellationToken)
     {
-      var requestUri = $"{SessionContext.route}{Constants.WS_INITIALIZE_SESSION}";
+      var requestUri = $"/service/{Constants.WS_INITIALIZE_SESSION}";
+
       SessionService sessionService = new SessionService(baseAddress,
                                                          requestUri,
                                                          this.login,
