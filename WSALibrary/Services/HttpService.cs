@@ -144,11 +144,9 @@ namespace SimpleWSA.WSALibrary.Services
           {
             return await httpResponseMessage.Content.ReadAsStringAsync();
           }
-          else
-          {
-            CreateAndThrowIfRestServiceException(httpResponseMessage);
-            httpResponseMessage.EnsureSuccessStatusCode();
-          }
+
+          CreateAndThrowIfRestServiceException(httpResponseMessage);
+          httpResponseMessage.EnsureSuccessStatusCode();
         }
       }
       return null;
@@ -195,15 +193,11 @@ namespace SimpleWSA.WSALibrary.Services
             {
               return await httpResponseMessage.Content.ReadAsStringAsync();
             }
-            else
-            {
-              this.CreateAndThrowIfRestServiceException(httpResponseMessage);
-              httpResponseMessage.EnsureSuccessStatusCode();
-            }
+            this.CreateAndThrowIfRestServiceException(httpResponseMessage);
+            httpResponseMessage.EnsureSuccessStatusCode();
           }
         }
       }
-
       return null;
     }
 

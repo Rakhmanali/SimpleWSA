@@ -5503,6 +5503,33 @@ namespace SimpleWSA.WSALibrary
       Assert.That(actualNonQuery, Is.EqualTo(9223372036854775807));
       Assert.That(actualScalar, Is.EqualTo(9223372036854775807));
     }
+
+    [Test]
+    public async Task ExecuteAllRoutineTypesAsync()
+    {
+      var dataSetCommandEx = new CommandEx("migration.get_scalar_data_types");
+      dataSetCommandEx.RoutineType = RoutineType.DataSet;
+
+      var nonQueryCommandEx = new CommandEx("migration.get_out_bigint");
+      nonQueryCommandEx.RoutineType = RoutineType.NonQuery;
+
+      var scalarCommandEx = new CommandEx("migration.get_bigint");
+      scalarCommandEx.Parameters.Add("p_parameter", PgsqlDbType.Bigint, 9223372036854775807);
+      scalarCommandEx.RoutineType = RoutineType.Scalar;
+
+      var response = await CommandEx.ExecuteAllAsync(new List<CommandEx> { dataSetCommandEx, nonQueryCommandEx, scalarCommandEx }, ResponseFormat.JSON, CompressionType.NONE, CompressionType.NONE, ParallelExecution.TRUE);
+      var jsonTextReader = new JsonTextReader(new StringReader(response));
+      JObject jobject = JObject.Load(jsonTextReader);
+
+      var actualDataSet = jobject["resultSet"]!["migration.get_scalar_data_types"]!.ToString();
+      var actualNonQuery = Convert.ChangeType(jobject["resultSet"]!["migration.get_out_bigint"]!["arguments"]!["p_parameter"], typeof(long));
+      var actualScalar = Convert.ChangeType(jobject["resultSet"]!["migration.get_bigint"]!["returnValue"]!, typeof(long));
+
+
+      Assert.That(HashString(actualDataSet), Is.EqualTo("BE8646C3A4F863EA0AB5DA8A822B2C1B035EAB6B1B1A79C91371D4E67565C641"));
+      Assert.That(actualNonQuery, Is.EqualTo(9223372036854775807));
+      Assert.That(actualScalar, Is.EqualTo(9223372036854775807));
+    }
     #endregion execute all types
 
     private void KillSession(int httpTimeout = 100000)
